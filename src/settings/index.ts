@@ -5,13 +5,17 @@ import { rendererDefs } from '../shared/renderers/definitions'
 import type { Fields } from '../shared/renderers/fields'
 import type { Issue } from '../shared/result'
 import type { Config } from '../shared/schemas/config'
+import type { RendererId } from '../shared/renderers/ids'
 import { draftIssues, draftOf, EDITABLE_IDS, isDirty, rebase, saveText, type Draft } from './draft'
+import './settings.css'
 
 class SettingsTab extends PluginSettingTab {
   private draft: Draft
   private unsubscribe: (() => void) | null = null
   private loaded: Config
   private changedOnDisk = false
+  /** Renderer sections the user has expanded, kept across re-renders. */
+  private readonly expanded = new Set<RendererId>()
 
   constructor(
     app: App,
@@ -59,6 +63,7 @@ class SettingsTab extends PluginSettingTab {
     showIssues(state.issues)
     if (this.changedOnDisk) containerEl.insertBefore(createDiv({ text: 'renderers.yaml changed on disk; your edits are kept and saved over the new text.' }), issuesEl)
 
+    new Setting(containerEl).setName('Maps').setHeading()
     new Setting(containerEl)
       .setName('Pin labels')
       .setDesc('When map pins show their note’s name.')
@@ -82,10 +87,15 @@ class SettingsTab extends PluginSettingTab {
 
     for (const id of EDITABLE_IDS) {
       const def = rendererDefs[id]
-      new Setting(containerEl).setName(def.label).setHeading()
+      const section = containerEl.createEl('details', { cls: 'saga-settings-renderer' })
+      section.open = this.expanded.has(id)
+      section.addEventListener('toggle', () => (section.open ? this.expanded.add(id) : this.expanded.delete(id)))
+      const summary = section.createEl('summary')
+      summary.createSpan({ cls: 'saga-settings-renderer-name', text: def.label })
+      summary.createSpan({ cls: 'saga-settings-renderer-types', text: this.draft.types[id] || id })
       const readOnly = state.invalid.includes(id)
-      if (readOnly) containerEl.createDiv({ text: 'This entry in renderers.yaml could not be read; fix it in the file.' }).style.color = 'var(--text-error)'
-      new Setting(containerEl)
+      if (readOnly) section.createDiv({ text: 'This entry in renderers.yaml could not be read; fix it in the file.' }).style.color = 'var(--text-error)'
+      new Setting(section)
         .setName('Types')
         .setDesc('Comma-separated values of the type key.')
         .addText((text) =>
@@ -98,7 +108,7 @@ class SettingsTab extends PluginSettingTab {
             })
         )
       for (const [field, fieldDef] of Object.entries(def.fields as Fields)) {
-        new Setting(containerEl)
+        new Setting(section)
           .setName(fieldDef.label)
           .setDesc(`Key in your notes (default ${fieldDef.key})`)
           .addText((text) =>

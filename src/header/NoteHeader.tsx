@@ -58,10 +58,14 @@ export function NoteHeader({ env, file, frontmatter, resolution, config, propert
   const missing = missingRequired(def, layers).map((name) => keys[name] ?? def.fields[name]?.key ?? name)
   const { Layout } = rendererRegistry[renderer]
   const title = <NoteTitle />
+  const nameId = useId()
 
   return (
     <HeaderCtx.Provider value={{ env, file, config, renderer }}>
-      <section className="saga-header" data-renderer={renderer} aria-label={`${def.label} header`}>
+      <section className="saga-header" data-renderer={renderer} aria-labelledby={nameId}>
+        <span id={nameId} hidden>
+          {def.label} header
+        </span>
         <div role="status" className="saga-header-status">
           {missing.length > 0 ? (
             <p className="saga-header-missing">

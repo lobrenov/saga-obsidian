@@ -1,0 +1,34 @@
+.saga-settings-renderer {
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.saga-settings-renderer:last-of-type {
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.saga-settings-renderer > summary {
+  display: flex;
+  align-items: baseline;
+  gap: var(--size-4-3);
+  padding: var(--size-4-3) 0;
+  cursor: var(--cursor);
+  font-weight: var(--font-semibold);
+  color: var(--text-normal);
+}
+
+.saga-settings-renderer-types {
+  overflow: hidden;
+  font-weight: var(--font-normal);
+  font-size: var(--font-ui-small);
+  color: var(--text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.saga-settings-renderer[open] > summary {
+  padding-bottom: var(--size-4-1);
+}
+
+.saga-settings-renderer > .setting-item {
+  padding-inline-start: var(--size-4-5);
+}

@@ -47,8 +47,9 @@ test('Faction: emblem, leader, base and allies', async () => {
   await expect.element(screen.getByRole('region', { name: 'Faction header' })).toBeVisible()
   expect(document.querySelector('.saga-header-emblem img')).not.toBeNull()
   await expect.element(screen.getByRole('button', { name: 'Bob' }).first()).toBeVisible()
-  expect(document.querySelectorAll('[aria-label="Allies"] .saga-header-chip')).toHaveLength(2)
-  expect(document.querySelectorAll('[aria-label="Allies"] .saga-header-chip.is-unresolved')).toHaveLength(1)
+  expect(document.querySelectorAll('[data-field="allies"] .saga-header-chip')).toHaveLength(2)
+  expect(document.querySelectorAll('[data-field="allies"] .saga-header-chip.is-unresolved')).toHaveLength(1)
+  expect(document.querySelector('.saga-header[aria-label]')).toBeNull()
 })
 
 test('Item: empty banner and the holder, owner, location and origin links', async () => {

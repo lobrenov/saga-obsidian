@@ -166,7 +166,7 @@ function TextEditor({ value, onChange, id, required, invalid, describedBy, place
   )
 }
 
-function ListEditor({ field, value, id, invalid, describedBy, placeholder, update }: EditorProps<'list'> & EditorCtx) {
+function ListEditor({ value, id, invalid, describedBy, placeholder, update }: EditorProps<'list'> & EditorCtx) {
   const items = value ?? []
   const [draft, setDraft] = useState('')
   const add = (): void => {
@@ -177,7 +177,7 @@ function ListEditor({ field, value, id, invalid, describedBy, placeholder, updat
   return (
     <div className="saga-header-list">
       {items.length > 0 ? (
-        <ul className="saga-header-chips" aria-label={field.label}>
+        <ul className="saga-header-chips">
           {items.map((item, i) => (
             <li key={`${i}-${item}`} className="saga-header-chip">
               <span>{item}</span>
@@ -307,7 +307,7 @@ function LinkEditor({ field, value, onChange, id, invalid, describedBy, placehol
   )
 }
 
-function LinksEditor({ field, value, id, invalid, describedBy, placeholder, update }: EditorProps<'links'> & EditorCtx) {
+function LinksEditor({ value, id, invalid, describedBy, placeholder, update }: EditorProps<'links'> & EditorCtx) {
   const items = value ?? []
   const [draft, setDraft] = useState('')
   const [adding, setAdding] = useState(false)
@@ -319,7 +319,7 @@ function LinksEditor({ field, value, id, invalid, describedBy, placeholder, upda
     update((current) => (current.some((entry) => targetOf(entry)?.toLowerCase() === next.toLowerCase()) ? current : [...current, `[[${next}]]`]))
   }
   return (
-    <div className="saga-header-chips" role="group" aria-label={field.label}>
+    <div className="saga-header-chips">
       {items.map((item, i) => (
         <LinkChip key={`${i}-${item.target}`} link={item} removeLabel={`Remove ${item.target}`} onRemove={() => update((current) => withoutFirst(current, (entry) => targetOf(entry) === item.target))} />
       ))}
