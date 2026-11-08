@@ -1,0 +1,32 @@
+# Lists
+
+- Level 1
+	- Level 2
+		- Level 3
+			- Level 4
+				- Level 5
+					- Level 6
+
+- [ ] To do
+- [x] Done
+- [/] Incomplete
+- [-] Cancelled
+- [>] Forwarded
+- [<] Scheduling
+- [?] Question
+- [!] Important
+- [*] Star
+- ["] Quote
+- [l] Location
+- [b] Bookmark
+- [i] Information
+- [S] Savings
+- [I] Idea
+- [p] Pros
+- [c] Cons
+- [f] Fire
+- [k] Key
+- [w] Win
+- [u] Up
+- [d] Down
+- [z] Unknown
