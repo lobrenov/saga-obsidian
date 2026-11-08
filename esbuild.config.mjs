@@ -22,6 +22,7 @@ const publish = {
 const context = await esbuild.context({
   entryPoints: ['src/main.ts'],
   bundle: true,
+  jsx: 'automatic',
   outfile: 'main.js',
   format: 'cjs',
   target: 'es2022',

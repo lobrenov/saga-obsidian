@@ -19,6 +19,7 @@ export default defineConfig({
         resolve: { alias },
         test: {
           name: 'component',
+          globalSetup: ['test/component/bundle.setup.ts'],
           sequence: { groupOrder: 1 },
           include: ['test/component/**/*.test.tsx'],
           typecheck: { include: [] },

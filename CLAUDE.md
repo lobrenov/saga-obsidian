@@ -7,7 +7,7 @@ An Obsidian plugin (id `saga`, desktop, Obsidian 1.10.2+) carrying two functions
 - `npm run build` minified build, same outputs plus the repo root
 - `npm run typecheck` `tsc -b` over the `shared`, `plugin`, `test` and `component` projects
 - `npm run lint` ESLint (type-aware; `src/shared` may not import Obsidian, React or the DOM)
-- `npm test` Vitest: `unit` (Node) and `component` (Chromium); `obsidian` is aliased to `test/fakes/obsidian.ts`
+- `npm test` Vitest: `unit` (Node) and `component` (Chromium); `obsidian` is aliased to `test/fakes/obsidian.ts`; `component` first runs the production build and `bundle.test.tsx` loads `main.js` as Obsidian does
 
 ## Layout
 - `src/main.ts` loads the config store and registers the map view, header and settings
