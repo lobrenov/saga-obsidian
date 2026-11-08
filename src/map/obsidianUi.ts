@@ -1,4 +1,4 @@
-import { Notice, type App, type BasesView, type HoverParent, type TFile } from 'obsidian'
+import { Menu, Notice, type App, type BasesView, type HoverParent, type TFile } from 'obsidian'
 import type { HostUi } from './host'
 import { chooseNote, confirm } from './modals'
 
@@ -26,6 +26,16 @@ export function createUi(app: App, view: BasesView & HoverParent, mapPath: strin
     },
     confirmRemove: (pin) => confirm(app, 'Remove pin', `Remove this pin from ${pin.file.name}?`, 'Remove pin'),
     notify: (message) => void new Notice(message),
+    showMenu(at, items) {
+      const menu = new Menu()
+      for (const entry of items) {
+        menu.addItem((item) => {
+          item.setTitle(entry.title).setIcon(entry.icon).onClick(entry.onClick)
+          if (entry.warning) item.setWarning(true)
+        })
+      }
+      menu.showAtPosition(at)
+    },
     hoverNote: (event, target, file) => app.workspace.trigger('hover-link', { event, source: HOVER_SOURCE, hoverParent: view, targetEl: target, linktext: file.path, sourcePath: mapPath })
   }
 }

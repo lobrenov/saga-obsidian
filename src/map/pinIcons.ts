@@ -22,8 +22,8 @@ const pinSvg = (sprite: string, style: PinStyle, renderer: RendererId): string =
   `<svg class="saga-map-pin-svg" aria-hidden="true" focusable="false" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}" style="--saga-map-pin:${pinColor(renderer)};color:var(--saga-map-pin)">` +
   `<use href="#${pinShapeId(sprite)}"/><use href="#${pinGlyphId(sprite, style)}"/></svg>`
 
-/** The class of a pin button: placed by its bottom tip, selected or not. */
-export const pinClass = (selected: boolean): string => `saga-map-placed saga-map-pin${selected ? ' saga-map-pin-selected' : ''}`
+/** The class of a pin button: placed by its bottom tip. */
+export const pinClass = 'saga-map-placed saga-map-pin'
 
 /** A pin's content: the head and tip from the sprite in the renderer's colour with the style's glyph, and a visually hidden name for screen readers. */
 export function pinHtml({ sprite, title, description, renderer, style }: PinHtmlOptions): string {

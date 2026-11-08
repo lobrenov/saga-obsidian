@@ -60,7 +60,7 @@ export function NoteHeader({ env, file, frontmatter, resolution, config, propert
   const title = <NoteTitle />
 
   return (
-    <HeaderCtx.Provider value={{ env, file, config }}>
+    <HeaderCtx.Provider value={{ env, file, config, renderer }}>
       <section className="saga-header" data-renderer={renderer} aria-label={`${def.label} header`}>
         <div role="status" className="saga-header-status">
           {missing.length > 0 ? (

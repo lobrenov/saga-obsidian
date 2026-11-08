@@ -46,14 +46,13 @@ const SLOTS: readonly LabelSlot[] = ['right', 'left', 'below']
 
 /**
  * Places each pin's label in the first of right, left and below where it covers no pin, cluster or earlier label and, given `view`, lies
- * inside the view; null when no slot is free. Targets in `first` are placed before the rest, which go in order of position (top to
- * bottom, then left to right).
+ * inside the view; null when no slot is free. Targets are placed in order of position (top to bottom, then left to right).
  */
-export function placeLabels(targets: readonly LabelTarget[], first: ReadonlySet<string> = new Set(), view?: { width: number; height: number }): Map<string, LabelSlot | null> {
+export function placeLabels(targets: readonly LabelTarget[], view?: { width: number; height: number }): Map<string, LabelSlot | null> {
   const obstacles = targets.map(pinBox)
   const placed: Box[] = []
   const slots = new Map<string, LabelSlot | null>()
-  const order = targets.filter((t) => t.title !== null).sort((a, b) => Number(first.has(b.key)) - Number(first.has(a.key)) || a.py - b.py || a.px - b.px || (a.key < b.key ? -1 : 1))
+  const order = targets.filter((t) => t.title !== null).sort((a, b) => a.py - b.py || a.px - b.px || (a.key < b.key ? -1 : 1))
   for (const target of order) {
     const width = labelWidth(target.title ?? '')
     const slot = SLOTS.find((candidate) => {

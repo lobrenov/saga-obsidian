@@ -91,15 +91,15 @@ describe('mapStateOf', () => {
     expect(fake.state()).toMatchObject({ kind: 'map', title: 'Renamed' })
   })
 
-  it('takes labels and layers from the options, on unless switched off', () => {
-    expect(fake.state()).toMatchObject({ labels: true, layers: true })
-    fake.options['labels'] = false
+  it('takes the layers panel from the option, on unless switched off, and the pin labels from the setting', () => {
+    expect(fake.state()).toMatchObject({ labels: 'always', layers: true })
     fake.options['layers'] = false
-    expect(fake.state()).toMatchObject({ labels: false, layers: false })
+    fake.pinLabels = 'hover'
+    expect(fake.state()).toMatchObject({ labels: 'hover', layers: false })
   })
 
   it('shows only the pins of the notes the base lists', () => {
-    const state = mapStateOf(fake.app, fake.settings, { option: (key) => fake.options[key], files: () => [fake.file('Places/Saltmere.md')], host: (map) => createHost(fake.app, map, { pickNote: () => Promise.resolve(null), confirmRemove: () => Promise.resolve(true), notify: () => {}, hoverNote: () => {} }) })
+    const state = mapStateOf(fake.app, fake.settings, { option: (key) => fake.options[key], pinLabels: 'always', files: () => [fake.file('Places/Saltmere.md')], host: (map) => createHost(fake.app, map, { pickNote: () => Promise.resolve(null), confirmRemove: () => Promise.resolve(true), notify: () => {}, hoverNote: () => {}, showMenu: () => {} }) })
     expect(state.kind === 'map' && state.pins.map((pin) => pin.title)).toEqual(['Saltmere'])
   })
 })

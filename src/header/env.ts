@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'react'
 import type { App, TFile } from 'obsidian'
+import type { RendererId } from '../shared/renderers/ids'
 import type { Config } from '../shared/schemas/config'
 
 /** What the header takes from Obsidian beyond the `App`; `host.ts` implements it, tests fake it. */
@@ -18,6 +19,7 @@ export interface HeaderContext {
   env: HeaderEnv
   file: TFile
   config: Config
+  renderer: RendererId
 }
 
 export const HeaderCtx = createContext<HeaderContext | null>(null)

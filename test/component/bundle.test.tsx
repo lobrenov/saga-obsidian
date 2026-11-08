@@ -12,6 +12,12 @@ it('loads the built plugin and registers its views', async () => {
   }
   class Plugin {
     app = app
+    loadData(): Promise<null> {
+      return Promise.resolve(null)
+    }
+    saveData(): Promise<void> {
+      return Promise.resolve()
+    }
     registerEvent(): void {}
     register(): void {}
     registerBasesView(id: string): boolean {

@@ -1,14 +1,15 @@
-import { useCallback, useContext, useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent } from 'react'
+import { useCallback, useContext, useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react'
 import type { TFile } from 'obsidian'
 import { imageZoomLimits } from '../shared/maps/viewport'
 import { roundCoord } from '../shared/pins/ops'
 import type { PinOp, PinStyle } from '../shared/schemas/pins'
 import { ZoomControls, Readout } from './Controls'
 import { clampToImage } from './geometry'
+import type { PinLabels } from '../obsidian/prefs'
 import type { MapHost } from './host'
 import { MapCanvas } from './MapCanvas'
 import { LayersPanel, NO_LAYERS, isVisible, type Layers } from './LayersPanel'
-import { CursorGhost, FixedGhost, PinLayer } from './PinLayer'
+import { FixedGhost, PinLayer } from './PinLayer'
 import { PinList } from './PinList'
 import { PinPopover } from './PinPopover'
 import { PinSprite, SpriteContext } from './PinSprite'
@@ -17,8 +18,6 @@ import { entryMatcher, locateEntry } from './pinWrites'
 import { pinKey, type PlacedPin } from './types'
 import { ViewportStore } from './viewportStore'
 
-export type MapTool = 'select' | 'add'
-
 interface MapStageProps {
   host: MapHost
   title: string
@@ -26,16 +25,11 @@ interface MapStageProps {
   /** The image's pixel size. */
   size: { width: number; height: number }
   pins: readonly PlacedPin[]
-  tool: MapTool
-  setTool: (tool: MapTool) => void
   listOpen: boolean
-  labels: boolean
+  labels: PinLabels
   layersOpen: boolean
 }
 
-const ARROWS: Record<string, readonly [number, number]> = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }
-/** Arrow keys move a pin about this many screen pixels (at least one image pixel); Shift moves it ten times as far. */
-const NUDGE_PX = 2
 /** A written change is shown as written for this long at most while the base catches up. */
 const HOLD_MS = 3000
 
@@ -44,7 +38,7 @@ type Point = { x: number; y: number }
 type Held = { from: Point; to: Point }
 
 /** The map of one image with its pins and the tools around it (layers, zoom, pin list, popover). */
-export function MapStage({ host, title, imageUrl, size, pins, tool, setTool, listOpen, labels, layersOpen }: MapStageProps) {
+export function MapStage({ host, title, imageUrl, size, pins, listOpen, labels, layersOpen }: MapStageProps) {
   const sprite = useContext(SpriteContext)
   const root = useRef<HTMLDivElement>(null)
   const [stage, setStage] = useState<HTMLElement | null>(null)
@@ -52,7 +46,6 @@ export function MapStage({ host, title, imageUrl, size, pins, tool, setTool, lis
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
   /** Where a new pin goes while its note is picked and written, until the base lists one more pin. */
   const [draft, setDraft] = useState<(Point & { count: number | null }) | null>(null)
-  const [moving, setMoving] = useState<{ pin: PlacedPin; x: number; y: number } | null>(null)
   const [held, setHeld] = useState<ReadonlyMap<string, Held>>(new Map())
   const [busy, setBusy] = useState(false)
 
@@ -69,7 +62,6 @@ export function MapStage({ host, title, imageUrl, size, pins, tool, setTool, lis
     [pins, held]
   )
   const visible = useMemo(() => placed.filter((pin) => isVisible(pin, activeLayers)), [placed, activeLayers])
-  const shownPins = useMemo(() => (moving ? visible.filter((pin) => pinKey(pin) !== pinKey(moving.pin)) : visible), [visible, moving])
   const selected = selectedKey === null ? null : (placed.find((pin) => pinKey(pin) === selectedKey) ?? null)
 
   // The base reports a pin elsewhere than before the write (or the pin gone): the held position is dropped; so is a held new pin once a pin is added.
@@ -110,7 +102,6 @@ export function MapStage({ host, title, imageUrl, size, pins, tool, setTool, lis
   const select = useCallback(
     (pin: PlacedPin, centre = false) => {
       setDraft(null)
-      setMoving(null)
       setSelectedKey(pinKey(pin))
       if (centre) store.set({ ...store.get(), cx: pin.x, cy: pin.y })
     },
@@ -152,82 +143,22 @@ export function MapStage({ host, title, imageUrl, size, pins, tool, setTool, lis
       return
     }
     setDraft({ ...at, count: pins.length })
-    setTool('select')
     setTimeout(() => setDraft(null), HOLD_MS)
   }
 
-  const onMapClick = (p: Point): void => {
-    if (moving) {
-      const next = place(p.x, p.y)
-      setMoving(null)
-      void commitMove(moving.pin, next.x, next.y)
-    } else if (tool === 'add' && !draft) void addPin(place(p.x, p.y))
-    else setSelectedKey(null)
-  }
+  const onMapClick = useCallback(() => setSelectedKey(null), [])
 
-  const startMove = useCallback((pin: PlacedPin) => {
-    setSelectedKey(null)
-    setDraft(null)
-    setMoving({ pin, x: pin.x, y: pin.y })
-  }, [])
-
-  // Keyboard moving: the move box takes focus; arrows nudge, Shift in larger steps, Enter places (one write), Escape cancels.
-  const movingRef = useRef(moving)
-  movingRef.current = moving
-  const moveBox = useRef<HTMLDivElement>(null)
-  const isMoving = moving !== null
-  useEffect(() => {
-    if (!isMoving) return undefined
-    const before = document.activeElement
-    moveBox.current?.focus({ preventScroll: true })
-    return () => {
-      if (before instanceof HTMLElement && before !== document.body && before.isConnected) before.focus({ preventScroll: true })
-    }
-  }, [isMoving])
-  const onMoveKey = (event: ReactKeyboardEvent<HTMLDivElement>): void => {
-    const current = movingRef.current
-    if (!current || event.defaultPrevented) return
-    const onButton = event.target instanceof HTMLElement && event.target.closest('button') !== null
-    const arrow = ARROWS[event.key]
-    if (arrow) {
-      event.preventDefault()
-      const step = Math.max(1, Math.round((NUDGE_PX / 2 ** store.get().zoom) * (event.shiftKey ? 10 : 1)))
-      const next = { ...current, ...clampToImage(current.x + arrow[0] * step, current.y + arrow[1] * step, width, height) }
-      movingRef.current = next
-      setMoving(next)
-    } else if (event.key === 'Enter' && !onButton) {
-      event.preventDefault()
-      setMoving(null)
-      void commitMove(current.pin, current.x, current.y)
-    } else if (event.key === 'Escape') {
-      event.preventDefault()
-      setMoving(null)
-    }
-  }
-
-  // Escape closes the card or Add pin mode, in that order, when focus is inside this map view.
+  // Escape closes the card when focus is inside this map view.
   useEffect(() => {
     const onKey = (event: KeyboardEvent): void => {
       const view = root.current?.closest('.saga-map')
-      if (event.key !== 'Escape' || event.defaultPrevented || !view || !(event.target instanceof Node) || !view.contains(event.target)) return
-      if (selectedKey) setSelectedKey(null)
-      else if (tool === 'add') setTool('select')
-      else return
+      if (event.key !== 'Escape' || event.defaultPrevented || !selectedKey || !view || !(event.target instanceof Node) || !view.contains(event.target)) return
+      setSelectedKey(null)
       event.preventDefault()
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [selectedKey, tool, setTool])
-
-  useEffect(() => {
-    if (tool !== 'add') setDraft((current) => (current?.count === null ? null : current))
-  }, [tool])
-
-  const addAtCentre = (): void => {
-    const centre = store.get()
-    setMoving(null)
-    void addPin(place(centre.cx, centre.cy))
-  }
+  }, [selectedKey])
 
   const restyle = async (pin: PlacedPin, style: PinStyle): Promise<void> => {
     await write(pin.file, locate(pin, (index) => ({ kind: 'style', index, style: style === 'auto' ? null : style })))
@@ -236,52 +167,38 @@ export function MapStage({ host, title, imageUrl, size, pins, tool, setTool, lis
     if (!(await host.confirmRemove(pin))) return
     if (await write(pin.file, locate(pin, (index) => ({ kind: 'remove', index })))) setSelectedKey(null)
   }
+  const menus = {
+    /** The right-click menu of the map (or the ContextMenu key on the stage): add a pin at that image point. */
+    map: (at: Point, screen: Point): void => {
+      const point = place(at.x, at.y)
+      host.showMenu(screen, [{ title: 'Add pin here', icon: 'map-pin', onClick: () => void addPin(point) }])
+    },
+    /** The right-click menu of a pin (or the ContextMenu key on it): remove it. */
+    pin: (pin: PlacedPin, screen: Point): void => host.showMenu(screen, [{ title: 'Remove pin', icon: 'trash', warning: true, onClick: () => void remove(pin) }])
+  }
+  const menusRef = useRef(menus)
+  menusRef.current = menus
+  const onMapMenu = useCallback((at: Point, screen: Point) => menusRef.current.map(at, screen), [])
+  const onPinMenu = useCallback((pin: PlacedPin, screen: Point) => menusRef.current.pin(pin, screen), [])
   const hover = useCallback((event: ReactMouseEvent<HTMLElement>, pin: PlacedPin) => host.hoverNote(event.nativeEvent, event.currentTarget, pin.file), [host])
 
   return (
     <div ref={root} className="saga-map-stage-row">
       <PinSprite id={sprite} />
       <div className="saga-map-canvas-wrap">
-        <div className="saga-map-canvas" data-tool={tool === 'add' || moving ? 'add' : 'select'}>
-          <MapCanvas store={store} imageUrl={imageUrl} title={title} onMapClick={onMapClick} stageRef={setStage}>
-            <PinLayer store={store} pins={shownPins} selectedKey={selectedKey} labels={labels} onSelect={select} onMoved={commitMove} onDragStart={closeCard} onHover={hover} />
-            {tool === 'add' && !draft && !moving ? <CursorGhost stage={stage} /> : null}
+        <div className="saga-map-canvas">
+          <MapCanvas store={store} imageUrl={imageUrl} title={title} onMapClick={onMapClick} onMapMenu={onMapMenu} stageRef={setStage}>
+            <PinLayer store={store} pins={visible} selectedKey={selectedKey} labels={labels} onSelect={select} onMoved={commitMove} onDragStart={closeCard} onHover={hover} onMenu={onPinMenu} />
             {draft ? <FixedGhost store={store} x={draft.x} y={draft.y} /> : null}
-            {moving ? <FixedGhost store={store} x={moving.x} y={moving.y} pin={moving.pin} /> : null}
           </MapCanvas>
         </div>
 
         {layersOpen ? <LayersPanel pins={placed} layers={layers} onChange={setLayers} /> : null}
         <ZoomControls store={store} onFit={fitMap} />
         <Readout store={store} stage={stage} />
-        {selected && !moving ? <PinPopover store={store} host={host} pin={selected} busy={busy} onClose={closeCard} onMove={startMove} onStyle={(pin, style) => void restyle(pin, style)} onRemove={(pin) => void remove(pin)} /> : null}
-
-        {tool === 'add' && !draft ? (
-          <p role="status" className="saga-map-hint">
-            Click the map to place a pin · Esc to cancel
-          </p>
-        ) : null}
-        {moving ? (
-          <div ref={moveBox} tabIndex={-1} role="status" className="saga-map-hint" onKeyDown={onMoveKey}>
-            <span>
-              Moving {moving.pin.title}: click the map, or use the arrow keys (Shift for larger steps), Enter to place, Esc to cancel · x {moving.x} · y {moving.y}
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                setMoving(null)
-                void commitMove(moving.pin, moving.x, moving.y)
-              }}
-            >
-              Place
-            </button>
-            <button type="button" onClick={() => setMoving(null)}>
-              Cancel
-            </button>
-          </div>
-        ) : null}
+        {selected ? <PinPopover store={store} host={host} pin={selected} busy={busy} onClose={closeCard} onStyle={(pin, style) => void restyle(pin, style)} /> : null}
       </div>
-      {listOpen ? <PinList pins={visible} selectedKey={selectedKey} onSelect={(pin) => select(pin, true)} onMove={startMove} onAddAtCentre={addAtCentre} /> : null}
+      {listOpen ? <PinList pins={visible} selectedKey={selectedKey} onSelect={(pin) => select(pin, true)} /> : null}
     </div>
   )
 }

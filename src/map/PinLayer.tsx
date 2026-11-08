@@ -2,7 +2,7 @@ import { memo, useCallback, useContext, useEffect, useLayoutEffect, useMemo, use
 import { toScreen } from '../shared/maps/viewport'
 import { rendererDefs } from '../shared/renderers/definitions'
 import { clusterItems } from '../shared/pins/cluster'
-import type { PinStyle } from '../shared/schemas/pins'
+import type { PinLabels } from '../obsidian/prefs'
 import { clusterHtml, ghostHtml, pinClass, pinHtml } from './pinIcons'
 import { placeLabels, type LabelSlot } from './labels'
 import { SpriteContext } from './PinSprite'
@@ -62,6 +62,8 @@ interface PinButtonProps {
   onFocusPin: (key: string | null) => void
   /** The pin under the pointer, null when it leaves. */
   onReveal: (key: string | null) => void
+  /** The pin's menu (right-click, ContextMenu key) at a screen point. */
+  onMenu: (pin: PlacedPin, screen: { x: number; y: number }) => void
   onHover: (event: ReactMouseEvent<HTMLElement>, pin: PlacedPin) => void
 }
 
@@ -75,7 +77,7 @@ interface Drag {
   moved: boolean
 }
 
-const PinButton = memo(function PinButton({ store, pin, selected, onSelect, onMoved, onDragStart, onDragEnd, onFocusPin, onReveal, onHover }: PinButtonProps) {
+const PinButton = memo(function PinButton({ store, pin, selected, onSelect, onMoved, onDragStart, onDragEnd, onFocusPin, onReveal, onMenu, onHover }: PinButtonProps) {
   const held = useRef(false)
   const sprite = useContext(SpriteContext)
   const [ref, place] = usePlacement<HTMLButtonElement>(store, pin.x, pin.y, held)
@@ -147,7 +149,7 @@ const PinButton = memo(function PinButton({ store, pin, selected, onSelect, onMo
       ref={ref}
       type="button"
       data-pin={pinKey(pin)}
-      className={pinClass(selected)}
+      className={pinClass}
       style={selected ? { zIndex: 1 } : undefined}
       onClick={(event) => {
         // The click that ends a drag is ignored; a keyboard or assistive click (detail 0) always selects.
@@ -161,6 +163,17 @@ const PinButton = memo(function PinButton({ store, pin, selected, onSelect, onMo
       }}
       onBlur={() => onFocusPin(null)}
       onMouseOver={(event) => onHover(event, pin)}
+      onContextMenu={(event) => {
+        event.preventDefault()
+        onMenu(pin, { x: event.clientX, y: event.clientY })
+      }}
+      onKeyDown={(event) => {
+        if (event.key !== 'ContextMenu' && !(event.shiftKey && event.key === 'F10')) return
+        event.preventDefault()
+        event.stopPropagation()
+        const box = event.currentTarget.getBoundingClientRect()
+        onMenu(pin, { x: box.left + box.width / 2, y: box.top + box.height / 2 })
+      }}
       onMouseEnter={() => onReveal(pinKey(pin))}
       onMouseLeave={() => onReveal(null)}
       onPointerDown={onPointerDown}
@@ -212,19 +225,20 @@ interface PinLayerProps {
   store: ViewportStore
   pins: readonly PlacedPin[]
   selectedKey: string | null
-  labels: boolean
+  labels: PinLabels
   onSelect: (pin: PlacedPin) => void
   /** Resolves true when the move was written. */
   onMoved: (pin: PlacedPin, x: number, y: number) => Promise<boolean>
   onDragStart: () => void
   onHover: (event: ReactMouseEvent<HTMLElement>, pin: PlacedPin) => void
+  onMenu: (pin: PlacedPin, screen: { x: number; y: number }) => void
 }
 
 /**
  * The pins of the map as buttons in the overlay above the image. Above the threshold nearby pins merge into cluster buttons,
  * regrouped 150 ms after the zoom settles; the selected pin and the pin being dragged never merge.
  */
-export function PinLayer({ store, pins, selectedKey, labels, onSelect, onMoved, onDragStart, onHover }: PinLayerProps) {
+export function PinLayer({ store, pins, selectedKey, labels, onSelect, onMoved, onDragStart, onHover, onMenu }: PinLayerProps) {
   const [groups, setGroups] = useState<Group[]>([])
   const [dragKey, setDragKey] = useState<string | null>(null)
   const [focusKey, setFocusKey] = useState<string | null>(null)
@@ -246,7 +260,7 @@ export function PinLayer({ store, pins, selectedKey, labels, onSelect, onMoved, 
         const at = toScreen(store.get(), view, group.x, group.y)
         return { key: group.key, title: group.pins.length === 1 ? (group.pins[0]?.title ?? null) : null, px: at.x, py: at.y }
       })
-      setSlots(placeLabels(targets, new Set(selectedKey === null ? [] : [selectedKey]), view))
+      setSlots(placeLabels(targets, view))
     }
     const regroup = (): void => {
       zoom = store.get().zoom
@@ -291,68 +305,45 @@ export function PinLayer({ store, pins, selectedKey, labels, onSelect, onMoved, 
 
   const singles = groups.flatMap((group) => (group.pins.length === 1 && group.pins[0] ? [group.pins[0]] : []))
   const slotOf = (pin: PlacedPin): LabelSlot | null => (pinKey(pin) === dragKey ? null : (slots.get(pinKey(pin)) ?? null))
-  const shown = labels ? singles.filter((pin) => slotOf(pin) !== null) : []
-  const revealed = labels ? singles.filter((pin) => slotOf(pin) === null && pinKey(pin) !== dragKey && [selectedKey, hoverKey, focusKey].includes(pinKey(pin))) : []
+  const always = labels === 'always'
+  const shown = always ? singles.filter((pin) => slotOf(pin) !== null) : []
+  const revealed = singles.filter((pin) => (!always || slotOf(pin) === null) && pinKey(pin) !== dragKey && [hoverKey, focusKey].includes(pinKey(pin)))
 
   return (
     <>
       {shown.map((pin) => (
-        <PinLabel key={pinKey(pin)} store={store} pin={pin} slot={slotOf(pin) ?? 'right'} selected={pinKey(pin) === selectedKey} />
+        <PinLabel key={pinKey(pin)} store={store} pin={pin} slot={slotOf(pin) ?? 'right'} />
       ))}
       {groups.map((group) => {
         const [first] = group.pins
         if (group.pins.length === 1 && first) {
-          return <PinButton key={group.key} store={store} pin={first} selected={group.key === selectedKey} onSelect={onSelect} onMoved={onMoved} onDragStart={dragStart} onDragEnd={dragEnd} onFocusPin={setFocusKey} onReveal={setHoverKey} onHover={onHover} />
+          return <PinButton key={group.key} store={store} pin={first} selected={group.key === selectedKey} onSelect={onSelect} onMoved={onMoved} onDragStart={dragStart} onDragEnd={dragEnd} onFocusPin={setFocusKey} onReveal={setHoverKey} onMenu={onMenu} onHover={onHover} />
         }
         return <ClusterButton key={group.key} store={store} group={group} onActivate={activate} />
       })}
       {revealed.map((pin) => (
-        <PinLabel key={`reveal:${pinKey(pin)}`} store={store} pin={pin} slot="right" selected={pinKey(pin) === selectedKey} top />
+        <PinLabel key={`reveal:${pinKey(pin)}`} store={store} pin={pin} slot="right" top />
       ))}
     </>
   )
 }
 
-/** A pin's label, in its own layer so pins stay above labels; a label with no free slot is shown only on hover, focus or selection, on top. */
-const PinLabel = memo(function PinLabel({ store, pin, slot, selected, top }: { store: ViewportStore; pin: PlacedPin; slot: LabelSlot; selected: boolean; top?: boolean }) {
+/** A pin's label, in its own layer so pins stay above labels; a label with no free slot (or all of them in hover mode) is shown only on hover or focus, on top. */
+const PinLabel = memo(function PinLabel({ store, pin, slot, top }: { store: ViewportStore; pin: PlacedPin; slot: LabelSlot; top?: boolean }) {
   const [ref] = usePlacement<HTMLDivElement>(store, pin.x, pin.y)
   return (
     <div ref={ref} className={`saga-map-label-anchor${top ? ' saga-map-label-top' : ''}`}>
-      <span className={`saga-map-label saga-map-label-${slot}${selected ? ' saga-map-label-selected' : ''}`} aria-hidden="true">
+      <span className={`saga-map-label saga-map-label-${slot}`} aria-hidden="true">
         {pin.title}
       </span>
     </div>
   )
 })
 
-const ghostClass = 'saga-map-placed saga-map-pin-ghost'
-
-/** A pin that follows the cursor over `stage` (Add pin mode). */
-export function CursorGhost({ stage }: { stage: HTMLElement | null }) {
-  const [at, setAt] = useState<{ x: number; y: number } | null>(null)
-  useEffect(() => {
-    if (!stage) return undefined
-    const move = (event: PointerEvent): void => {
-      const box = stage.getBoundingClientRect()
-      setAt({ x: event.clientX - box.left, y: event.clientY - box.top })
-    }
-    const leave = (): void => setAt(null)
-    stage.addEventListener('pointermove', move)
-    stage.addEventListener('pointerleave', leave)
-    return () => {
-      stage.removeEventListener('pointermove', move)
-      stage.removeEventListener('pointerleave', leave)
-    }
-  }, [stage])
-  const sprite = useContext(SpriteContext)
-  const html = useMemo(() => ghostHtml(sprite, 'character', 'auto'), [sprite])
-  return at ? <div data-map-ghost="" className={ghostClass} style={{ transform: `translate(${at.x}px, ${at.y}px)` }} dangerouslySetInnerHTML={{ __html: html }} /> : null
-}
-
-/** A pin at a fixed place that is not saved yet (the new pin, or a pin being moved). */
-export function FixedGhost({ store, x, y, pin }: { store: ViewportStore; x: number; y: number; pin?: { renderer: PlacedPin['renderer']; style: PinStyle } }) {
+/** A pin at a fixed place that is not saved yet (the new pin while its note is picked and written). */
+export function FixedGhost({ store, x, y }: { store: ViewportStore; x: number; y: number }) {
   const [ref] = usePlacement<HTMLDivElement>(store, x, y)
   const sprite = useContext(SpriteContext)
-  const html = useMemo(() => ghostHtml(sprite, pin?.renderer ?? 'character', pin?.style ?? 'auto'), [sprite, pin?.renderer, pin?.style])
-  return <div ref={ref} data-map-ghost="" className={ghostClass} dangerouslySetInnerHTML={{ __html: html }} />
+  const html = useMemo(() => ghostHtml(sprite, 'character', 'auto'), [sprite])
+  return <div ref={ref} data-map-ghost="" className="saga-map-placed saga-map-pin-ghost" dangerouslySetInnerHTML={{ __html: html }} />
 }

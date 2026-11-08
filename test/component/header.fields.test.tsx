@@ -195,7 +195,7 @@ test('the list editor adds and removes items', async () => {
   const def = { kind: 'list', key: 'aliases', required: false, label: 'Aliases' } as const
   const layer = readFrontmatter({ fields: { aliases: def } }, { aliases: ['a'] }).fields.aliases
   const screen = await render(
-    <HeaderCtx.Provider value={{ env, file, config: DEFAULT_CONFIG }}>
+    <HeaderCtx.Provider value={{ env, file, config: DEFAULT_CONFIG, renderer: 'character' }}>
       <FieldView def={def} noteKey="aliases" raw={['a']} layer={layer} />
     </HeaderCtx.Provider>
   )

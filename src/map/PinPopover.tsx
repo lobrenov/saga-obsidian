@@ -29,14 +29,12 @@ interface PinPopoverProps {
   host: MapHost
   pin: PlacedPin
   onClose: () => void
-  onMove: (pin: PlacedPin) => void
   onStyle: (pin: PlacedPin, style: PinStyle) => void
-  onRemove: (pin: PlacedPin) => void
   busy: boolean
 }
 
-/** The card for a selected pin: the note, where the pin is stored, its style, and Open note / Move / Remove. */
-export function PinPopover({ store, host, pin, onClose, onMove, onStyle, onRemove, busy }: PinPopoverProps) {
+/** The card for a selected pin: the note (its title opens it), an excerpt and its style. */
+export function PinPopover({ store, host, pin, onClose, onStyle, busy }: PinPopoverProps) {
   const ids = { title: useId(), style: useId() }
   const root = useRef<HTMLElement>(null)
   const [excerpt, setExcerpt] = useState('')
@@ -88,12 +86,20 @@ export function PinPopover({ store, host, pin, onClose, onMove, onStyle, onRemov
         {def.label}
       </p>
       <h2 id={ids.title} className="saga-map-popover-title">
-        {pin.title}
+        <a
+          href={pin.file.path}
+          className="internal-link"
+          data-autofocus
+          onClick={(event) => {
+            event.preventDefault()
+            host.openNote(pin.file, event.metaKey || event.ctrlKey)
+          }}
+          onMouseOver={(event) => host.hoverNote(event.nativeEvent, event.currentTarget, pin.file)}
+        >
+          {pin.title}
+        </a>
       </h2>
       {excerpt ? <p className="saga-map-popover-excerpt">{excerpt}</p> : null}
-      <p className="saga-map-popover-meta">
-        Pin saved in <code>{pin.file.name}</code> → <code>map-pins</code>
-      </p>
       <div className="saga-map-popover-style">
         <label htmlFor={ids.style}>Style</label>
         <select id={ids.style} className="dropdown" value={pin.style} disabled={busy} onChange={(event) => onStyle(pin, event.target.value as PinStyle)}>
@@ -111,17 +117,6 @@ export function PinPopover({ store, host, pin, onClose, onMove, onStyle, onRemov
           ))}
         </ul>
       ) : null}
-      <div className="saga-map-popover-actions">
-        <button type="button" className="mod-cta" data-autofocus onClick={(event) => host.openNote(pin.file, event.metaKey || event.ctrlKey)}>
-          Open note
-        </button>
-        <button type="button" disabled={busy} onClick={() => onMove(pin)}>
-          Move
-        </button>
-        <button type="button" className="mod-warning" disabled={busy} onClick={() => onRemove(pin)}>
-          Remove pin
-        </button>
-      </div>
     </section>
   )
 }

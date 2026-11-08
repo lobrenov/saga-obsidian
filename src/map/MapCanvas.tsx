@@ -19,6 +19,8 @@ interface MapCanvasProps {
   title: string
   /** A click on the map itself (not a pin or a drag), in image pixels. */
   onMapClick: (at: { x: number; y: number }) => void
+  /** A right-click on the map (not a pin) or the ContextMenu key on the stage: the image point and the screen point for the menu. */
+  onMapMenu: (at: { x: number; y: number }, screen: { x: number; y: number }) => void
   stageRef: (element: HTMLDivElement | null) => void
   /** Drawn in an untransformed overlay above the image (pins, ghosts). */
   children: ReactNode
@@ -29,7 +31,7 @@ interface MapCanvasProps {
  * (written straight to the style, no re-render), holding the image in image pixels. Wheel, pinch, drag, double-click
  * and keys move the viewport.
  */
-export function MapCanvas({ store, imageUrl, title, onMapClick, stageRef, children }: MapCanvasProps) {
+export function MapCanvas({ store, imageUrl, title, onMapClick, onMapMenu, stageRef, children }: MapCanvasProps) {
   const element = useRef<HTMLDivElement>(null)
   const layer = useRef<HTMLDivElement>(null)
   const overlay = useRef<HTMLDivElement>(null)
@@ -130,8 +132,21 @@ export function MapCanvas({ store, imageUrl, title, onMapClick, stageRef, childr
     const at = pointOf(event)
     store.zoomStep(1, at.x, at.y)
   }
+  const onContextMenu = (event: MouseEvent<HTMLDivElement>): void => {
+    event.preventDefault()
+    if (overPin(event)) return
+    const at = pointOf(event)
+    onMapMenu(store.toImage(at.x, at.y), { x: event.clientX, y: event.clientY })
+  }
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     if (event.target !== event.currentTarget || event.metaKey || event.ctrlKey || event.altKey) return
+    if (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10')) {
+      event.preventDefault()
+      const box = event.currentTarget.getBoundingClientRect()
+      const centre = store.get()
+      onMapMenu({ x: centre.cx, y: centre.cy }, { x: box.left + box.width / 2, y: box.top + box.height / 2 })
+      return
+    }
     const zoom = KEY_ZOOM[event.key]
     const pan = KEY_PAN[event.key]
     if (zoom !== undefined) store.zoomStep(zoom)
@@ -158,6 +173,7 @@ export function MapCanvas({ store, imageUrl, title, onMapClick, stageRef, childr
       onFocus={onFocus}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
+      onContextMenu={onContextMenu}
       onKeyDown={onKeyDown}
     >
       <div ref={layer} className="saga-map-layer">

@@ -1,11 +1,14 @@
 import { splitFrontmatter } from '../shared/frontmatter'
 
-/** The first lines of a note's body as plain text (headings, code and embeds dropped, wikilinks as alias or target), at most `maxChars` long. */
+/** The note body's first block as plain text (headings, code and embeds dropped, list and task markers removed, wikilinks as alias or target), at most `maxChars` long. */
 export function toExcerpt(text: string, maxChars: number): string {
-  const lines = splitFrontmatter(text)
-    .body.split(/\r?\n/)
-    .filter((line) => line.trim() !== '' && !/^\s*(#{1,6}\s|```|!\[\[)/.test(line))
+  const lines =
+    splitFrontmatter(text)
+      .body.split(/\r?\n\s*\r?\n/)
+      .map((block) => block.split(/\r?\n/).filter((line) => line.trim() !== '' && !/^\s*(#{1,6}\s|```|!\[\[)/.test(line)))
+      .find((block) => block.length > 0) ?? []
   const plain = lines
+    .map((line) => line.replace(/^\s*(?:[-*+]|\d+[.)])\s+(?:\[.\]\s+)?/, ''))
     .join(' ')
     .replace(/\[\[([^\]|]*)\|([^\]]*)\]\]/g, '$2')
     .replace(/\[\[([^\]]*)\]\]/g, '$1')

@@ -37,15 +37,10 @@ describe('placeLabels', () => {
     targets.forEach((t) => boxes.forEach((b) => expect(apart(b, { left: t.px - 16, top: t.py - 43, right: t.px + 16, bottom: t.py + 1 })).toBe(true)))
   })
 
-  it('places the first targets before the rest', () => {
-    const targets = [pin('a', 100, 100), pin('b', 100, 100), pin('c', 100, 100), pin('d', 100, 100)]
-    expect(placeLabels(targets, new Set(['d'])).get('d')).toBe('right')
-  })
-
   it('keeps a label inside the view', () => {
-    const slots = placeLabels([pin('Kholinar', 300, 100)], new Set(), { width: 340, height: 300 })
+    const slots = placeLabels([pin('Kholinar', 300, 100)], { width: 340, height: 300 })
     expect(slots.get('Kholinar')).toBe('left')
-    expect(placeLabels([pin('Kholinar', 20, 100)], new Set(), { width: 100, height: 300 }).get('Kholinar')).toBeNull()
+    expect(placeLabels([pin('Kholinar', 20, 100)], { width: 100, height: 300 }).get('Kholinar')).toBeNull()
   })
 
   it('has no label for a cluster and does not let one cover it', () => {

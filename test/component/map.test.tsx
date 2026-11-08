@@ -44,7 +44,6 @@ test('pins are coloured by their note renderer whatever their style, which shows
   await screen.getByRole('button', { name: 'The Brine Vaults — Location' }).click()
   const card = screen.getByRole('dialog', { name: 'The Brine Vaults' })
   await expect.element(card).toBeVisible()
-  expect(card.element().textContent).toContain('Pin saved in The Brine Vaults.md → map-pins')
   expect(card.getByRole('list', { name: 'Problems with this pin' }).element().textContent).toContain('Unknown pin style "sparkly"; using auto')
   await expect.element(card.getByLabelText('Style')).toHaveValue('auto')
 })
@@ -71,14 +70,23 @@ test('layer toggles hide pins by renderer and by style', async () => {
   await vi.waitFor(() => expect(markers()).toHaveLength(2))
 })
 
-test('the layers and labels options switch the panel and the pin labels', async () => {
-  const { screen } = await renderMap((fake) => {
-    fake.options['layers'] = false
-    fake.options['labels'] = false
-  })
+test('the layers option hides the panel', async () => {
+  const { screen } = await renderMap((fake) => void (fake.options['layers'] = false))
   await vi.waitFor(() => expect(markers()).toHaveLength(3))
   expect(screen.getByRole('checkbox', { name: /Locations/ }).elements()).toHaveLength(0)
+})
+
+test('in hover mode a label shows only for the pin under the pointer or with focus', async () => {
+  await renderMap((fake) => void (fake.pinLabels = 'hover'))
+  await vi.waitFor(() => expect(markers()).toHaveLength(3))
   expect(document.querySelectorAll('.saga-map-label')).toHaveLength(0)
+  marker('Saltmere').dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))
+  await vi.waitFor(() => expect(document.querySelectorAll('.saga-map-label')).toHaveLength(1))
+  expect(document.querySelector('.saga-map-label')?.textContent).toBe('Saltmere')
+  marker('Saltmere').dispatchEvent(new MouseEvent('mouseout', { bubbles: true }))
+  await vi.waitFor(() => expect(document.querySelectorAll('.saga-map-label')).toHaveLength(0))
+  marker('The Gull King').focus()
+  await vi.waitFor(() => expect(document.querySelector('.saga-map-label')?.textContent).toBe('The Gull King'))
 })
 
 test('labels sit beside their pins, and one with no free slot shows on hover, on top of the pins', async () => {
@@ -139,7 +147,6 @@ test('a click on a pin selects it and opens its card; a click on the map or Esca
   await screen.getByRole('button', { name: 'Saltmere — Location' }).click()
   const card = screen.getByRole('dialog', { name: 'Saltmere' })
   await expect.element(card).toBeVisible()
-  expect(marker('Saltmere').className).toContain('saga-map-pin-selected')
   await screen.getByRole('button', { name: 'The Gull King — Character, danger' }).click()
   await expect.element(screen.getByRole('dialog', { name: 'The Gull King' })).toBeVisible()
   expect(screen.getByRole('dialog', { name: 'Saltmere' }).elements()).toHaveLength(0)
@@ -152,16 +159,21 @@ test('a click on a pin selects it and opens its card; a click on the map or Esca
   await vi.waitFor(() => expect(screen.getByRole('dialog').elements()).toHaveLength(0))
 })
 
-test('the card shows an excerpt of the note and Open note opens it, in a new tab with ⌘ or Ctrl', async () => {
+test('the card shows an excerpt; its title opens the note, in a new tab with ⌘ or Ctrl, and shows the hover preview', async () => {
   const { screen, fake } = await renderMap()
   await vi.waitFor(() => expect(markers()).toHaveLength(3))
   await screen.getByRole('button', { name: 'Saltmere — Location' }).click()
   const card = screen.getByRole('dialog', { name: 'Saltmere' })
   await vi.waitFor(() => expect(card.element().textContent).toContain('A harbour town that taxes the tide.'))
-  await card.getByRole('button', { name: 'Open note' }).click()
+  expect(card.element().textContent).not.toContain('map-pins')
+  expect(card.getByRole('button').elements().map((el) => el.getAttribute('aria-label') ?? el.textContent)).toEqual(['Close'])
+  const title = card.getByRole('link', { name: 'Saltmere' })
+  await title.click()
   expect(fake.opened).toEqual([{ linktext: 'Places/Saltmere.md', sourcePath: MAP, newLeaf: false }])
-  card.getByRole('button', { name: 'Open note' }).element().dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, metaKey: true }))
+  title.element().dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, metaKey: true }))
   expect(fake.opened[1]).toMatchObject({ linktext: 'Places/Saltmere.md', newLeaf: 'tab' })
+  title.element().dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))
+  expect(fake.hovered).toContain('Places/Saltmere.md')
 })
 
 test('hovering a pin asks for the note\'s hover preview', async () => {
@@ -176,6 +188,7 @@ test('the pin list is sorted by title and opens the card of a pin', async () => 
   await vi.waitFor(() => expect(markers()).toHaveLength(3))
   await screen.getByRole('button', { name: /Pins ·/ }).click()
   const list = screen.getByRole('complementary', { name: 'Pins on this map' })
+  expect(list.getByRole('button', { name: /Move|Add pin/ }).elements()).toHaveLength(0)
   const rows = list
     .getByRole('listitem')
     .elements()

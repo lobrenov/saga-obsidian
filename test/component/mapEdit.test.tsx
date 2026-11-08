@@ -1,26 +1,26 @@
 import { expect, test, vi } from 'vitest'
-import { GULL, HESK } from '../fakes/map'
-import { clickMapAt, dragMarker, ghosts, imageBox, marker, markers, pressKey, renderMap, stage, tipOf } from './mapSupport'
+import { GULL } from '../fakes/map'
+import { dragMarker, ghosts, imageBox, marker, markers, renderMap, stage, tipOf } from './mapSupport'
 
-const addAtCentre = async (screen: Awaited<ReturnType<typeof renderMap>>['screen']): Promise<void> => {
-  await screen.getByRole('button', { name: 'Add pin' }).click()
+/** Right-clicks the map at a point of the stage, in stage pixels from its top left. */
+const rightClickMapAt = (x: number, y: number): void => {
   const box = stage()!.getBoundingClientRect()
-  clickMapAt(box.width / 2, box.height / 2)
+  stage()!.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2, clientX: box.left + x, clientY: box.top + y }))
 }
+const key = (target: Element, name: string, shiftKey = false): void => void target.dispatchEvent(new KeyboardEvent('keydown', { key: name, shiftKey, bubbles: true, cancelable: true }))
 
-test('Add pin: a ghost follows the cursor, a click asks for the note, and the pin is added to it while the ghost holds the place', async () => {
-  const { screen, fake } = await renderMap()
+test('right-clicking the map opens its menu at the pointer; Add pin here asks for the note and adds the pin while the ghost holds the place', async () => {
+  const { fake } = await renderMap()
   await vi.waitFor(() => expect(markers()).toHaveLength(3))
-  await screen.getByRole('button', { name: 'Add pin' }).click()
-  expect(document.body.textContent).toContain('Click the map to place a pin · Esc to cancel')
-  const container = stage()!
-  const box = container.getBoundingClientRect()
-  container.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientX: box.left + 200, clientY: box.top + 200, pointerId: 1, isPrimary: true, pointerType: 'mouse' }))
-  await vi.waitFor(() => expect(ghosts()).toBe(1))
+  const box = stage()!.getBoundingClientRect()
+  rightClickMapAt(box.width / 2, box.height / 2)
+  expect(fake.menus).toHaveLength(1)
+  expect(fake.menus[0]?.at).toEqual({ x: box.left + box.width / 2, y: box.top + box.height / 2 })
+  expect(fake.menus[0]?.items.map((item) => item.title)).toEqual(['Add pin here'])
 
   const release = fake.holdWrites()
   fake.pick = () => Promise.resolve(fake.file('People/Mother Hesk.md'))
-  clickMapAt(box.width / 2, box.height / 2)
+  fake.choose('Add pin here')
   await vi.waitFor(() => expect(fake.pickCalls).toBe(1))
   await new Promise((resolve) => setTimeout(resolve, 50))
   expect(ghosts()).toBe(1)
@@ -30,64 +30,96 @@ test('Add pin: a ghost follows the cursor, a click asks for the note, and the pi
   await vi.waitFor(() => expect(markers()).toHaveLength(4))
   await vi.waitFor(() => expect(ghosts()).toBe(0))
   expect(fake.text('People/Mother Hesk.md')).toMatch(/^---\ntype: NPC\nmap-pins:\n {2}- map: "\[\[The Shattered Coast\]\]"\n {4}x: \d+(\.\d)?\n {4}y: \d+(\.\d)?\n---\nHesk, the rumour-monger\.\n$/)
-  const pin = marker('Mother Hesk')
   const image = imageBox()
-  const tip = tipOf(pin)
+  const tip = tipOf(marker('Mother Hesk'))
   expect(tip.x).toBeCloseTo(box.left + box.width / 2, -1)
   expect((tip.x - image.left) / image.scale).toBeCloseTo(700, -1)
   expect(fake.writes).toEqual(['People/Mother Hesk.md'])
-  await expect.element(screen.getByRole('button', { name: 'Select' })).toHaveAttribute('aria-pressed', 'true')
   expect(fake.notices).toEqual([])
 })
 
-test('cancelling the note picker writes nothing, removes the ghost and keeps Add pin on', async () => {
-  const { screen, fake } = await renderMap()
+test('the ContextMenu key or Shift+F10 on the stage opens the map menu at the view centre', async () => {
+  const { fake } = await renderMap()
   await vi.waitFor(() => expect(markers()).toHaveLength(3))
-  await addAtCentre(screen)
+  const box = stage()!.getBoundingClientRect()
+  key(stage()!, 'ContextMenu')
+  key(stage()!, 'F10', true)
+  expect(fake.menus.map((menu) => menu.at)).toEqual([
+    { x: box.left + box.width / 2, y: box.top + box.height / 2 },
+    { x: box.left + box.width / 2, y: box.top + box.height / 2 }
+  ])
+  fake.pick = () => Promise.resolve(fake.file('People/Mother Hesk.md'))
+  fake.choose('Add pin here')
+  await vi.waitFor(() => expect(fake.writes).toEqual(['People/Mother Hesk.md']))
+  await vi.waitFor(() => expect(markers()).toHaveLength(4))
+  const image = imageBox()
+  const tip = tipOf(marker('Mother Hesk'))
+  expect((tip.x - image.left) / image.scale).toBeCloseTo(700, -1)
+})
+
+test('cancelling the note picker writes nothing and removes the ghost', async () => {
+  const { fake } = await renderMap()
+  await vi.waitFor(() => expect(markers()).toHaveLength(3))
+  rightClickMapAt(300, 300)
+  fake.choose('Add pin here')
   await vi.waitFor(() => expect(fake.pickCalls).toBe(1))
   await vi.waitFor(() => expect(ghosts()).toBe(0))
   expect(fake.writes).toEqual([])
-  await expect.element(screen.getByRole('button', { name: 'Add pin' })).toHaveAttribute('aria-pressed', 'true')
-  expect(HESK).toBe(fake.text('People/Mother Hesk.md'))
 })
 
 test('the picker can create a note, which is then pinned', async () => {
-  const { screen, fake } = await renderMap()
+  const { fake } = await renderMap()
   await vi.waitFor(() => expect(markers()).toHaveLength(3))
   fake.pick = () => Promise.resolve(fake.addNote('People/Quillon.md', '---\ntype: NPC\n---\n'))
-  await addAtCentre(screen)
+  rightClickMapAt(300, 300)
+  fake.choose('Add pin here')
   await vi.waitFor(() => expect(fake.writes).toEqual(['People/Quillon.md']))
   await vi.waitFor(() => expect(markers()).toHaveLength(4))
   expect(fake.text('People/Quillon.md')).toContain('map-pins:\n  - map: "[[The Shattered Coast]]"')
 })
 
 test('a failed add is reported with a notice and the ghost goes', async () => {
-  const { screen, fake } = await renderMap()
+  const { fake } = await renderMap()
   await vi.waitFor(() => expect(markers()).toHaveLength(3))
   fake.pick = () => Promise.resolve(fake.file('People/Mother Hesk.md'))
   fake.failWrites('Disk full')
-  await addAtCentre(screen)
+  rightClickMapAt(300, 300)
+  fake.choose('Add pin here')
   await vi.waitFor(() => expect(fake.notices).toEqual(['Disk full']))
   await vi.waitFor(() => expect(ghosts()).toBe(0))
   expect(markers()).toHaveLength(3)
 })
 
-test('Add pin at centre in the Pins list asks for a note', async () => {
-  const { screen, fake } = await renderMap()
+test('right-clicking a pin opens the pin menu, not the map menu; Remove pin asks first and removes only that entry', async () => {
+  const { fake } = await renderMap()
   await vi.waitFor(() => expect(markers()).toHaveLength(3))
-  fake.pick = () => Promise.resolve(fake.file('People/Mother Hesk.md'))
-  await screen.getByRole('button', { name: /Pins ·/ }).click()
-  await screen.getByRole('button', { name: 'Add pin at centre' }).click()
-  await vi.waitFor(() => expect(fake.writes).toEqual(['People/Mother Hesk.md']))
-  await vi.waitFor(() => expect(markers()).toHaveLength(4))
+  marker('The Gull King').dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2, clientX: 40, clientY: 50 }))
+  expect(fake.menus).toHaveLength(1)
+  expect(fake.menus[0]?.at).toEqual({ x: 40, y: 50 })
+  expect(fake.menus[0]?.items.map((item) => [item.title, item.warning])).toEqual([['Remove pin', true]])
+
+  fake.confirm = false
+  fake.choose('Remove pin')
+  await vi.waitFor(() => expect(fake.prompts).toEqual(['Remove this pin from The Gull King.md?']))
+  expect(fake.writes).toEqual([])
+  expect(markers()).toHaveLength(3)
+
+  fake.confirm = true
+  fake.choose('Remove pin')
+  await vi.waitFor(() => expect(markers()).toHaveLength(2))
+  expect(fake.text('People/The Gull King.md')).toBe(GULL.replace(/ {2}- map: "\[\[The Shattered Coast]]"[\s\S]*?note: keep\n/, ''))
 })
 
-test('Escape leaves Add pin', async () => {
-  const { screen } = await renderMap()
+test('the ContextMenu key on a focused pin opens its menu at the pin', async () => {
+  const { fake } = await renderMap()
   await vi.waitFor(() => expect(markers()).toHaveLength(3))
-  await screen.getByRole('button', { name: 'Add pin' }).click()
-  stage()!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
-  await expect.element(screen.getByRole('button', { name: 'Select' })).toHaveAttribute('aria-pressed', 'true')
+  const pin = marker('Saltmere')
+  key(pin, 'ContextMenu')
+  key(pin, 'F10', true)
+  expect(fake.menus).toHaveLength(2)
+  const box = pin.getBoundingClientRect()
+  expect(fake.menus[0]?.at).toEqual({ x: box.left + box.width / 2, y: box.top + box.height / 2 })
+  expect(fake.menus[0]?.items.map((item) => item.title)).toEqual(['Remove pin'])
 })
 
 test('dragging a pin writes once, on release, changing only that entry`s position', async () => {
@@ -161,51 +193,6 @@ test('a stale index writes the entry that matches the pin, not the one at that p
   expect(after).toContain('style: danger\n    note: keep')
 })
 
-test('Move from the Pins list nudges with the arrow keys and writes once on Enter', async () => {
-  const { screen, fake } = await renderMap()
-  await vi.waitFor(() => expect(markers()).toHaveLength(3))
-  await screen.getByRole('button', { name: /Pins ·/ }).click()
-  await screen.getByRole('button', { name: 'Move Saltmere' }).click()
-  await expect.element(screen.getByRole('status').getByText(/Moving Saltmere/)).toBeVisible()
-  pressKey('ArrowRight')
-  pressKey('ArrowRight')
-  pressKey('ArrowDown', true)
-  await vi.waitFor(() => expect(document.body.textContent).toMatch(/x \d+ · y \d+/))
-  expect(fake.writes).toEqual([])
-  pressKey('Enter')
-  await vi.waitFor(() => expect(fake.writes).toEqual(['Places/Saltmere.md']))
-  const [, x, y] = /x: ([\d.]+)\n\s+y: ([\d.]+)/.exec(fake.text('Places/Saltmere.md')) ?? []
-  // Two small steps right, one Shift step (ten times larger) down.
-  expect(Number(y) - 500).toBeGreaterThan((Number(x) - 790) * 3)
-})
-
-test('Escape cancels a keyboard move without writing', async () => {
-  const { screen, fake } = await renderMap()
-  await vi.waitFor(() => expect(markers()).toHaveLength(3))
-  await screen.getByRole('button', { name: /Pins ·/ }).click()
-  await screen.getByRole('button', { name: 'Move Saltmere' }).click()
-  pressKey('ArrowLeft')
-  pressKey('Escape')
-  await vi.waitFor(() => expect(screen.getByText(/Moving Saltmere/).elements()).toHaveLength(0))
-  expect(fake.writes).toEqual([])
-  expect(markers()).toHaveLength(3)
-})
-
-test('a pin moves to a click on the map after Move on its card', async () => {
-  const { screen, fake } = await renderMap()
-  await vi.waitFor(() => expect(markers()).toHaveLength(3))
-  await screen.getByRole('button', { name: 'Saltmere — Location' }).click()
-  await screen.getByRole('dialog', { name: 'Saltmere' }).getByRole('button', { name: 'Move' }).click()
-  const box = stage()!.getBoundingClientRect()
-  clickMapAt(150, 150)
-  await vi.waitFor(() => expect(fake.writes).toEqual(['Places/Saltmere.md']))
-  const image = imageBox()
-  const [, x, y] = /x: ([\d.]+)\n\s+y: ([\d.]+)/.exec(fake.text('Places/Saltmere.md')) ?? []
-  expect(Number(x)).toBeCloseTo((box.left + 150 - image.left) / image.scale, -1)
-  expect(Number(y)).toBeCloseTo((box.top + 150 - image.top) / image.scale, -1)
-  await vi.waitFor(() => expect(tipOf(marker('Saltmere')).x).toBeCloseTo(box.left + 150, 0))
-})
-
 test('the card changes a pin\'s style, and Auto removes the override', async () => {
   const { screen, fake } = await renderMap()
   await vi.waitFor(() => expect(markers()).toHaveLength(3))
@@ -221,20 +208,3 @@ test('the card changes a pin\'s style, and Auto removes the override', async () 
   expect(fake.writes).toHaveLength(2)
 })
 
-test('Remove asks first, and removes only that entry after confirmation', async () => {
-  const { screen, fake } = await renderMap()
-  await vi.waitFor(() => expect(markers()).toHaveLength(3))
-  await screen.getByRole('button', { name: 'The Gull King — Character, danger' }).click()
-  const card = screen.getByRole('dialog', { name: 'The Gull King' })
-  fake.confirm = false
-  await card.getByRole('button', { name: 'Remove pin' }).click()
-  await vi.waitFor(() => expect(fake.prompts).toEqual(['Remove this pin from The Gull King.md?']))
-  expect(fake.writes).toEqual([])
-  expect(markers()).toHaveLength(3)
-
-  fake.confirm = true
-  await card.getByRole('button', { name: 'Remove pin' }).click()
-  await vi.waitFor(() => expect(markers()).toHaveLength(2))
-  expect(fake.text('People/The Gull King.md')).toBe(GULL.replace(/ {2}- map: "\[\[The Shattered Coast]]"[\s\S]*?note: keep\n/, ''))
-  expect(screen.getByRole('dialog').elements()).toHaveLength(0)
-})

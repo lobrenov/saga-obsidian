@@ -1,7 +1,7 @@
 import type { App, TFile } from 'obsidian'
 import { CONFIG_PATH, createConfigStore, type ConfigStore } from '../../src/obsidian/vault'
 import type { MapState } from '../../src/map/types'
-import { createHost, type HostUi, type MapHost } from '../../src/map/host'
+import { createHost, type HostUi, type MapHost, type MenuItem } from '../../src/map/host'
 import { mapStateOf } from '../../src/map/mapState'
 import { FakeApp } from './obsidian'
 
@@ -34,6 +34,10 @@ export class MapFake {
   /** Notes of the base, in order. */
   readonly base: string[] = []
   readonly options: Record<string, unknown> = { map: MAP }
+  /** The Pin labels setting. */
+  pinLabels: 'always' | 'hover' = 'always'
+  /** Menus the view opened, newest last. */
+  readonly menus: { at: { x: number; y: number }; items: MenuItem[] }[] = []
   readonly notices: string[] = []
   readonly hovered: string[] = []
   readonly prompts: string[] = []
@@ -90,6 +94,7 @@ export class MapFake {
     if (this.frozen && this.last) return this.last
     this.last = mapStateOf(this.app, this.settings, {
       option: (key) => this.options[key],
+      pinLabels: this.pinLabels,
       files: () => this.base.map((path) => this.file(path)),
       host: (map) => {
         if (this.cached?.path !== map.path) this.cached = { path: map.path, host: createHost(this.app, map, this.ui()) }
@@ -110,7 +115,8 @@ export class MapFake {
           return Promise.resolve(this.confirm)
         },
         notify: (message) => void this.notices.push(message),
-        hoverNote: (_event, _target, file) => void this.hovered.push(file.path)
+        hoverNote: (_event, _target, file) => void this.hovered.push(file.path),
+        showMenu: (at, items) => void this.menus.push({ at, items })
     }
   }
 
@@ -120,6 +126,13 @@ export class MapFake {
       if (!this.frozen) callback()
     })
     return () => this.fake.metadataCache.offref(ref)
+  }
+
+  /** Chooses an item of the newest menu by title, as a click would. */
+  choose(title: string): void {
+    const item = this.menus.at(-1)?.items.find((candidate) => candidate.title === title)
+    if (!item) throw new Error(`no menu item ${title}`)
+    item.onClick()
   }
 
   /** Holds every write until the returned function is called. */

@@ -28,7 +28,7 @@ Each renderer has an accent and tint from the `--saga-<renderer>` and `--saga-<r
 - Item: image banner, name, facts kind, rarity, holder, owner, location, origin.
 - Map: image banner and name.
 
-An absent image is not a box: a small dashed "Add …" button (below the identity for portrait and emblem, above the title for banners). A set image shows its frame with change and remove controls on hover. Banners are 180 px high inside the card. Facts are a grid of fields. A layout that throws falls back to the title alone and logs to the console. The status region is always mounted and lists the required note keys (after renames) that are missing or invalid: "Missing required for the X renderer: keys".
+Every image field keeps its frame in its real place. A set image fills the frame (portrait 152×192, emblem 112×112, banners 180 px high) with change and remove controls on hover. An empty one is a quiet dashed frame of the same place, tinted with the renderer's `-tint` token, with the renderer icon centred (portrait 120×150, emblem 96×96, banner 72 px high); "Add portrait" shows on hover and focus, and click opens the image suggester input in place (Esc cancels). Facts are a grid of fields. A layout that throws falls back to the title alone and logs to the console. The status region is always mounted and lists the required note keys (after renames) that are missing or invalid: "Missing required for the X renderer: keys".
 
 ## Fields
 `FieldView` shows the label, the editor, a "required" mark, and for a value failing its schema the raw value, the issue and, when `convertRaw` finds a safe conversion, a Convert button (a `setField` with the converted value). A failed write shows `role="alert"`. All writes go through `src/obsidian/vault.ts` with the note key from the config's renames; a cleared field removes its key.
@@ -39,7 +39,7 @@ An absent image is not a box: a small dashed "Add …" button (below the identit
 | list | chips and an input | `updateField`: append, or remove the first equal entry |
 | link | link chip (edit and remove on hover) or an add button; the input with file suggester opens in place, Esc cancels | `setField`, `[[target]]`; empty or remove clears the key |
 | links | link chips (remove on hover) and an add button that opens the suggester input in place | `updateField`: append unless a link with that target exists, or remove the first entry with that target |
-| image | frame with hover controls (change opens the image suggester input over the frame, remove), or an add button | `setField`, `[[file]]`; remove clears the key |
+| image | frame with hover controls (change opens the image suggester input over the frame, remove), or the empty frame as the add button | `setField`, `[[file]]`; remove clears the key |
 | choice | select | `setField`; the empty option removes |
 
 - Text: the draft is committed 600 ms after the last keystroke (`COMMIT_DELAY_MS`), on blur, and on unmount. Enter blurs; Escape restores the last known saved text. `useDraft` keeps the user's draft while the field has focus when the cache delivers a value, and tracks the last written value so an unchanged value is not written twice.

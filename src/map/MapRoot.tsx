@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { MapStage, type MapTool } from './MapStage'
+import { MapStage } from './MapStage'
 import { SpriteContext } from './PinSprite'
 import type { MapState } from './types'
 
@@ -24,15 +24,8 @@ function useImageSize(url: string): ImageSize | 'error' | null {
 
 let spriteCount = 0
 
-const cursor = (
-  <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="m5 3 14 7-6 2-2 6z" />
-  </svg>
-)
-
 function MapView({ state }: { state: Extract<MapState, { kind: 'map' }> }) {
   const size = useImageSize(state.imageUrl)
-  const [tool, setTool] = useState<MapTool>('select')
   const [listOpen, setListOpen] = useState(false)
 
   let body
@@ -47,8 +40,6 @@ function MapView({ state }: { state: Extract<MapState, { kind: 'map' }> }) {
         imageUrl={state.imageUrl}
         size={size}
         pins={state.pins}
-        tool={tool}
-        setTool={setTool}
         listOpen={listOpen}
         labels={state.labels}
         layersOpen={state.layers}
@@ -60,15 +51,6 @@ function MapView({ state }: { state: Extract<MapState, { kind: 'map' }> }) {
     <>
       <header className="saga-map-header">
         <h2 className="saga-map-name">{state.title}</h2>
-        <div role="group" aria-label="Map tool" className="saga-map-tools">
-          <button type="button" aria-pressed={tool === 'select'} disabled={!ready} onClick={() => setTool('select')}>
-            {cursor}
-            Select
-          </button>
-          <button type="button" aria-pressed={tool === 'add'} disabled={!ready} onClick={() => setTool('add')}>
-            Add pin
-          </button>
-        </div>
         <button type="button" aria-expanded={listOpen} disabled={!ready} onClick={() => setListOpen((open) => !open)}>
           Pins · {state.pins.length}
         </button>

@@ -1,4 +1,5 @@
 import type { TFile } from 'obsidian'
+import type { PinLabels } from '../obsidian/prefs'
 import type { MapHost } from './host'
 import type { RendererId } from '../shared/renderers/ids'
 import type { PinStyle } from '../shared/schemas/pins'
@@ -27,6 +28,6 @@ export type MapState =
       title: string
       imageUrl: string
       pins: readonly PlacedPin[]
-      labels: boolean
+      labels: PinLabels
       layers: boolean
     }

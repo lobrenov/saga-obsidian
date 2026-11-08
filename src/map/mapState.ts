@@ -1,4 +1,5 @@
 import type { App, TFile } from 'obsidian'
+import type { PinLabels } from '../obsidian/prefs'
 import { frontmatterOf, resolveLink, resourceUrl, type ConfigStore } from '../obsidian/vault'
 import type { MapHost } from './host'
 import { collectPins } from './pins'
@@ -7,6 +8,7 @@ import type { MapState } from './types'
 /** What the Bases view supplies: its option values, the notes of the base, and the Obsidian UI for a map. */
 export interface MapViewInput {
   option: (key: string) => unknown
+  pinLabels: PinLabels
   files: () => TFile[]
   /** The host of a map; the view keeps it while the map is unchanged. */
   host: (map: TFile) => MapHost
@@ -38,7 +40,7 @@ export function mapStateOf(app: App, settings: ConfigStore, input: MapViewInput)
     title: map.basename,
     imageUrl: resourceUrl(app, image),
     pins: collectPins(app, settings, files, map),
-    labels: input.option('labels') !== false,
+    labels: input.pinLabels,
     layers: input.option('layers') !== false
   }
 }

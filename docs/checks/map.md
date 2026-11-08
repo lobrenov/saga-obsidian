@@ -18,7 +18,7 @@ Vault facts used below: `Maps/The Shattered Coast.md` (`type: map`, `image: "[[c
    ```
 
 2. Open it. The view selector lists "Saga map" with the map icon. The view shows "Choose a map note in the view options."
-3. Open `Maps/Pins.base` as text and confirm what the `map` option stores (a vault path, or a `[[link]]`); both are accepted. View options (the toolbar's view settings): the Map note field lists only `The Shattered Coast` and `Empty Map` when you type `Maps/`; `Waterdeep`, `Bob` and the others are absent. Choose `Maps/The Shattered Coast.md`; the options also show "Layers panel" and "Pin labels", both on.
+3. Open `Maps/Pins.base` as text and confirm what the `map` option stores (a vault path, or a `[[link]]`); both are accepted. View options (the toolbar's view settings): the Map note field lists only `The Shattered Coast` and `Empty Map` when you type `Maps/`; `Waterdeep`, `Bob` and the others are absent. Choose `Maps/The Shattered Coast.md`; the options also show "Layers panel", on. Pin labels are in Saga's settings tab ("Pin labels": always or on hover).
 
 ## Step 3: read
 
@@ -32,16 +32,16 @@ Vault facts used below: `Maps/The Shattered Coast.md` (`type: map`, `image: "[[c
 
 ### Pin card, open and hover
 
-1. Click the Moonblade pin: a card appears beside it with "Item", "Moonblade", an excerpt (`Held by Ada Lovelace.`), "Pin saved in Moonblade.md → map-pins", the style select (Treasure), Open note, Move, Remove pin. Focus is on Open note; Esc, the close button or a click on the map closes the card and focus returns to the pin.
+1. Click the Moonblade pin: a card appears beside it with "Item", "Moonblade", an excerpt (`Held by Ada Lovelace.`), the style select (Treasure) and a close button; no Open note, Move or Remove buttons and no "Pin saved in" line. The title is a link and has focus; Esc, the close button or a click on the map closes the card and focus returns to the pin. The selected pin looks like the others (same size and colour, same label).
 2. Click the Waterdeep pin at 10,20: the card lists "Unknown pin style "sparkly"; using auto" and the select reads Auto (Location).
-3. Open note opens `Moonblade` in the current tab. Reopen the map, select the pin again, ⌘-click (Ctrl on Windows or Linux) Open note: it opens in a new tab and the map stays.
+3. Click the card title: `Moonblade` opens in the current tab. Reopen the map, select the pin again, ⌘-click (Ctrl on Windows or Linux) the title: it opens in a new tab and the map stays. Hovering the title shows the page preview (with ⌘/Ctrl unless Page preview says otherwise).
 4. Settings → Core plugins → Page preview is on. Hover a pin while holding ⌘ (Ctrl): the note's hover preview appears. Settings → Page preview lists "Saga map" as a source; turning its modifier requirement off shows the preview on a plain hover.
 
 ### Filtering and colour
 
 1. Edit `Maps/Pins.base` filters to `type == "location"` (UI: Filter → add `type` `is` `location`): only Waterdeep's pins remain (Moonblade's `artifact` type does not match). Change to `type == "artifact"`: only Moonblade.
 2. Add a pin to a character first (see Step 4, "Add pin"; pick `Ada Lovelace`). With the filter `type == "character"` only the Ada pin shows, in the Character colour; `NPC` notes count as characters through `.saga/renderers.yaml`, so a pin on `Bob` shows too with the same colour. Restore the filter to `file.ext == "md"`.
-3. Layers panel: it lists Characters, Locations, Items with a dot in the renderer colour and, when pins have styles, a style group with each style's glyph in a neutral colour. Unticking Locations hides the Waterdeep pins; unticking Treasure hides Moonblade. Setting the view option "Layers panel" off hides the panel and shows every pin again. "Pin labels" off hides the labels on every pin.
+3. Layers panel: it lists Characters, Locations, Items with a dot in the renderer colour and, when pins have styles, a style group with each style's glyph in a neutral colour. Unticking Locations hides the Waterdeep pins; unticking Treasure hides Moonblade. Setting the view option "Layers panel" off hides the panel and shows every pin again. Switching the Saga setting "Pin labels" to on hover removes every label until a pin is hovered or focused; the open map updates at once.
 4. In `.saga/renderers.yaml` change the `location` types to `[place]` and save: within a moment the Waterdeep pins turn the document colour and the Layers panel counts them under Documents, with no reload. Revert it.
 
 ### Live updates
@@ -66,22 +66,20 @@ Each write must show in `git diff` as a change of the `map-pins` value only: no 
 
 ### Add pin
 
-1. Click Add pin: the cursor becomes a crosshair, a ghost pin follows it, and "Click the map to place a pin · Esc to cancel" shows. Esc leaves the mode (Select is pressed again).
-2. Click Add pin, click the map: a note picker opens over the base's notes (the map note is not listed). Dismiss it with Esc: nothing is written, the ghost goes, Add pin stays on.
-3. Click the map again, type `lovelace`, choose `Characters/Ada Lovelace`: the ghost holds the clicked spot, then becomes the Ada pin in the same spot, Add pin switches back to Select, `git diff` shows a `map-pins` list added to the end of the front matter with `map: "[[The Shattered Coast]]"`, `x`, `y` with at most one decimal and no `style`.
-4. Click the map, type `Quillon` (no such note), choose "Create note "Quillon"": the base's new-note flow runs. When the note exists it gets the pin at the clicked spot: `git diff` shows `Quillon.md` with the new `map-pins` and the front matter the base applies (filter values, template) intact. Check both orders: (a) the pin lands after the new note is fully written, with no lost front matter; (b) if `createFileForView` resolves before the note exists, or its menu is cancelled, a notice reads "The note was not created; no pin was added." and no pin is written. Record which happens.
-5. The Pins button opens the list; "Add pin at centre" places the ghost at the map centre and opens the picker.
+1. Right-click an empty spot of the map: an Obsidian menu opens at the pointer with "Add pin here" (and no other items). Right-click on a pin opens the pin menu instead. There is no Select / Add pin toggle in the header.
+2. Focus the map (Tab) and press the ContextMenu key (or Shift+F10): the same menu opens at the middle of the view and the pin goes at the view centre.
+3. Choose "Add pin here": a note picker opens over the base's notes (the map note is not listed). Dismiss it with Esc: nothing is written, the ghost goes.
+4. Right-click again, type `lovelace`, choose `Characters/Ada Lovelace`: the ghost holds the clicked spot, then becomes the Ada pin in the same spot; `git diff` shows a `map-pins` list added to the end of the front matter with `map: "[[The Shattered Coast]]"`, `x`, `y` with at most one decimal and no `style`.
+5. Right-click, type `Quillon` (no such note), choose "Create note "Quillon"": the base's new-note flow runs. When the note exists it gets the pin at the clicked spot: `git diff` shows `Quillon.md` with the new `map-pins` and the front matter the base applies (filter values, template) intact. Check both orders: (a) the pin lands after the new note is fully written, with no lost front matter; (b) if `createFileForView` resolves before the note exists, or its menu is cancelled, a notice reads "The note was not created; no pin was added." and no pin is written. Record which happens.
 6. With the vault read-only on disk (`chmod -w Characters/Bob.md`), add a pin to Bob: an Obsidian notice shows the error, the ghost disappears and no pin is added. `chmod +w` afterwards.
 
 ### Move
 
-1. Drag the Moonblade pin 100 px: it follows the pointer, and on release it stays on the drop point. While the write is pending (add a one-second delay with a slow disk, or watch the drop closely) it does not jump back; once written the pin stays. `git diff`: only `x` and `y` of that entry changed, to one decimal.
+1. Drag the Moonblade pin 100 px: it follows the pointer, and on release it stays on the drop point. While the write is pending (a slow disk, or watch the drop closely) it does not jump back; once written the pin stays. `git diff`: only `x` and `y` of that entry changed, to one decimal.
 2. Drag a pin outside the map pane, then release: it returns to where it was; nothing is written. A click without movement past 4 px selects it and writes nothing.
-3. Select a pin, press Move: "Moving …" shows with the coordinates. Click the map: the pin moves there with one write. Repeat and press Esc: no write. Repeat and press Cancel: no write.
-4. Pins list → "Move Waterdeep" (or select a pin and Move): the keyboard box takes focus. Arrow keys move the ghost by about 2 screen px (at least one image pixel); Shift moves ten times as far; Enter writes once, Esc cancels. Tab to Cancel and press Enter: it cancels instead of placing.
-5. With `Places/Waterdeep.md` open in the editor in a second pane, drag one of its pins: the editor text updates to the new coordinates, the cursor and unsaved typing in other parts of the note are not lost, and undo in the editor reverts the change (the file follows).
-6. Conflict case: in the second pane type in the note body, and in the same moment drag a pin of that note. The note ends with both the typed text and the moved pin, or the drag fails with a notice; it never loses the typing.
-7. Stale index: with the map open, edit `Places/Waterdeep.md` in an external editor (outside Obsidian) to put a different `map-pins` entry above the rumour one, and before Obsidian reindexes drag the rumour pin. The entry matching its old coordinates changes, not the one that moved into its position. If the entry is no longer there, a notice reads "That pin is no longer in the note. Its map may have changed." and the file is unchanged.
+3. With `Places/Waterdeep.md` open in the editor in a second pane, drag one of its pins: the editor text updates to the new coordinates, the cursor and unsaved typing in other parts of the note are not lost, and undo in the editor reverts the change (the file follows).
+4. Conflict case: in the second pane type in the note body, and in the same moment drag a pin of that note. The note ends with both the typed text and the moved pin, or the drag fails with a notice; it never loses the typing.
+5. Stale index: with the map open, edit `Places/Waterdeep.md` in an external editor (outside Obsidian) to put a different `map-pins` entry above the rumour one, and before Obsidian reindexes drag the rumour pin. The entry matching its old coordinates changes, not the one that moved into its position. If the entry is no longer there, a notice reads "That pin is no longer in the note. Its map may have changed." and the file is unchanged.
 
 ### Style
 
@@ -91,18 +89,20 @@ Each write must show in `git diff` as a change of the `map-pins` value only: no 
 
 ### Remove
 
-1. Select a pin, press Remove pin: an Obsidian dialog asks "Remove this pin from Moonblade.md?" Press Keep (or Esc): nothing is written, the pin stays.
-2. Press Remove pin, then Remove pin in the dialog: the pin goes and the card closes. `git diff`: that entry is gone from `map-pins`; the other entries of the note (including the broken Waterdeep ones) and every other key are untouched. Removing the last entry of a note removes the `map-pins` key.
+1. Right-click a pin: a menu with "Remove pin". Choose it: an Obsidian dialog asks "Remove this pin from Moonblade.md?" Press Keep (or Esc): nothing is written, the pin stays.
+2. Choose Remove pin again, then Remove pin in the dialog: the pin goes. `git diff`: that entry is gone from `map-pins`; the other entries of the note (including the broken Waterdeep ones) and every other key are untouched. Removing the last entry of a note removes the `map-pins` key.
 3. `git checkout test/vault` restores the vault.
 
 ### Keyboard route
 
-1. Tab into the map: the stage takes focus (focus ring), then each pin in turn; Enter on a pin opens its card; Tab moves through Open note, Move, Remove pin, Close.
-2. A pin tabbed to outside the view pans into view. The Pins list reaches every pin without the pointer: select, Move, Enter.
+1. Tab into the map: the stage takes focus (focus ring), then each pin in turn; Enter on a pin opens its card; Tab moves to the title link, the style select and Close. The ContextMenu key (Shift+F10) on a pin opens its menu at the pin.
+2. A pin tabbed to outside the view pans into view. The Pins list reaches every pin without the pointer: selecting a row centres the map on the pin and opens its card. The list has no Move buttons and no "Add pin at centre".
 
 ### Labels and pin look
 
-1. Pin markers match Saga's: 32 × 44 teardrop, light outline, light glyph; the tip sits on the image point (zoom in on a pin and compare with the readout). Selected: larger and darker.
-2. Pins close together (zoom out on a crowded area): labels go right, else left, else below, and never cover a pin or another label. A pin with no free slot has no label until hover, focus or selection, when it appears on top.
+1. Pin markers match Saga's: 32 × 44 teardrop, light outline, light glyph; the tip sits on the image point (zoom in on a pin and compare with the readout). A selected pin is not larger or darker.
+2. Pins close together (zoom out on a crowded area): labels go right, else left, else below, and never cover a pin or another label. A pin with no free slot has no label until hover or focus, when it appears on top.
 3. Labels stay unclipped at the view's edge after panning settles. Pins draw above labels.
 4. Light and dark themes: outlines, labels, clusters and focus rings (Tab to a pin and a cluster) read clearly.
+5. Pin labels on hover (Saga settings): no labels at rest; hover one pin and only its label shows; Tab to a pin and its label shows.
+6. The view fills the pane's height with one background; no band of another colour under the map, in either theme.

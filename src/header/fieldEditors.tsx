@@ -355,7 +355,7 @@ function LinksEditor({ field, value, id, invalid, describedBy, placeholder, upda
 }
 
 function ImageEditor({ field, value, onChange, id, invalid, describedBy, placeholder }: EditorProps<'image'> & EditorCtx) {
-  const { env, file } = useHeader()
+  const { env, file, renderer } = useHeader()
   const resolved = value ? resolveLink(env.app, value, file.path) : null
   const [query, setQuery] = useState<string | null>(null)
   const editing = query !== null
@@ -383,27 +383,40 @@ function ImageEditor({ field, value, onChange, id, invalid, describedBy, placeho
       }}
     />
   )
-  if (!value) return editing ? input : <AddButton id={id} label={placeholder} name={placeholder} onClick={() => setQuery('')} />
+  const icon = rendererDefs[renderer].icon
   return (
     <div className="saga-header-image">
-      <div className="saga-header-frame" data-missing={resolved ? undefined : ''}>
-        {resolved ? <img src={resourceUrl(env.app, resolved)} alt={field.label} /> : <Icon name="image-off" />}
-        <div className="saga-header-image-controls" data-editing={editing || undefined}>
-          {editing ? (
-            input
-          ) : (
-            <>
-              <button type="button" id={id} className="saga-header-chip-action" aria-label={`Change ${field.label.toLowerCase()}`} onClick={() => setQuery('')}>
-                <Icon name="pencil" />
-              </button>
-              <button type="button" className="saga-header-chip-action" aria-label={`Remove ${field.label.toLowerCase()}`} onClick={() => onChange(undefined)}>
-                <Icon name="trash-2" />
-              </button>
-            </>
-          )}
-        </div>
+      <div className="saga-header-frame" data-empty={value ? undefined : ''} data-missing={value && !resolved ? '' : undefined}>
+        {resolved ? (
+          <img src={resourceUrl(env.app, resolved)} alt={field.label} />
+        ) : value ? (
+          <Icon name="image-off" />
+        ) : editing ? (
+          <Icon name={icon} />
+        ) : (
+          <button type="button" id={id} className="saga-header-frame-add" aria-label={placeholder} onClick={() => setQuery('')}>
+            <Icon name={icon} />
+            <span>Add {field.label.toLowerCase()}</span>
+          </button>
+        )}
+        {value || editing ? (
+          <div className="saga-header-image-controls" data-editing={editing || undefined}>
+            {editing ? (
+              input
+            ) : (
+              <>
+                <button type="button" id={id} className="saga-header-chip-action" aria-label={`Change ${field.label.toLowerCase()}`} onClick={() => setQuery('')}>
+                  <Icon name="pencil" />
+                </button>
+                <button type="button" className="saga-header-chip-action" aria-label={`Remove ${field.label.toLowerCase()}`} onClick={() => onChange(undefined)}>
+                  <Icon name="trash-2" />
+                </button>
+              </>
+            )}
+          </div>
+        ) : null}
       </div>
-      {resolved === null ? <p className="saga-header-hint">{value.target} was not found in the vault.</p> : null}
+      {value && resolved === null ? <p className="saga-header-hint">{value.target} was not found in the vault.</p> : null}
     </div>
   )
 }

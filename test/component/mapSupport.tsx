@@ -1,5 +1,6 @@
 import { useEffect, useReducer } from 'react'
 import { expect, vi } from 'vitest'
+import { userEvent } from 'vitest/browser'
 import { render } from 'vitest-browser-react'
 import { MapRoot } from '../../src/map/MapRoot'
 import '../../src/map/map.css'
@@ -22,6 +23,8 @@ export async function renderMap(setup?: (fake: MapFake) => void | Promise<void>,
     </div>
   )
   if (ready) await vi.waitFor(() => expect(stage()).not.toBeNull())
+  // The real pointer rests over the header, not over a pin left by the previous test.
+  await userEvent.hover(document.querySelector('.saga-map-header') ?? document.body)
   return { fake, screen }
 }
 

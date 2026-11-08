@@ -1,8 +1,16 @@
 /* Saga map view: Obsidian's variables for colour, type and radii. */
 .saga-map-view {
   position: relative;
+  flex: 1;
   height: 100%;
   min-height: 360px;
+}
+
+.saga-map-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 0;
 }
 
 .saga-map {
@@ -42,18 +50,6 @@
   font-weight: var(--font-semibold);
 }
 
-.saga-map-tools {
-  display: flex;
-  gap: var(--size-2-2);
-}
-
-.saga-map-tools button {
-  display: flex;
-  align-items: center;
-  gap: var(--size-4-1);
-}
-
-.saga-map-tools button[aria-pressed='true'],
 .saga-map-header button[aria-expanded='true'] {
   background: var(--interactive-accent);
   color: var(--text-on-accent);
@@ -64,7 +60,7 @@
   display: flex;
   flex: 1;
   min-height: 0;
-  background: var(--background-secondary);
+  background: var(--background-primary);
 }
 
 /* Stage */
@@ -94,14 +90,10 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: var(--background-secondary);
+  background: var(--background-primary);
   cursor: grab;
   touch-action: none;
   user-select: none;
-}
-
-.saga-map-canvas[data-tool='add'] .saga-map-stage {
-  cursor: crosshair;
 }
 
 .saga-map-stage:focus-visible {
@@ -148,7 +140,6 @@
 .saga-map-layers,
 .saga-map-zoom,
 .saga-map-readout,
-.saga-map-hint,
 .saga-map-popover {
   position: absolute;
   z-index: 1;
@@ -253,21 +244,6 @@
   color: var(--text-muted);
 }
 
-.saga-map-hint {
-  top: var(--size-4-3);
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: var(--size-4-2);
-  max-width: calc(100% - 32px);
-  margin: 0;
-  padding: var(--size-4-2) var(--size-4-3);
-  border-radius: var(--radius-l);
-  background: var(--background-modifier-message);
-  color: var(--text-on-accent);
-}
-
 /* Pin popover */
 .saga-map-popover {
   padding: var(--size-4-4);
@@ -323,12 +299,6 @@
   font-style: italic;
 }
 
-.saga-map-popover-meta {
-  margin: var(--size-4-2) 0 0;
-  font-size: var(--font-ui-smaller);
-  color: var(--text-muted);
-}
-
 .saga-map-popover-style {
   display: flex;
   align-items: center;
@@ -343,13 +313,6 @@
   padding-left: var(--size-4-4);
   font-size: var(--font-ui-smaller);
   color: var(--text-error);
-}
-
-.saga-map-popover-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--size-4-2);
-  margin-top: var(--size-4-3);
 }
 
 /* Pin list */
@@ -423,11 +386,6 @@
 }
 
 .saga-map-pin-row-meta,
-.saga-map-pin-row-move {
-  color: var(--text-muted);
-  font-size: var(--font-ui-smaller);
-}
-
 /* Markers: the specificity beats Obsidian's button styles. */
 .saga-map button.saga-map-pin,
 .saga-map button.saga-map-cluster {
@@ -479,11 +437,6 @@
   filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35));
 }
 
-.saga-map-pin-selected .saga-map-pin-svg {
-  color: color-mix(in srgb, var(--saga-map-pin) 78%, black);
-  transform: scale(1.2);
-}
-
 /* Labels sit in their own layers: under the pins, or for a label with no free slot on top of them. */
 .saga-map-label-anchor {
   position: absolute;
@@ -525,12 +478,6 @@
   top: 4px;
   left: 0;
   transform: translateX(-50%);
-}
-
-.saga-map-label-selected {
-  border-color: transparent;
-  background: var(--text-normal);
-  color: var(--background-primary);
 }
 
 .saga-map-pin-ghost {

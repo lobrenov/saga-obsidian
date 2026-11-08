@@ -1,4 +1,5 @@
 import { Notice, PluginSettingTab, Setting, type App, type Plugin } from 'obsidian'
+import type { PinLabels, PrefsStore } from '../obsidian/prefs'
 import type { ConfigStore } from '../obsidian/vault'
 import { rendererDefs } from '../shared/renderers/definitions'
 import type { Fields } from '../shared/renderers/fields'
@@ -15,7 +16,8 @@ class SettingsTab extends PluginSettingTab {
   constructor(
     app: App,
     plugin: Plugin,
-    private readonly config: ConfigStore
+    private readonly config: ConfigStore,
+    private readonly prefs: PrefsStore
   ) {
     super(app, plugin)
     this.loaded = config.state().config
@@ -57,6 +59,17 @@ class SettingsTab extends PluginSettingTab {
     showIssues(state.issues)
     if (this.changedOnDisk) containerEl.insertBefore(createDiv({ text: 'renderers.yaml changed on disk; your edits are kept and saved over the new text.' }), issuesEl)
 
+    new Setting(containerEl)
+      .setName('Pin labels')
+      .setDesc('When map pins show their note’s name.')
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOptions({ always: 'Always', hover: 'On hover' })
+          .setValue(this.prefs.get().pinLabels)
+          .onChange((value) => void this.prefs.set({ pinLabels: value as PinLabels }))
+      )
+
+    new Setting(containerEl).setName('Renderers').setHeading()
     new Setting(containerEl)
       .setName('Type key')
       .setDesc('The frontmatter key whose value picks a note’s renderer. Saved to .saga/renderers.yaml.')
@@ -134,6 +147,6 @@ class SettingsTab extends PluginSettingTab {
 }
 
 /** Adds the settings tab, editing `.saga/renderers.yaml` through `config`. */
-export function registerSettings(plugin: Plugin, config: ConfigStore): void {
-  plugin.addSettingTab(new SettingsTab(plugin.app, plugin, config))
+export function registerSettings(plugin: Plugin, config: ConfigStore, prefs: PrefsStore): void {
+  plugin.addSettingTab(new SettingsTab(plugin.app, plugin, config, prefs))
 }

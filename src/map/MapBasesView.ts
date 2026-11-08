@@ -1,6 +1,7 @@
 import { BasesView, type HoverPopover, type QueryController, type TFile } from 'obsidian'
 import { createElement } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
+import type { PrefsStore } from '../obsidian/prefs'
 import type { ConfigStore } from '../obsidian/vault'
 import { createHost, type MapHost } from './host'
 import { MapRoot } from './MapRoot'
@@ -20,18 +21,21 @@ export class MapBasesView extends BasesView {
   constructor(
     controller: QueryController,
     containerEl: HTMLElement,
-    private readonly settings: ConfigStore
+    private readonly settings: ConfigStore,
+    private readonly prefs: PrefsStore
   ) {
     super(controller)
+    containerEl.addClass('saga-map-container')
     this.rootEl = containerEl.createDiv({ cls: 'saga-map-view' })
     this.root = createRoot(this.rootEl)
     this.register(settings.subscribe(() => this.onDataUpdated()))
+    this.register(prefs.subscribe(() => this.onDataUpdated()))
   }
 
   onDataUpdated(): void {
     if (!this.data) return
     const files = (): TFile[] => this.data.data.map((entry) => entry.file)
-    const state = mapStateOf(this.app, this.settings, { option: (key) => this.config.get(key), files, host: (map) => this.hostFor(map, files) })
+    const state = mapStateOf(this.app, this.settings, { option: (key) => this.config.get(key), pinLabels: this.prefs.get().pinLabels, files, host: (map) => this.hostFor(map, files) })
     this.root.render(createElement(MapRoot, { state }))
   }
 
