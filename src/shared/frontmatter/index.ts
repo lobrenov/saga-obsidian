@@ -1,0 +1,5 @@
+export { removeFrontmatterKey, setFrontmatterKey } from './edit'
+export { parseFrontmatter } from './parse'
+export type { FrontmatterError, ParsedFrontmatter } from './parse'
+export { splitFrontmatter } from './split'
+export type { FrontmatterSpan, FrontmatterSplit } from './split'

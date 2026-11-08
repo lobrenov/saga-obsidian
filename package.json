@@ -1,0 +1,37 @@
+{
+  "name": "saga",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Saga for Obsidian: a map Bases view and note renderers over Saga's vault format",
+  "type": "module",
+  "scripts": {
+    "dev": "node esbuild.config.mjs watch",
+    "build": "node esbuild.config.mjs",
+    "typecheck": "tsc -b",
+    "lint": "eslint .",
+    "test": "vitest run --typecheck"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "24.19.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitest/browser": "5.0.4",
+    "@vitest/browser-playwright": "5.0.4",
+    "esbuild": "0.28.2",
+    "eslint": "10.12.0",
+    "fast-check": "4.10.2",
+    "obsidian": "1.14.4",
+    "playwright": "1.64.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.2",
+    "vitest": "5.0.4",
+    "vitest-browser-react": "2.3.0"
+  },
+  "dependencies": {
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "yaml": "2.9.1",
+    "zod": "4.6.7"
+  }
+}

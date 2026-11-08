@@ -1,0 +1,193 @@
+import type { App, Component as ObsidianComponent, TFile as ObsidianTFile } from 'obsidian'
+import { parseFrontmatter } from '../../src/shared/frontmatter'
+
+type Listener = (...args: unknown[]) => unknown
+export interface EventRef {
+  events: Events
+  name: string
+  fn: Listener
+}
+
+export class Events {
+  private readonly listeners = new Map<string, Set<Listener>>()
+
+  on(name: string, fn: Listener): EventRef {
+    const set = this.listeners.get(name) ?? new Set<Listener>()
+    set.add(fn)
+    this.listeners.set(name, set)
+    return { events: this, name, fn }
+  }
+
+  off(name: string, fn: Listener): void {
+    this.listeners.get(name)?.delete(fn)
+  }
+
+  offref(ref: EventRef): void {
+    this.off(ref.name, ref.fn)
+  }
+
+  trigger(name: string, ...args: unknown[]): void {
+    this.listeners.get(name)?.forEach((fn) => fn(...args))
+  }
+}
+
+export class Component {
+  private readonly cleanups: (() => void)[] = []
+  private readonly children: Component[] = []
+
+  load(): void {}
+
+  unload(): void {
+    this.children.forEach((child) => child.unload())
+    this.cleanups.splice(0).forEach((cleanup) => cleanup())
+  }
+
+  addChild<T extends Component>(child: T): T {
+    this.children.push(child)
+    return child
+  }
+
+  register(cleanup: () => void): void {
+    this.cleanups.push(cleanup)
+  }
+
+  registerEvent(ref: EventRef): void {
+    this.register(() => ref.events.offref(ref))
+  }
+
+  registerDomEvent(): void {}
+  registerInterval(): number {
+    return 0
+  }
+}
+
+export class Plugin extends Component {
+  constructor(
+    public app: App,
+    public manifest: { id: string }
+  ) {
+    super()
+  }
+
+  onload(): void | Promise<void> {}
+  onunload(): void {}
+}
+
+export class TAbstractFile {
+  constructor(public path: string) {}
+  get name(): string {
+    return this.path.slice(this.path.lastIndexOf('/') + 1)
+  }
+}
+
+export class TFile extends TAbstractFile {
+  get extension(): string {
+    const dot = this.name.lastIndexOf('.')
+    return dot < 0 ? '' : this.name.slice(dot + 1)
+  }
+  get basename(): string {
+    const dot = this.name.lastIndexOf('.')
+    return dot < 0 ? this.name : this.name.slice(0, dot)
+  }
+}
+
+/** Link resolution as Obsidian's: a path (with or without `.md`) matches exactly, else the first file with that name. */
+function resolvePath(files: Iterable<TFile>, linkpath: string): TFile | null {
+  const all = [...files].sort((a, b) => a.path.localeCompare(b.path))
+  const withExt = /\.[^/.]+$/.test(linkpath) ? linkpath : `${linkpath}.md`
+  return all.find((file) => file.path === withExt) ?? all.find((file) => file.path.endsWith(`/${withExt}`) || file.name === withExt) ?? null
+}
+
+/** The slice of Obsidian's `App` the plugin uses, over in-memory files; cast with `asApp()`. */
+export class FakeApp {
+  private readonly texts = new Map<string, string>()
+  private readonly files = new Map<string, TFile>()
+  private readonly rawTexts = new Map<string, string>()
+  /** Paths rewritten by `vault.process`, one entry per changing write. */
+  readonly processed: string[] = []
+  readonly opened: { linktext: string; sourcePath: string; newLeaf: unknown }[] = []
+
+  readonly vault = Object.assign(new Events(), {
+    adapter: {
+      exists: (path: string): Promise<boolean> => Promise.resolve(this.rawTexts.has(path) || [...this.rawTexts.keys()].some((key) => key.startsWith(`${path}/`))),
+      read: (path: string): Promise<string> => {
+        const text = this.rawTexts.get(path)
+        return text === undefined ? Promise.reject(new Error(`ENOENT: ${path}`)) : Promise.resolve(text)
+      },
+      write: (path: string, text: string): Promise<void> => {
+        this.setRaw(path, text)
+        return Promise.resolve()
+      },
+      mkdir: (): Promise<void> => Promise.resolve()
+    },
+    getResourcePath: (file: TFile): string => `app://local/${encodeURIComponent(file.path)}`,
+    read: (file: TFile): Promise<string> => Promise.resolve(this.text(file.path)),
+    getFileByPath: (path: string): TFile | null => this.files.get(path) ?? null,
+    process: (file: TFile, fn: (data: string) => string): Promise<string> => {
+      const next = fn(this.text(file.path))
+      if (next !== this.text(file.path)) {
+        this.processed.push(file.path)
+        this.setText(file.path, next)
+        this.vault.trigger('modify', file)
+      }
+      return Promise.resolve(next)
+    }
+  })
+
+  readonly metadataCache = Object.assign(new Events(), {
+    getFileCache: (file: TFile): { frontmatter?: Record<string, unknown> } | null => {
+      const parsed = parseFrontmatter(this.text(file.path))
+      return Object.keys(parsed.data).length > 0 ? { frontmatter: { ...parsed.data, position: {} } } : {}
+    },
+    getFirstLinkpathDest: (linkpath: string): TFile | null => resolvePath(this.files.values(), linkpath)
+  })
+
+  readonly workspace = Object.assign(new Events(), {
+    getLeavesOfType: (): unknown[] => [],
+    openLinkText: (linktext: string, sourcePath: string, newLeaf?: unknown): Promise<void> => {
+      this.opened.push({ linktext, sourcePath, newLeaf })
+      return Promise.resolve()
+    }
+  })
+
+  readonly fileManager = {}
+
+  /** Adds (or replaces) a note or attachment and returns its file. */
+  addFile(path: string, text = ''): ObsidianTFile {
+    const file = this.files.get(path) ?? new TFile(path)
+    this.files.set(path, file)
+    this.setText(path, text)
+    return file as unknown as ObsidianTFile
+  }
+
+  /** The current text of a file, or of a dot-folder file added with `setRaw`. */
+  text(path: string): string {
+    return this.texts.get(path) ?? this.rawTexts.get(path) ?? ''
+  }
+
+  /** Writes a file that is not indexed (inside a dot-folder) and fires the `raw` event. */
+  setRaw(path: string, text: string): void {
+    this.rawTexts.set(path, text)
+    this.vault.trigger('raw', path)
+  }
+
+  /** Removes a file that is not indexed and fires the `raw` event. */
+  deleteRaw(path: string): void {
+    this.rawTexts.delete(path)
+    this.vault.trigger('raw', path)
+  }
+
+  /** A component to own event registrations; `unload()` removes them. */
+  owner(): ObsidianComponent {
+    return new Component() as unknown as ObsidianComponent
+  }
+
+  asApp(): App {
+    return this as unknown as App
+  }
+
+  private setText(path: string, text: string): void {
+    this.texts.set(path, text)
+    this.metadataCache.trigger('changed', this.files.get(path))
+  }
+}

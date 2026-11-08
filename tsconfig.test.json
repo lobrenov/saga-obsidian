@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "types": ["node"],
+    "outDir": "./node_modules/.tmp/tsc/test",
+    "tsBuildInfoFile": "./node_modules/.tmp/tsc/test.tsbuildinfo"
+  },
+  "include": ["test", "vitest.config.mts"],
+  "exclude": ["test/component", "test/vault"],
+  "references": [{ "path": "./tsconfig.shared.json" }, { "path": "./tsconfig.plugin.json" }]
+}

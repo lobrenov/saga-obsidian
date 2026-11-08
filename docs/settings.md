@@ -1,0 +1,13 @@
+# Settings (as built)
+
+Settings → Saga edits `.saga/renderers.yaml` through the config store (`docs/adapter.md`).
+
+## Modules
+- `settings/draft.ts` (no Obsidian imports): `Draft` holds the inputs (type key; per renderer in `EDITABLE_IDS` a comma-separated types string and a key per field, blank for the default). `draftOf(config)`, `configOf(draft, base)` (unedited entries and `document` stay as `base` has them), `draftIssues`, `saveText(state, draft)` (`buildConfigText` over the file as read; refused with the issues for an invalid config), `isDirty(draft, base)`, `rebase(draft, previous, next)` (edited inputs keep their value, the rest take `next`'s).
+- `settings/index.ts`: `registerSettings(plugin, config)` adds the `PluginSettingTab`, built with `Setting`.
+
+## Behaviour
+- Rows: type key; per renderer Types and one key input per field (the default key as placeholder); Document is shown as the fallback. An unreadable renderer entry shows its issue and disables its inputs.
+- Issues of the saved config show inline and update as the draft changes.
+- Save writes `saveText`'s text with `writeConfig`; a refused config writes nothing; a write error shows in the issues area and as a Notice. `applyConfigToYaml` keeps comments, unknown keys, `templates` and key order; an edited value is replaced with its inline comment.
+- The tab subscribes while shown. A config change rebases the draft; with unsaved edits it shows "renderers.yaml changed on disk; your edits are kept and saved over the new text."

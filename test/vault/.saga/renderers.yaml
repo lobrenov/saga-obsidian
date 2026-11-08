@@ -1,0 +1,16 @@
+typeKey: type
+renderers:
+  character:
+    types: [character, NPC]
+    keys: { portrait: avatar }
+    templates: [Templates/Character.md]
+  location:
+    types: [location, settlement]
+  faction:
+    types: [faction, guild]
+    templates: [Templates/Faction.md]
+  item:
+    types: [item, artifact]
+    templates: [Templates/Item.md]
+  map:
+    types: [map]

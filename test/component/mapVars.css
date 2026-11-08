@@ -1,0 +1,40 @@
+/* The Obsidian variables the map styles read, with the default theme's values. */
+body {
+  --background-primary: #fff;
+  --background-secondary: #f6f6f6;
+  --background-modifier-border: #e0e0e0;
+  --background-modifier-hover: rgba(0, 0, 0, 0.05);
+  --background-modifier-active-hover: rgba(0, 0, 0, 0.1);
+  --background-modifier-message: #444;
+  --color-red: #e93147;
+  --color-orange: #ec7500;
+  --color-yellow: #e0ac00;
+  --color-green: #08b94e;
+  --color-cyan: #00bfbc;
+  --color-blue: #086ddd;
+  --color-purple: #7852ee;
+  --color-pink: #d53984;
+  --text-normal: #222;
+  --text-muted: #5c5c5c;
+  --text-faint: #ababab;
+  --text-on-accent: #fff;
+  --text-error: #e93147;
+  --interactive-accent: #7852ee;
+  --font-monospace: ui-monospace, monospace;
+  --font-semibold: 600;
+  --font-ui-small: 13px;
+  --font-ui-smaller: 12px;
+  --font-ui-large: 20px;
+  --radius-s: 4px;
+  --radius-m: 8px;
+  --radius-l: 12px;
+  --shadow-s: 0 1px 2px rgba(0, 0, 0, 0.1);
+  --shadow-l: 0 8px 24px rgba(0, 0, 0, 0.2);
+  --size-2-1: 2px;
+  --size-2-2: 4px;
+  --size-4-1: 4px;
+  --size-4-2: 8px;
+  --size-4-3: 12px;
+  --size-4-4: 16px;
+  --size-4-6: 24px;
+}

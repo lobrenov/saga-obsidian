@@ -1,0 +1,14 @@
+node_modules/
+/main.js
+/main.css
+/styles.css
+coverage/
+*.log
+.DS_Store
+*.tsbuildinfo
+.claude/
+.vitest/
+test/vault/.obsidian/plugins/saga/main.js
+test/vault/.obsidian/plugins/saga/styles.css
+test/vault/.obsidian/plugins/saga/data.json
+test/vault/.obsidian/workspace*.json
