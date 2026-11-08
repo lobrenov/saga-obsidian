@@ -1,27 +1,24 @@
 # Saga for Obsidian
 
-An Obsidian plugin (id `saga`, desktop, Obsidian 1.10.2+) carrying two functions of the Saga app (`../Saga`) into Obsidian: a **Saga map** Bases view that draws the base's notes' `map-pins` on a map note's image, and a **note header** that replaces the inline title and properties of notes whose `type` maps to a Saga renderer. The vault format is Saga's, so one vault works in both. Plans are in `docs/plans/`.
+An Obsidian plugin (id `saga`, desktop, Obsidian 1.10.2+) carrying two functions of the Saga app into Obsidian: a **Saga map** Bases view that draws the base's notes' `map-pins` on a map note's image, and a **note header** that replaces the inline title and properties of notes whose `type` maps to a Saga renderer. The vault format is Saga's, so one vault works in both. Plans are in `docs/plans/`.
 
 ## Scripts
 - `npm run dev` esbuild watch; writes `main.js`, `styles.css`, `manifest.json` into `test/vault/.obsidian/plugins/saga/`
 - `npm run build` minified build, same outputs plus the repo root
-- `npm run build:theme` writes `theme/theme.css` (fonts embedded) from `theme/src/theme.css`
 - `npm run typecheck` `tsc -b` over the `shared`, `plugin`, `test` and `component` projects
 - `npm run lint` ESLint (type-aware; `src/shared` may not import Obsidian, React or the DOM)
 - `npm test` Vitest: `unit` (Node) and `component` (Chromium); `obsidian` is aliased to `test/fakes/obsidian.ts`; `component` first runs the production build and `bundle.test.tsx` loads `main.js` as Obsidian does
 
 ## Layout
 - `src/main.ts` loads the config store and registers the map view, header and settings
-- `src/shared` ported from Saga's `src/shared` (frontmatter, wikilinks, pins, viewport maths, renderer definitions, config)
+- `src/shared` platform-free logic (frontmatter, wikilinks, pins, viewport maths, renderer definitions, config)
 - `src/obsidian/vault.ts` the adapter: frontmatter reads, link resolution, text-preserving writes (`setField`, `updateField`, `updatePins`), the `.saga/renderers.yaml` config store (`docs/adapter.md`)
 - `src/map` the Saga map Bases view (`docs/map.md`)
 - `src/header` the note header (`docs/header.md`); every Obsidian DOM selector is in `src/header/dom.ts`
 - `src/settings` the renderer settings tab (`docs/settings.md`)
-- `theme` the Saga Obsidian theme, light and dark (`docs/theme.md`)
 - `test/unit`, `test/component`, `test/fakes`; `test/vault` is the manual-check vault
 - `docs/checks` manual checks in Obsidian per feature
 
 ## Conventions
 - Dependencies are pinned exactly.
 - Writes to notes go through the adapter (`vault.process`), changing only the edited key's text.
-- `src/shared` stays in step with Saga's `src/shared`; port changes rather than diverging.

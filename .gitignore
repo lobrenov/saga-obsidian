@@ -2,7 +2,6 @@ node_modules/
 /main.js
 /main.css
 /styles.css
-/theme/theme.css
 coverage/
 *.log
 .DS_Store
