@@ -5,6 +5,8 @@ export type PinLabels = 'always' | 'hover'
 /** Obsidian-only preferences, stored in the plugin's `data.json` (not shared with the Saga app). */
 export interface Prefs {
   pinLabels: PinLabels
+  /** Wikilinks in note text show the linked note's renderer icon. */
+  linkIcons: boolean
 }
 
 export interface PrefsStore {
@@ -16,7 +18,7 @@ export interface PrefsStore {
 
 export async function createPrefsStore(plugin: Plugin): Promise<PrefsStore> {
   const saved = (await plugin.loadData()) as Partial<Prefs> | null
-  let prefs: Prefs = { pinLabels: saved?.pinLabels === 'hover' ? 'hover' : 'always' }
+  let prefs: Prefs = { pinLabels: saved?.pinLabels === 'hover' ? 'hover' : 'always', linkIcons: saved?.linkIcons === true }
   const listeners = new Set<(prefs: Prefs) => void>()
   return {
     get: () => prefs,

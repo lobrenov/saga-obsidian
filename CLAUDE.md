@@ -1,6 +1,6 @@
 # Saga for Obsidian
 
-An Obsidian plugin (id `saga`, desktop, Obsidian 1.10.2+) carrying two functions of the Saga app into Obsidian: a **Saga map** Bases view that draws the base's notes' `map-pins` on a map note's image, and a **note header** that replaces the inline title and properties of notes whose `type` maps to a Saga renderer. The vault format is Saga's, so one vault works in both. Plans are in `docs/plans/`.
+An Obsidian plugin (id `saga`, desktop, Obsidian 1.10.2+) carrying functions of the Saga app into Obsidian: a **Saga map** Bases view that draws the base's notes' `map-pins` on a map note's image, a **note header** that replaces the inline title and properties of notes whose `type` maps to a Saga renderer, and optional renderer icons on wikilinks. The vault format is Saga's, so one vault works in both. Plans are in `docs/plans/`.
 
 ## Scripts
 - `npm run dev` esbuild watch; writes `main.js`, `styles.css`, `manifest.json` into `test/vault/.obsidian/plugins/saga/`
@@ -15,6 +15,7 @@ An Obsidian plugin (id `saga`, desktop, Obsidian 1.10.2+) carrying two functions
 - `src/obsidian/vault.ts` the adapter: frontmatter reads, link resolution, text-preserving writes (`setField`, `updateField`, `updatePins`), the `.saga/renderers.yaml` config store (`docs/adapter.md`)
 - `src/map` the Saga map Bases view (`docs/map.md`)
 - `src/header` the note header (`docs/header.md`); every Obsidian DOM selector is in `src/header/dom.ts`
+- `src/links` renderer icons on wikilinks in note text (`docs/links.md`)
 - `src/settings` the renderer settings tab (`docs/settings.md`)
 - `test/unit`, `test/component`, `test/fakes`; `test/vault` is the manual-check vault
 - `docs/checks` manual checks in Obsidian per feature

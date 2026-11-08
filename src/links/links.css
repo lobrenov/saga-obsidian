@@ -1,0 +1,28 @@
+.saga-link-icon {
+  display: inline-flex;
+  align-items: center;
+  margin-inline-end: 0.2em;
+  vertical-align: -0.125em;
+  color: var(--saga-link-accent);
+}
+
+.saga-link-icon .svg-icon {
+  width: 1em;
+  height: 1em;
+}
+
+.saga-link-icon[data-renderer='character'] {
+  --saga-link-accent: var(--saga-character, var(--color-purple));
+}
+.saga-link-icon[data-renderer='location'] {
+  --saga-link-accent: var(--saga-location, var(--color-green));
+}
+.saga-link-icon[data-renderer='faction'] {
+  --saga-link-accent: var(--saga-faction, var(--color-red));
+}
+.saga-link-icon[data-renderer='item'] {
+  --saga-link-accent: var(--saga-item, var(--color-orange));
+}
+.saga-link-icon[data-renderer='map'] {
+  --saga-link-accent: var(--saga-map, var(--color-blue));
+}

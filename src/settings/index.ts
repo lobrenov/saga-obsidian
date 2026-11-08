@@ -88,6 +88,12 @@ class SettingsTab extends PluginSettingTab {
           .onChange((value) => void this.prefs.set({ pinLabels: value as PinLabels }))
       )
 
+    new Setting(containerEl).setName('Links').setHeading()
+    new Setting(containerEl)
+      .setName('Link icons')
+      .setDesc('Wikilinks in note text show the linked note’s renderer icon.')
+      .addToggle((toggle) => toggle.setValue(this.prefs.get().linkIcons).onChange((value) => void this.prefs.set({ linkIcons: value })))
+
     new Setting(containerEl).setName('Renderers').setHeading()
     new Setting(containerEl)
       .setName('Type key')
