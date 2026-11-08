@@ -1,17 +1,13 @@
-.saga-settings-renderer {
+.saga-settings-renderer + .saga-settings-renderer {
   border-top: 1px solid var(--background-modifier-border);
 }
 
-.saga-settings-renderer:last-of-type {
-  border-bottom: 1px solid var(--background-modifier-border);
-}
-
-.saga-settings-renderer > summary {
+.saga-settings-renderer > summary,
+.saga-settings-fallback {
   display: flex;
   align-items: baseline;
   gap: var(--size-4-3);
   padding: var(--size-4-3) 0;
-  cursor: var(--cursor);
   font-weight: var(--font-semibold);
   color: var(--text-normal);
 }
@@ -31,4 +27,12 @@
 
 .saga-settings-renderer > .setting-item {
   padding-inline-start: var(--size-4-5);
+}
+
+.saga-settings-renderer > summary {
+  cursor: var(--cursor);
+}
+
+.saga-settings-issue {
+  color: var(--text-error);
 }

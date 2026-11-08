@@ -16,6 +16,8 @@ class SettingsTab extends PluginSettingTab {
   private changedOnDisk = false
   /** Renderer sections the user has expanded, kept across re-renders. */
   private readonly expanded = new Set<RendererId>()
+  private issuesEl: HTMLElement | null = null
+  private pending: number | null = null
 
   constructor(
     app: App,
@@ -31,6 +33,11 @@ class SettingsTab extends PluginSettingTab {
   override display(): void {
     this.unsubscribe?.()
     this.unsubscribe = this.config.subscribe((state) => {
+      // The tab's own save: the inputs already show it, so keep focus and leave them.
+      if (!isDirty(this.draft, state.config)) {
+        this.loaded = state.config
+        return
+      }
       this.changedOnDisk = isDirty(this.draft, this.loaded)
       this.draft = rebase(this.draft, this.loaded, state.config)
       this.loaded = state.config
@@ -45,23 +52,30 @@ class SettingsTab extends PluginSettingTab {
   override hide(): void {
     this.unsubscribe?.()
     this.unsubscribe = null
+    if (this.pending !== null) void this.save()
+  }
+
+  private showIssues(issues: readonly Issue[]): void {
+    const el = this.issuesEl
+    if (!el) return
+    el.empty()
+    for (const issue of issues) el.createDiv({ cls: 'saga-settings-issue', text: issue.path ? `${issue.path}: ${issue.message}` : issue.message })
+  }
+
+  /** Shows the draft's issues and saves it 600 ms after the last edit. */
+  private changed(): void {
+    this.showIssues(draftIssues(this.draft, this.config.state().config))
+    if (this.pending !== null) window.clearTimeout(this.pending)
+    this.pending = window.setTimeout(() => void this.save(), 600)
   }
 
   private render(): void {
     const { containerEl } = this
     containerEl.empty()
-    const issuesEl = containerEl.createDiv()
-    const showIssues = (issues: readonly Issue[]): void => {
-      issuesEl.empty()
-      for (const issue of issues) {
-        const line = issuesEl.createDiv({ text: issue.path ? `${issue.path}: ${issue.message}` : issue.message })
-        line.style.color = 'var(--text-error)'
-      }
-    }
+    this.issuesEl = containerEl.createDiv()
     const state = this.config.state()
-    const validate = (): void => showIssues(draftIssues(this.draft, state.config))
-    showIssues(state.issues)
-    if (this.changedOnDisk) containerEl.insertBefore(createDiv({ text: 'renderers.yaml changed on disk; your edits are kept and saved over the new text.' }), issuesEl)
+    this.showIssues(state.issues)
+    if (this.changedOnDisk) containerEl.insertBefore(createDiv({ text: 'renderers.yaml changed on disk; your edits are kept and saved over the new text.' }), this.issuesEl)
 
     new Setting(containerEl).setName('Maps').setHeading()
     new Setting(containerEl)
@@ -81,7 +95,7 @@ class SettingsTab extends PluginSettingTab {
       .addText((text) =>
         text.setValue(this.draft.typeKey).onChange((value) => {
           this.draft.typeKey = value
-          validate()
+          this.changed()
         })
       )
 
@@ -92,9 +106,9 @@ class SettingsTab extends PluginSettingTab {
       section.addEventListener('toggle', () => (section.open ? this.expanded.add(id) : this.expanded.delete(id)))
       const summary = section.createEl('summary')
       summary.createSpan({ cls: 'saga-settings-renderer-name', text: def.label })
-      summary.createSpan({ cls: 'saga-settings-renderer-types', text: this.draft.types[id] || id })
+      const typesEl = summary.createSpan({ cls: 'saga-settings-renderer-types', text: this.draft.types[id] || id })
       const readOnly = state.invalid.includes(id)
-      if (readOnly) section.createDiv({ text: 'This entry in renderers.yaml could not be read; fix it in the file.' }).style.color = 'var(--text-error)'
+      if (readOnly) section.createDiv({ cls: 'saga-settings-issue', text: 'This entry in renderers.yaml could not be read; fix it in the file.' })
       new Setting(section)
         .setName('Types')
         .setDesc('Comma-separated values of the type key.')
@@ -104,7 +118,8 @@ class SettingsTab extends PluginSettingTab {
             .setDisabled(readOnly)
             .onChange((value) => {
               this.draft.types[id] = value
-              validate()
+              typesEl.setText(value || id)
+              this.changed()
             })
         )
       for (const [field, fieldDef] of Object.entries(def.fields as Fields)) {
@@ -119,40 +134,39 @@ class SettingsTab extends PluginSettingTab {
               .onChange((value) => {
                 const keys = (this.draft.keys[id] ??= {})
                 keys[field] = value
-                validate()
+                this.changed()
               })
           )
       }
     }
-    new Setting(containerEl).setName('Document').setHeading()
-    containerEl.createDiv({ text: 'The fallback: any note whose type is not mapped above.' })
-
-    new Setting(containerEl).addButton((button) =>
-      button
-        .setButtonText('Save')
-        .setCta()
-        .onClick(() => void this.save(showIssues))
-    )
+    const fallback = containerEl.createDiv({ cls: 'saga-settings-renderer saga-settings-fallback' })
+    fallback.createSpan({ cls: 'saga-settings-renderer-name', text: rendererDefs.document.label })
+    fallback.createSpan({ cls: 'saga-settings-renderer-types', text: 'any other type' })
   }
 
-  private async save(showIssues: (issues: readonly Issue[]) => void): Promise<void> {
+  /** Writes the draft when it is valid; a refused draft shows its issues and writes nothing. */
+  private async save(): Promise<void> {
+    if (this.pending !== null) window.clearTimeout(this.pending)
+    this.pending = null
     const result = saveText(this.config.state(), this.draft)
     if (!result.ok) {
-      showIssues(result.error.kind === 'validation' ? result.error.issues : [{ path: '', message: result.error.message }])
+      this.showIssues(result.error.kind === 'validation' ? result.error.issues : [{ path: '', message: result.error.message }])
       return
     }
     try {
       await this.config.writeConfig(result.value)
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      showIssues([{ path: '', message: `Could not write renderers.yaml: ${message}` }])
+      this.showIssues([{ path: '', message: `Could not write renderers.yaml: ${message}` }])
       new Notice(`Saga: could not write renderers.yaml: ${message}`)
       return
     }
     this.loaded = this.config.state().config
-    this.draft = draftOf(this.loaded)
-    this.changedOnDisk = false
-    this.render()
+    this.showIssues(this.config.state().issues)
+    if (this.changedOnDisk) {
+      this.changedOnDisk = false
+      this.render()
+    }
   }
 }
 

@@ -7,7 +7,7 @@ Settings → Saga edits `.saga/renderers.yaml` through the config store (`docs/a
 - `settings/index.ts`: `registerSettings(plugin, config, prefs)` adds the `PluginSettingTab`, built with `Setting`.
 
 ## Behaviour
-- Rows: Maps (Pin labels: Always or On hover, in the plugin's `data.json`); Renderers: type key, then one collapsible section per renderer (summary: its types; expanded sections stay open across re-renders) with Types and one key input per field (the default key as placeholder); Document is shown as the fallback. An unreadable renderer entry shows its issue and disables its inputs.
+- Rows: Maps (Pin labels: Always or On hover, in the plugin's `data.json`); Renderers: type key, then one collapsible section per renderer (summary: its types; expanded sections stay open across re-renders) with Types and one key input per field (the default key as placeholder); Document is a last, non-collapsible row as the fallback. Rules separate the sections only. An unreadable renderer entry shows its issue and disables its inputs.
 - Issues of the saved config show inline and update as the draft changes.
-- Save writes `saveText`'s text with `writeConfig`; a refused config writes nothing; a write error shows in the issues area and as a Notice. `applyConfigToYaml` keeps comments, unknown keys, `templates` and key order; an edited value is replaced with its inline comment.
-- The tab subscribes while shown. A config change rebases the draft; with unsaved edits it shows "renderers.yaml changed on disk; your edits are kept and saved over the new text."
+- Edits save on their own 600 ms after the last change (and when the tab closes): `saveText`'s text through `writeConfig`; a refused config shows its issues and writes nothing; a write error shows in the issues area and as a Notice. `applyConfigToYaml` keeps comments, unknown keys, `templates` and key order; an edited value is replaced with its inline comment.
+- The tab subscribes while shown. The tab's own save leaves the inputs (and focus) as they are. Another config change rebases the draft; with unsaved edits it shows "renderers.yaml changed on disk; your edits are kept and saved over the new text."
