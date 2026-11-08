@@ -40,7 +40,7 @@ Every image field keeps its frame in its real place. A set image fills the frame
 | link | link chip (edit and remove on hover) or an add button; the input with file suggester opens in place, Esc cancels | `setField`, `[[target]]`; empty or remove clears the key |
 | links | link chips (remove on hover) and an add button that opens the suggester input in place | `updateField`: append unless a link with that target exists, or remove the first entry with that target |
 | image | frame with hover controls (change opens the image suggester input over the frame, remove), or the empty frame as the add button | `setField`, `[[file]]`; remove clears the key |
-| choice | select | `setField`; the empty option removes |
+| choice | select (placeholder only while empty) and a Clear button on hover | `setField`; Clear removes |
 
 - Text: the draft is committed 600 ms after the last keystroke (`COMMIT_DELAY_MS`), on blur, and on unmount. Enter blurs; Escape restores the last known saved text. `useDraft` keeps the user's draft while the field has focus when the cache delivers a value, and tracks the last written value so an unchanged value is not written twice.
 - List and links writes use `updateField`, which builds the new array from the note's text at write time, so successive edits before the metadata cache updates all land.

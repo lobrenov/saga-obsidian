@@ -423,22 +423,33 @@ function ImageEditor({ field, value, onChange, id, invalid, describedBy, placeho
 
 function ChoiceEditor({ field, value, onChange, id, required, invalid, describedBy, placeholder }: EditorProps<'choice'> & EditorCtx) {
   return (
-    <select
-      id={id}
-      className="dropdown saga-header-select"
-      value={value ?? ''}
-      aria-required={required || undefined}
-      aria-invalid={invalid || undefined}
-      aria-describedby={describedBy}
-      onChange={(event) => onChange(event.target.value === '' ? undefined : event.target.value)}
-    >
-      <option value="">{placeholder}</option>
-      {field.options.map((option) => (
-        <option key={option} value={option}>
-          {capitalise(option)}
-        </option>
-      ))}
-    </select>
+    <span className="saga-header-choice">
+      <select
+        id={id}
+        className="dropdown saga-header-select"
+        value={value ?? ''}
+        aria-required={required || undefined}
+        aria-invalid={invalid || undefined}
+        aria-describedby={describedBy}
+        onChange={(event) => onChange(event.target.value)}
+      >
+        {value === undefined ? (
+          <option value="" disabled hidden>
+            {placeholder}
+          </option>
+        ) : null}
+        {field.options.map((option) => (
+          <option key={option} value={option}>
+            {capitalise(option)}
+          </option>
+        ))}
+      </select>
+      {value === undefined ? null : (
+        <button type="button" className="saga-header-chip-action" aria-label={`Clear ${field.label}`} onClick={() => onChange(undefined)}>
+          <Icon name="x" />
+        </button>
+      )}
+    </span>
   )
 }
 

@@ -292,6 +292,13 @@
   max-width: 100%;
 }
 
+.saga-header-choice {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--size-2-2);
+  max-width: 100%;
+}
+
 /* Lists, link chips and add buttons. */
 .saga-header-list {
   display: flex;
@@ -397,7 +404,9 @@
 .saga-header .saga-header-chip:hover .saga-header-chip-action,
 .saga-header .saga-header-chip:focus-within .saga-header-chip-action,
 .saga-header-frame:hover .saga-header-chip-action,
-.saga-header-frame:focus-within .saga-header-chip-action {
+.saga-header-frame:focus-within .saga-header-chip-action,
+.saga-header-choice:hover .saga-header-chip-action,
+.saga-header-choice:focus-within .saga-header-chip-action {
   width: 20px;
   margin-right: 4px;
   opacity: 1;

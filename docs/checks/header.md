@@ -29,7 +29,7 @@ Run on `test/vault` in Obsidian (`npm run dev`, reload the plugin). Notes: `Char
 
 ## Fields (each edit lands in the file as one key)
 - [ ] Text (Role, Title, Kind, Rarity): typing writes once after a pause or on leaving the field, not per keystroke; the cursor stays put when the write lands; Enter leaves the field; Escape restores the saved text; clearing and leaving removes the key.
-- [ ] Choice (Status): selecting writes the value; the empty option removes the key.
+- [ ] Choice (Status): selecting writes the value; the list has no empty option while set; Clear (hover) removes the key and the placeholder returns.
 - [ ] Image fields without a value show a small tinted frame in the image's place (beside the title for portrait and emblem, a slim strip for banners) with the renderer icon; hover shows "Add …", click opens the image suggester in place, Esc cancels.
 - [ ] Link chips and Add pills have equal left and right padding, and no text clips, with the Saga theme (IBM Plex Sans) and without it.
 - [ ] Link (Location, Region, Leader, Base, Holder, Owner, Origin): the value shows as a chip with the linked note's renderer icon; click opens the note, Cmd/Ctrl-click opens a new tab, hovering with the modifier shows the page preview; the pencil (on hover) edits in place, Esc cancels, the x clears; the suggester lists notes; picking writes `[[Name]]`; clearing and Enter removes the key; an unresolved name is styled as an unresolved link.

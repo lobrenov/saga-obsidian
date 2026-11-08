@@ -64,13 +64,15 @@ test('the text editor grows with its content', async () => {
   await vi.waitFor(() => expect((role.element() as HTMLElement).getBoundingClientRect().height).toBeGreaterThan(before))
 })
 
-test('the choice editor selects, and clearing removes only its key', async () => {
+test('the choice editor selects, offers no empty option while set, and Clear removes only its key', async () => {
   const { screen, text } = await renderHeader(ada, ADA)
   const status = screen.getByRole('combobox', { name: 'Status' })
+  expect([...(status.element() as HTMLSelectElement).options].map((option) => option.value)).toEqual(['alive', 'dead', 'missing'])
   await status.selectOptions('dead')
   await vi.waitFor(() => expect(text()).toBe(ADA.replace('status: alive', 'status: dead')))
-  await status.selectOptions('')
+  await screen.getByRole('button', { name: 'Clear Status' }).click()
   await vi.waitFor(() => expect(text()).toBe(ADA.replace('status: alive\n', '')))
+  await expect.element(screen.getByRole('button', { name: 'Clear Status' })).not.toBeInTheDocument()
 })
 
 test('a link opens its note, in a new tab on a modifier-click, and previews on hover', async () => {
