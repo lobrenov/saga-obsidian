@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "node esbuild.config.mjs watch",
     "build": "node esbuild.config.mjs",
+    "build:theme": "node theme/build.mjs",
     "typecheck": "tsc -b",
     "lint": "eslint .",
     "test": "vitest run --typecheck"

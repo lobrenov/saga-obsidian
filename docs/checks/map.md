@@ -24,7 +24,7 @@ Vault facts used below: `Maps/The Shattered Coast.md` (`type: map`, `image: "[[c
 
 ### Stage
 
-1. The coast image fills the pane, fitted. Two pins stand on it with labels: Waterdeep (plain colour for a `Location`, a rumour ring glyph) and Moonblade (a diamond, treasure colour). Waterdeep's second pin at 10,20 (`sparkly`) is at the top left with the plain dot. The broken Waterdeep entries (`x: wrong`, no `y`, `[[Nowhere Map]]`) draw nothing.
+1. The coast image fills the pane, fitted. Two pins stand on it with labels beside them: Waterdeep (the Location colour, a rumour ring glyph) and Moonblade (the Item colour, a diamond glyph). A pin's colour is always its note's renderer colour; only the glyph shows the style. Waterdeep's second pin at 10,20 (`sparkly`) is at the top left with the plain dot. The broken Waterdeep entries (`x: wrong`, no `y`, `[[Nowhere Map]]`) draw nothing.
 2. Hover a pin's pixel position against the readout at the bottom left: it shows `x · y` in image pixels and a zoom level; the Moonblade tip reads about 300 / 410.
 3. Two-finger scroll pans; pinch (or ⌘-scroll) zooms around the pointer; drag pans; double-click, the `+` and `-` buttons and the `+`/`-` keys zoom one level; arrow keys pan when the map has focus; Fit map refits. Panning stops with a quarter of the image (or the whole image if smaller) still in view.
 4. Zoom out as far as it goes: the longest image side is about 64 px. Zoom in as far as it goes: 8x native.
@@ -41,7 +41,7 @@ Vault facts used below: `Maps/The Shattered Coast.md` (`type: map`, `image: "[[c
 
 1. Edit `Maps/Pins.base` filters to `type == "location"` (UI: Filter → add `type` `is` `location`): only Waterdeep's pins remain (Moonblade's `artifact` type does not match). Change to `type == "artifact"`: only Moonblade.
 2. Add a pin to a character first (see Step 4, "Add pin"; pick `Ada Lovelace`). With the filter `type == "character"` only the Ada pin shows, in the Character colour; `NPC` notes count as characters through `.saga/renderers.yaml`, so a pin on `Bob` shows too with the same colour. Restore the filter to `file.ext == "md"`.
-3. Layers panel: it lists Characters, Locations, Items with counts and, when pins have styles, a "By style" group. Unticking Locations hides the Waterdeep pins; unticking Treasure hides Moonblade. Setting the view option "Layers panel" off hides the panel and shows every pin again. "Pin labels" off hides the labels on every pin.
+3. Layers panel: it lists Characters, Locations, Items with a dot in the renderer colour and, when pins have styles, a style group with each style's glyph in a neutral colour. Unticking Locations hides the Waterdeep pins; unticking Treasure hides Moonblade. Setting the view option "Layers panel" off hides the panel and shows every pin again. "Pin labels" off hides the labels on every pin.
 4. In `.saga/renderers.yaml` change the `location` types to `[place]` and save: within a moment the Waterdeep pins turn the document colour and the Layers panel counts them under Documents, with no reload. Revert it.
 
 ### Live updates
@@ -99,3 +99,10 @@ Each write must show in `git diff` as a change of the `map-pins` value only: no 
 
 1. Tab into the map: the stage takes focus (focus ring), then each pin in turn; Enter on a pin opens its card; Tab moves through Open note, Move, Remove pin, Close.
 2. A pin tabbed to outside the view pans into view. The Pins list reaches every pin without the pointer: select, Move, Enter.
+
+### Labels and pin look
+
+1. Pin markers match Saga's: 32 × 44 teardrop, light outline, light glyph; the tip sits on the image point (zoom in on a pin and compare with the readout). Selected: larger and darker.
+2. Pins close together (zoom out on a crowded area): labels go right, else left, else below, and never cover a pin or another label. A pin with no free slot has no label until hover, focus or selection, when it appears on top.
+3. Labels stay unclipped at the view's edge after panning settles. Pins draw above labels.
+4. Light and dark themes: outlines, labels, clusters and focus rings (Tab to a pin and a cluster) read clearly.

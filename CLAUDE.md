@@ -5,6 +5,7 @@ An Obsidian plugin (id `saga`, desktop, Obsidian 1.10.2+) carrying two functions
 ## Scripts
 - `npm run dev` esbuild watch; writes `main.js`, `styles.css`, `manifest.json` into `test/vault/.obsidian/plugins/saga/`
 - `npm run build` minified build, same outputs plus the repo root
+- `npm run build:theme` writes `theme/theme.css` (fonts embedded) from `theme/src/theme.css`
 - `npm run typecheck` `tsc -b` over the `shared`, `plugin`, `test` and `component` projects
 - `npm run lint` ESLint (type-aware; `src/shared` may not import Obsidian, React or the DOM)
 - `npm test` Vitest: `unit` (Node) and `component` (Chromium); `obsidian` is aliased to `test/fakes/obsidian.ts`; `component` first runs the production build and `bundle.test.tsx` loads `main.js` as Obsidian does
@@ -16,6 +17,7 @@ An Obsidian plugin (id `saga`, desktop, Obsidian 1.10.2+) carrying two functions
 - `src/map` the Saga map Bases view (`docs/map.md`)
 - `src/header` the note header (`docs/header.md`); every Obsidian DOM selector is in `src/header/dom.ts`
 - `src/settings` the renderer settings tab (`docs/settings.md`)
+- `theme` the Saga Obsidian theme, light and dark (`docs/theme.md`)
 - `test/unit`, `test/component`, `test/fakes`; `test/vault` is the manual-check vault
 - `docs/checks` manual checks in Obsidian per feature
 

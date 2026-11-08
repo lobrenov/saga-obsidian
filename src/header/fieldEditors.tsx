@@ -1,7 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
-import { resolveLink, resourceUrl } from '../obsidian/vault'
+import { frontmatterOf, resolveLink, resourceUrl } from '../obsidian/vault'
 import type { EditorProps, FieldEditors } from '../shared/renderers/define'
+import { rendererDefs } from '../shared/renderers/definitions'
 import type { FieldDef } from '../shared/renderers/fields'
+import { createRendererResolver } from '../shared/renderers/resolve'
 import { parseWikiLink, type WikiLink } from '../shared/wikilink'
 import { useHeader } from './env'
 import { Icon } from './Icon'
@@ -86,23 +88,6 @@ function FileInput({ kind, onPick, ...props }: { kind: 'note' | 'image'; onPick:
         props.onKeyDown?.(event)
       }}
     />
-  )
-}
-
-/** A link as a button that opens its note (modifier-click: new tab) and previews it on hover. */
-function LinkButton({ link }: { link: WikiLink }) {
-  const { env, file } = useHeader()
-  const resolved = resolveLink(env.app, link, file.path)
-  const target = linkText(link)
-  return (
-    <button
-      type="button"
-      className={`saga-header-link${resolved ? '' : ' is-unresolved'}`}
-      onClick={(event) => env.openLink(target, file.path, event)}
-      onMouseOver={(event) => env.hover(event.nativeEvent, event.currentTarget, target, file.path)}
-    >
-      {link.alias ?? link.target}
-    </button>
   )
 }
 
@@ -228,6 +213,45 @@ function ListEditor({ field, value, id, invalid, describedBy, placeholder, updat
   )
 }
 
+/** A ghost button that opens an inline editor in place. */
+function AddButton({ id, label, name, onClick }: { id: string; label: string; name: string; onClick: () => void }) {
+  return (
+    <button type="button" id={id} className="saga-header-add" aria-label={name} onClick={onClick}>
+      <Icon name="plus" />
+      {label}
+    </button>
+  )
+}
+
+/** A link as a chip: the linked note's renderer icon and title; click opens it (modifier-click: new tab), hover previews it. Edit and remove show on hover. */
+function LinkChip({ link, editId, editLabel, removeLabel, onEdit, onRemove }: { link: WikiLink; editId?: string; editLabel?: string; removeLabel: string; onEdit?: () => void; onRemove: () => void }) {
+  const { env, file, config } = useHeader()
+  const resolved = resolveLink(env.app, link, file.path)
+  const renderer = resolved ? createRendererResolver(config)(frontmatterOf(env.app, resolved)).renderer : null
+  const target = linkText(link)
+  return (
+    <span className={`saga-header-chip${resolved ? '' : ' is-unresolved'}`} data-renderer={renderer ?? undefined}>
+      <button
+        type="button"
+        className="saga-header-chip-link"
+        onClick={(event) => env.openLink(target, file.path, event)}
+        onMouseOver={(event) => env.hover(event.nativeEvent, event.currentTarget, target, file.path)}
+      >
+        <Icon name={renderer ? rendererDefs[renderer].icon : 'unlink'} />
+        {link.alias ?? resolved?.basename ?? link.target}
+      </button>
+      {onEdit ? (
+        <button type="button" id={editId} className="saga-header-chip-action" aria-label={editLabel} onClick={onEdit}>
+          <Icon name="pencil" />
+        </button>
+      ) : null}
+      <button type="button" className="saga-header-chip-action" aria-label={removeLabel} onClick={onRemove}>
+        <Icon name="x" />
+      </button>
+    </span>
+  )
+}
+
 function LinkEditor({ field, value, onChange, id, invalid, describedBy, placeholder }: EditorProps<'link'> & EditorCtx) {
   const text = value?.target ?? ''
   const { draft, setDraft, written, focused } = useDraft(text)
@@ -239,14 +263,11 @@ function LinkEditor({ field, value, onChange, id, invalid, describedBy, placehol
     written.current = next
     onChange(next === '' ? undefined : { target: next, embed: false })
   }
-  if (value && !editing) {
-    return (
-      <span className="saga-header-linkrow">
-        <LinkButton link={value} />
-        <button type="button" id={id} className="saga-header-edit" aria-label={`Edit ${field.label}`} onClick={() => setEditing(true)}>
-          <Icon name="pencil" />
-        </button>
-      </span>
+  if (!editing) {
+    return value ? (
+      <LinkChip link={value} editId={id} editLabel={`Edit ${field.label}`} removeLabel={`Clear ${field.label}`} onEdit={() => setEditing(true)} onRemove={() => commit('')} />
+    ) : (
+      <AddButton id={id} label={placeholder} name={placeholder} onClick={() => setEditing(true)} />
     )
   }
   return (
@@ -256,7 +277,7 @@ function LinkEditor({ field, value, onChange, id, invalid, describedBy, placehol
       className="saga-header-input"
       value={draft}
       placeholder={placeholder}
-      autoFocus={editing}
+      autoFocus
       aria-invalid={invalid || undefined}
       aria-describedby={describedBy}
       onPick={(target) => {
@@ -289,46 +310,46 @@ function LinkEditor({ field, value, onChange, id, invalid, describedBy, placehol
 function LinksEditor({ field, value, id, invalid, describedBy, placeholder, update }: EditorProps<'links'> & EditorCtx) {
   const items = value ?? []
   const [draft, setDraft] = useState('')
+  const [adding, setAdding] = useState(false)
   const add = (target: string): void => {
     const next = target.trim()
     setDraft('')
+    setAdding(false)
     if (next === '') return
     update((current) => (current.some((entry) => targetOf(entry)?.toLowerCase() === next.toLowerCase()) ? current : [...current, `[[${next}]]`]))
   }
   return (
-    <div className="saga-header-list">
-      {items.length > 0 ? (
-        <ul className="saga-header-chips" aria-label={field.label}>
-          {items.map((item, i) => (
-            <li key={`${i}-${item.target}`} className="saga-header-chip">
-              <LinkButton link={item} />
-              <RemoveButton label={item.target} onClick={() => update((current) => withoutFirst(current, (entry) => targetOf(entry) === item.target))} />
-            </li>
-          ))}
-        </ul>
-      ) : null}
-      <FileInput
-        kind="note"
-        id={id}
-        className="saga-header-input"
-        value={draft}
-        placeholder={placeholder}
-        aria-invalid={invalid || undefined}
-        aria-describedby={describedBy}
-        onPick={add}
-        onChange={(event) => setDraft(event.target.value)}
-        onBlur={() => add(draft)}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter') {
-            event.preventDefault()
-            add(draft)
-          } else if (event.key === 'Escape') {
-            event.preventDefault()
-            setDraft('')
-            event.currentTarget.blur()
-          }
-        }}
-      />
+    <div className="saga-header-chips" role="group" aria-label={field.label}>
+      {items.map((item, i) => (
+        <LinkChip key={`${i}-${item.target}`} link={item} removeLabel={`Remove ${item.target}`} onRemove={() => update((current) => withoutFirst(current, (entry) => targetOf(entry) === item.target))} />
+      ))}
+      {adding ? (
+        <FileInput
+          kind="note"
+          id={id}
+          className="saga-header-input"
+          value={draft}
+          placeholder={placeholder}
+          autoFocus
+          aria-invalid={invalid || undefined}
+          aria-describedby={describedBy}
+          onPick={add}
+          onChange={(event) => setDraft(event.target.value)}
+          onBlur={() => add(draft)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault()
+              add(draft)
+            } else if (event.key === 'Escape') {
+              event.preventDefault()
+              setDraft('')
+              setAdding(false)
+            }
+          }}
+        />
+      ) : (
+        <AddButton id={id} label={items.length > 0 ? 'Add' : placeholder} name={placeholder} onClick={() => setAdding(true)} />
+      )}
     </div>
   )
 }
@@ -337,42 +358,52 @@ function ImageEditor({ field, value, onChange, id, invalid, describedBy, placeho
   const { env, file } = useHeader()
   const resolved = value ? resolveLink(env.app, value, file.path) : null
   const [query, setQuery] = useState<string | null>(null)
+  const editing = query !== null
+  const input = (
+    <FileInput
+      kind="image"
+      id={id}
+      className="saga-header-input"
+      value={query ?? ''}
+      placeholder={placeholder}
+      autoFocus
+      aria-invalid={invalid || (value !== undefined && resolved === null) || undefined}
+      aria-describedby={describedBy}
+      onPick={(target) => {
+        setQuery(null)
+        onChange({ target, embed: false })
+      }}
+      onChange={(event) => setQuery(event.target.value)}
+      onBlur={() => setQuery(null)}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') {
+          event.preventDefault()
+          setQuery(null)
+        }
+      }}
+    />
+  )
+  if (!value) return editing ? input : <AddButton id={id} label={placeholder} name={placeholder} onClick={() => setQuery('')} />
   return (
     <div className="saga-header-image">
-      <div className="saga-header-frame" data-empty={resolved ? undefined : ''}>
-        {resolved ? <img src={resourceUrl(env.app, resolved)} alt={field.label} /> : <Icon name="image-plus" />}
-        <div className="saga-header-image-controls">
-          <FileInput
-            kind="image"
-            id={id}
-            className="saga-header-input"
-            value={query ?? value?.target ?? ''}
-            placeholder={placeholder}
-            aria-invalid={invalid || (value !== undefined && resolved === null) || undefined}
-            aria-describedby={describedBy}
-            onPick={(target) => {
-              setQuery(null)
-              onChange({ target, embed: false })
-            }}
-            onChange={(event) => setQuery(event.target.value)}
-            onFocus={(event) => event.currentTarget.select()}
-            onBlur={() => setQuery(null)}
-            onKeyDown={(event) => {
-              if (event.key === 'Escape') {
-                event.preventDefault()
-                setQuery(null)
-                event.currentTarget.blur()
-              }
-            }}
-          />
-          {value ? (
-            <button type="button" className="saga-header-edit" aria-label={`Remove ${field.label.toLowerCase()}`} onClick={() => onChange(undefined)}>
-              <Icon name="trash-2" />
-            </button>
-          ) : null}
+      <div className="saga-header-frame" data-missing={resolved ? undefined : ''}>
+        {resolved ? <img src={resourceUrl(env.app, resolved)} alt={field.label} /> : <Icon name="image-off" />}
+        <div className="saga-header-image-controls" data-editing={editing || undefined}>
+          {editing ? (
+            input
+          ) : (
+            <>
+              <button type="button" id={id} className="saga-header-chip-action" aria-label={`Change ${field.label.toLowerCase()}`} onClick={() => setQuery('')}>
+                <Icon name="pencil" />
+              </button>
+              <button type="button" className="saga-header-chip-action" aria-label={`Remove ${field.label.toLowerCase()}`} onClick={() => onChange(undefined)}>
+                <Icon name="trash-2" />
+              </button>
+            </>
+          )}
         </div>
       </div>
-      {value && resolved === null ? <p className="saga-header-hint">{value.target} was not found in the vault.</p> : null}
+      {resolved === null ? <p className="saga-header-hint">{value.target} was not found in the vault.</p> : null}
     </div>
   )
 }

@@ -100,6 +100,7 @@ test('the link editor writes the picked note as [[Target]] and nothing else', as
 
 test('an empty link field takes typed text', async () => {
   const { screen, text } = await renderHeader(ada, ADA)
+  await screen.getByRole('button', { name: 'Add affiliation…' }).click()
   const affiliation = screen.getByRole('textbox', { name: 'Affiliation' })
   await affiliation.fill('The Gull King')
   await userEvent.keyboard('{Enter}')
@@ -119,6 +120,7 @@ const GUILD = '---\ntype: faction\nallies:\n  - "[[Bob]]"\n---\n'
 
 test('the links editor adds a picked note, ignores a duplicate and removes a chip', async () => {
   const { screen, text, suggesters } = await renderHeader('Factions/Harbor Guild.md', GUILD)
+  await screen.getByRole('button', { name: 'Add allies…' }).click()
   const allies = () => suggesters.find((s) => s.input === (screen.getByRole('textbox', { name: 'Allies' }).element() as HTMLInputElement))
   allies()?.pick('Waterdeep')
   await vi.waitFor(() => expect(text()).toBe('---\ntype: faction\nallies:\n  - "[[Bob]]"\n  - "[[Waterdeep]]"\n---\n'))
@@ -132,6 +134,7 @@ test('the links editor adds a picked note, ignores a duplicate and removes a chi
 
 test('the image editor shows a preview, picks an image and removes it', async () => {
   const { screen, text, suggesters } = await renderHeader('Places/Docks.md', '---\ntype: location\nkind: Harbour\n---\n')
+  await screen.getByRole('button', { name: 'Add image…' }).click()
   expect(suggesters.map((s) => s.kind)).toContain('image')
   suggesters.find((s) => s.kind === 'image')?.pick('coast.jpg')
   await vi.waitFor(() => expect(text()).toBe('---\ntype: location\nkind: Harbour\nimage: "[[coast.jpg]]"\n---\n'))
@@ -224,6 +227,7 @@ test('the title renames through the file manager; Escape cancels and bad names a
 
 test('successive list and links edits before the cache catches up all land', async () => {
   const { screen, text, suggesters } = await renderHeader('Factions/Harbor Guild.md', GUILD)
+  await screen.getByRole('button', { name: 'Add allies…' }).click()
   const input = screen.getByRole('textbox', { name: 'Allies' }).element() as HTMLInputElement
   const allies = suggesters.find((s) => s.input === input)
   allies?.pick('Waterdeep')

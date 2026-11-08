@@ -53,7 +53,7 @@ export function FieldView({ def, noteKey, raw, layer, className }: FieldViewProp
   })
 
   return (
-    <div className={`saga-header-field ${className ?? ''}`} data-field={noteKey} data-kind={def.kind} data-missing={missing ? 'required' : undefined}>
+    <div className={`saga-header-field ${className ?? ''}`} data-field={noteKey} data-kind={def.kind} data-empty={present(raw) ? undefined : ''} data-missing={missing ? 'required' : undefined}>
       {invalid && converted !== undefined ? (
         <div role="group" aria-labelledby={`${id}-label`} aria-describedby={hint}>
           <span id={`${id}-label`} className="saga-header-label">

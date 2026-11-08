@@ -4,6 +4,7 @@ import { rendererDefs } from '../shared/renderers/definitions'
 import { clusterItems } from '../shared/pins/cluster'
 import type { PinStyle } from '../shared/schemas/pins'
 import { clusterHtml, ghostHtml, pinClass, pinHtml } from './pinIcons'
+import { placeLabels, type LabelSlot } from './labels'
 import { SpriteContext } from './PinSprite'
 import { STYLE_LABELS } from './pinStyles'
 import { pinKey, type PlacedPin } from './types'
@@ -53,13 +54,14 @@ interface PinButtonProps {
   store: ViewportStore
   pin: PlacedPin
   selected: boolean
-  labels: boolean
   onSelect: (pin: PlacedPin) => void
   /** Resolves true when the move was written. */
   onMoved: (pin: PlacedPin, x: number, y: number) => Promise<boolean>
   onDragStart: (pin: PlacedPin) => void
   onDragEnd: () => void
   onFocusPin: (key: string | null) => void
+  /** The pin under the pointer, null when it leaves. */
+  onReveal: (key: string | null) => void
   onHover: (event: ReactMouseEvent<HTMLElement>, pin: PlacedPin) => void
 }
 
@@ -73,7 +75,7 @@ interface Drag {
   moved: boolean
 }
 
-const PinButton = memo(function PinButton({ store, pin, selected, labels, onSelect, onMoved, onDragStart, onDragEnd, onFocusPin, onHover }: PinButtonProps) {
+const PinButton = memo(function PinButton({ store, pin, selected, onSelect, onMoved, onDragStart, onDragEnd, onFocusPin, onReveal, onHover }: PinButtonProps) {
   const held = useRef(false)
   const sprite = useContext(SpriteContext)
   const [ref, place] = usePlacement<HTMLButtonElement>(store, pin.x, pin.y, held)
@@ -145,7 +147,7 @@ const PinButton = memo(function PinButton({ store, pin, selected, labels, onSele
       ref={ref}
       type="button"
       data-pin={pinKey(pin)}
-      className={pinClass(selected, labels)}
+      className={pinClass(selected)}
       style={selected ? { zIndex: 1 } : undefined}
       onClick={(event) => {
         // The click that ends a drag is ignored; a keyboard or assistive click (detail 0) always selects.
@@ -159,6 +161,8 @@ const PinButton = memo(function PinButton({ store, pin, selected, labels, onSele
       }}
       onBlur={() => onFocusPin(null)}
       onMouseOver={(event) => onHover(event, pin)}
+      onMouseEnter={() => onReveal(pinKey(pin))}
+      onMouseLeave={() => onReveal(null)}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
@@ -224,6 +228,8 @@ export function PinLayer({ store, pins, selectedKey, labels, onSelect, onMoved, 
   const [groups, setGroups] = useState<Group[]>([])
   const [dragKey, setDragKey] = useState<string | null>(null)
   const [focusKey, setFocusKey] = useState<string | null>(null)
+  const [hoverKey, setHoverKey] = useState<string | null>(null)
+  const [slots, setSlots] = useState<ReadonlyMap<string, LabelSlot | null>>(new Map())
   /** After a cluster is activated, the first of its pins takes focus once they show as pins (until `until`). */
   const refocus = useRef<{ key: string; until: number } | null>(null)
   useEffect(() => {
@@ -232,16 +238,26 @@ export function PinLayer({ store, pins, selectedKey, labels, onSelect, onMoved, 
   useEffect(() => {
     let zoom = NaN
     let timer: ReturnType<typeof setTimeout> | undefined
+    let current: Group[] = []
     const keep = new Set([selectedKey, dragKey, focusKey].filter((key): key is string => key !== null))
+    const relabel = (): void => {
+      const view = store.view()
+      const targets = current.map((group) => {
+        const at = toScreen(store.get(), view, group.x, group.y)
+        return { key: group.key, title: group.pins.length === 1 ? (group.pins[0]?.title ?? null) : null, px: at.x, py: at.y }
+      })
+      setSlots(placeLabels(targets, new Set(selectedKey === null ? [] : [selectedKey]), view))
+    }
     const regroup = (): void => {
       zoom = store.get().zoom
-      setGroups(groupPins(pins, zoom, zoom >= store.limits.max, keep))
+      current = groupPins(pins, zoom, zoom >= store.limits.max, keep)
+      setGroups(current)
+      relabel()
     }
     regroup()
     const unsubscribe = store.subscribe(() => {
-      if (store.get().zoom === zoom) return
       clearTimeout(timer)
-      timer = setTimeout(regroup, CLUSTER_SETTLE_MS)
+      timer = setTimeout(() => (store.get().zoom === zoom ? relabel() : regroup()), CLUSTER_SETTLE_MS)
     })
     return () => {
       unsubscribe()
@@ -273,18 +289,41 @@ export function PinLayer({ store, pins, selectedKey, labels, onSelect, onMoved, 
     if (first) refocus.current = { key: pinKey(first), until: Date.now() + 2000 }
   }, [])
 
+  const singles = groups.flatMap((group) => (group.pins.length === 1 && group.pins[0] ? [group.pins[0]] : []))
+  const slotOf = (pin: PlacedPin): LabelSlot | null => (pinKey(pin) === dragKey ? null : (slots.get(pinKey(pin)) ?? null))
+  const shown = labels ? singles.filter((pin) => slotOf(pin) !== null) : []
+  const revealed = labels ? singles.filter((pin) => slotOf(pin) === null && pinKey(pin) !== dragKey && [selectedKey, hoverKey, focusKey].includes(pinKey(pin))) : []
+
   return (
     <>
+      {shown.map((pin) => (
+        <PinLabel key={pinKey(pin)} store={store} pin={pin} slot={slotOf(pin) ?? 'right'} selected={pinKey(pin) === selectedKey} />
+      ))}
       {groups.map((group) => {
         const [first] = group.pins
         if (group.pins.length === 1 && first) {
-          return <PinButton key={group.key} store={store} pin={first} selected={group.key === selectedKey} labels={labels} onSelect={onSelect} onMoved={onMoved} onDragStart={dragStart} onDragEnd={dragEnd} onFocusPin={setFocusKey} onHover={onHover} />
+          return <PinButton key={group.key} store={store} pin={first} selected={group.key === selectedKey} onSelect={onSelect} onMoved={onMoved} onDragStart={dragStart} onDragEnd={dragEnd} onFocusPin={setFocusKey} onReveal={setHoverKey} onHover={onHover} />
         }
         return <ClusterButton key={group.key} store={store} group={group} onActivate={activate} />
       })}
+      {revealed.map((pin) => (
+        <PinLabel key={`reveal:${pinKey(pin)}`} store={store} pin={pin} slot="right" selected={pinKey(pin) === selectedKey} top />
+      ))}
     </>
   )
 }
+
+/** A pin's label, in its own layer so pins stay above labels; a label with no free slot is shown only on hover, focus or selection, on top. */
+const PinLabel = memo(function PinLabel({ store, pin, slot, selected, top }: { store: ViewportStore; pin: PlacedPin; slot: LabelSlot; selected: boolean; top?: boolean }) {
+  const [ref] = usePlacement<HTMLDivElement>(store, pin.x, pin.y)
+  return (
+    <div ref={ref} className={`saga-map-label-anchor${top ? ' saga-map-label-top' : ''}`}>
+      <span className={`saga-map-label saga-map-label-${slot}${selected ? ' saga-map-label-selected' : ''}`} aria-hidden="true">
+        {pin.title}
+      </span>
+    </div>
+  )
+})
 
 const ghostClass = 'saga-map-placed saga-map-pin-ghost'
 

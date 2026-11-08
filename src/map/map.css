@@ -6,17 +6,6 @@
 }
 
 .saga-map {
-  --saga-map-renderer-character: var(--color-red);
-  --saga-map-renderer-location: var(--color-green);
-  --saga-map-renderer-faction: var(--color-blue);
-  --saga-map-renderer-item: var(--color-orange);
-  --saga-map-renderer-map: var(--color-cyan);
-  --saga-map-renderer-document: var(--text-muted);
-  --saga-map-pin-rumour: var(--color-purple);
-  --saga-map-pin-danger: var(--color-pink);
-  --saga-map-pin-treasure: var(--color-yellow);
-  --saga-map-pin-quest: var(--color-cyan);
-  --saga-map-pin-camp: var(--color-green);
   --saga-map-float: color-mix(in srgb, var(--background-primary) 94%, transparent);
 
   display: flex;
@@ -150,7 +139,7 @@
 /* An element placed by its bottom tip at the screen point its transform gives. */
 .saga-map-placed {
   position: absolute;
-  top: -44px;
+  top: -43px;
   left: -16px;
   width: 32px;
   height: 44px;
@@ -439,21 +428,25 @@
   font-size: var(--font-ui-smaller);
 }
 
-/* Markers */
-.saga-map-pin,
-.saga-map-cluster {
+/* Markers: the specificity beats Obsidian's button styles. */
+.saga-map button.saga-map-pin,
+.saga-map button.saga-map-cluster {
+  min-width: 0;
+  min-height: 0;
   border: 0;
-  background: transparent;
+  border-radius: 0;
+  background: none;
   box-shadow: none;
 }
 
 .saga-map-placed[data-culled],
-.saga-map-cluster-placed[data-culled] {
+.saga-map-cluster-placed[data-culled],
+.saga-map-label-anchor[data-culled] {
   opacity: 0;
   pointer-events: none;
 }
 
-.saga-map-cluster-placed {
+.saga-map button.saga-map-cluster-placed {
   position: absolute;
   top: -20px;
   left: -20px;
@@ -464,54 +457,80 @@
   cursor: pointer;
 }
 
-.saga-map-pin {
+.saga-map button.saga-map-pin {
   display: block;
   padding: 0;
   pointer-events: auto;
   cursor: pointer;
 }
 
-.saga-map-pin:focus-visible,
-.saga-map-cluster:focus-visible {
+.saga-map button.saga-map-pin:focus-visible,
+.saga-map button.saga-map-cluster:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px var(--background-primary), 0 0 0 4px var(--interactive-accent);
   border-radius: var(--radius-m);
 }
 
+/* The tip of the outline (16, 43 of the 32 x 44 grid) is the pin's image point. */
 .saga-map-pin-svg {
   display: block;
   overflow: visible;
-  transform-origin: 50% 100%;
+  transform-origin: 50% 98%;
   filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35));
 }
 
 .saga-map-pin-selected .saga-map-pin-svg {
+  color: color-mix(in srgb, var(--saga-map-pin) 78%, black);
   transform: scale(1.2);
 }
 
-.saga-map-pin-label {
+/* Labels sit in their own layers: under the pins, or for a label with no free slot on top of them. */
+.saga-map-label-anchor {
   position: absolute;
-  top: 48px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 1px var(--size-4-2);
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.saga-map-label-top {
+  z-index: 3;
+}
+
+.saga-map-label {
+  position: absolute;
+  padding: 0 var(--size-4-2);
   border: 1px solid var(--background-modifier-border);
   border-radius: var(--radius-l);
   background: var(--saga-map-float);
   color: var(--text-normal);
+  font-size: var(--font-ui-smaller);
   font-weight: var(--font-semibold);
+  line-height: 18px;
   white-space: nowrap;
-  pointer-events: none;
 }
 
-.saga-map-pin-selected .saga-map-pin-label {
+.saga-map-label-right {
+  top: -36px;
+  left: 20px;
+}
+
+.saga-map-label-left {
+  top: -36px;
+  right: 20px;
+}
+
+.saga-map-label-below {
+  top: 4px;
+  left: 0;
+  transform: translateX(-50%);
+}
+
+.saga-map-label-selected {
   border-color: transparent;
-  background: var(--interactive-accent);
-  color: var(--text-on-accent);
-}
-
-.saga-map-pin-no-label .saga-map-pin-label {
-  display: none;
+  background: var(--text-normal);
+  color: var(--background-primary);
 }
 
 .saga-map-pin-ghost {
@@ -527,10 +546,15 @@
   height: 40px;
   border: 2px solid var(--background-primary);
   border-radius: 50%;
-  background: var(--interactive-accent);
-  color: var(--text-on-accent);
+  background: var(--text-normal);
+  color: var(--background-primary);
   font-weight: var(--font-semibold);
   box-shadow: var(--shadow-s);
+}
+
+.saga-map-glyph {
+  flex: none;
+  color: var(--text-muted);
 }
 
 .saga-map-sr-only {

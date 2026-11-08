@@ -32,12 +32,12 @@ test('a pin of a note the base does not list is not shown', async () => {
   expect(markers().some((el) => el.textContent?.startsWith('Hidden'))).toBe(false)
 })
 
-test('pins are coloured by their note renderer or the style override, with an unknown style shown as an issue on the card', async () => {
+test('pins are coloured by their note renderer whatever their style, which shows only as a glyph; an unknown style is an issue on the card', async () => {
   const { screen } = await renderMap()
   await vi.waitFor(() => expect(markers()).toHaveLength(3))
-  expect(color(marker('Saltmere'))).toBe('color:var(--saga-map-renderer-location)')
-  expect(color(marker('The Gull King'))).toBe('color:var(--saga-map-pin-danger)')
-  expect(color(marker('The Brine Vaults'))).toBe('color:var(--saga-map-renderer-location)')
+  expect(color(marker('Saltmere'))).toContain('--saga-map-pin:var(--saga-location)')
+  expect(color(marker('The Gull King'))).toContain('--saga-map-pin:var(--saga-character)')
+  expect(color(marker('The Brine Vaults'))).toContain('--saga-map-pin:var(--saga-location)')
   expect(marker('The Gull King').innerHTML).toMatch(/#saga-map-sprite-\d+-glyph-danger/)
   expect(marker('Saltmere').innerHTML).toMatch(/#saga-map-sprite-\d+-glyph-auto/)
 
@@ -78,7 +78,34 @@ test('the layers and labels options switch the panel and the pin labels', async 
   })
   await vi.waitFor(() => expect(markers()).toHaveLength(3))
   expect(screen.getByRole('checkbox', { name: /Locations/ }).elements()).toHaveLength(0)
-  expect(document.querySelectorAll('.saga-map-pin-no-label')).toHaveLength(3)
+  expect(document.querySelectorAll('.saga-map-label')).toHaveLength(0)
+})
+
+test('labels sit beside their pins, and one with no free slot shows on hover, on top of the pins', async () => {
+  await renderMap((fake) => {
+    for (const name of ['A', 'B', 'C', 'D']) fake.addNote(`Places/${name}.md`, '---\ntype: location\nmap-pins:\n  - map: "[[The Shattered Coast]]"\n    x: 400\n    y: 200\n---\n')
+  })
+  await vi.waitFor(() => expect(markers()).toHaveLength(7))
+  await vi.waitFor(() => expect(document.querySelectorAll('.saga-map-label')).toHaveLength(6))
+  const labels = [...document.querySelectorAll<HTMLElement>('.saga-map-label')]
+  for (const label of labels) {
+    const box = label.getBoundingClientRect()
+    for (const pin of markers()) {
+      const pinBox = pin.getBoundingClientRect()
+      expect(box.right <= pinBox.left || box.left >= pinBox.right || box.bottom <= pinBox.top || box.top >= pinBox.bottom).toBe(true)
+    }
+  }
+  expect(document.querySelectorAll('.saga-map-label-top')).toHaveLength(0)
+  marker('D').dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))
+  await vi.waitFor(() => expect(document.querySelectorAll('.saga-map-label-top .saga-map-label')).toHaveLength(1))
+  expect(document.querySelector('.saga-map-label-top')?.textContent).toBe('D')
+})
+
+test('a style shows as the pin glyph and in the Layers panel as the same glyph in a neutral colour', async () => {
+  await renderMap()
+  await vi.waitFor(() => expect(markers()).toHaveLength(3))
+  expect(document.querySelectorAll('.saga-map-glyph').length).toBeGreaterThan(0)
+  expect(document.querySelector('.saga-map-layers .saga-map-dot')).not.toBeNull()
 })
 
 test('above the threshold pins merge into clusters that zoom in when activated', async () => {

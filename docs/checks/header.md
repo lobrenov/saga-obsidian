@@ -8,7 +8,7 @@ Run on `test/vault` in Obsidian (`npm run dev`, reload the plugin). Notes: `Char
 - [ ] `Notes/Type Unknown.md` and a note with no frontmatter: no header, native title and properties as usual.
 - [ ] Source mode: no header, native title and properties visible.
 - [ ] Toggle Live Preview, Reading view and Source mode on one note: the header appears and disappears with the mode, once, never duplicated.
-- [ ] Settings, Appearance, Readable line width on and off: the header follows the content width (off: same side margins as the text).
+- [ ] Settings, Appearance, Readable line width on and off, in Live Preview and Reading view: the header's left edge and width match the text column exactly.
 - [ ] Light and dark theme, switched while a header is open: all text, borders, banners and the dashed empty image frame stay legible.
 - [ ] A custom theme or accent colour: renderer accent stays on the top rule, badge icon and portrait border.
 - [ ] Split pane with the same note twice (one in Live Preview, one in Reading view): each pane has its own header; editing a field in one updates the other.
@@ -30,7 +30,8 @@ Run on `test/vault` in Obsidian (`npm run dev`, reload the plugin). Notes: `Char
 ## Fields (each edit lands in the file as one key)
 - [ ] Text (Role, Title, Kind, Rarity): typing writes once after a pause or on leaving the field, not per keystroke; the cursor stays put when the write lands; Enter leaves the field; Escape restores the saved text; clearing and leaving removes the key.
 - [ ] Choice (Status): selecting writes the value; the empty option removes the key.
-- [ ] Link (Location, Region, Leader, Base, Holder, Owner, Origin): the value shows as a link; click opens the note, Cmd/Ctrl-click opens a new tab, hovering with the modifier shows the page preview; the pencil edits; the suggester lists notes; picking writes `[[Name]]`; clearing and Enter removes the key; an unresolved name is styled as an unresolved link.
+- [ ] Image fields without a value show only a small "Add …" button, never a large empty box.
+- [ ] Link (Location, Region, Leader, Base, Holder, Owner, Origin): the value shows as a chip with the linked note's renderer icon; click opens the note, Cmd/Ctrl-click opens a new tab, hovering with the modifier shows the page preview; the pencil (on hover) edits in place, Esc cancels, the x clears; the suggester lists notes; picking writes `[[Name]]`; clearing and Enter removes the key; an unresolved name is styled as an unresolved link.
 - [ ] Press Enter on a highlighted suggestion in a Link or Links input: the picked note is written, not the half-typed text.
 - [ ] Links (Allies, Rivals): chips open notes like links; the input adds from the suggester or typed text, a duplicate is ignored; the x removes a chip.
 - [ ] Image (Portrait, Emblem, Image): the preview shows the vault image; hovering the frame reveals the input (always shown when empty); the suggester lists only images; picking writes `[[file.png]]`; the trash button removes the key; a name that is not in the vault shows "was not found in the vault".

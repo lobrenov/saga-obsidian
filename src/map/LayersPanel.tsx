@@ -1,7 +1,7 @@
 import { useId } from 'react'
 import { RENDERER_IDS, type RendererId } from '../shared/renderers/ids'
 import { PIN_STYLES, type PinStyle } from '../shared/schemas/pins'
-import { STYLE_LABELS, pinColor } from './pinStyles'
+import { PIN_LIGHT, STYLE_GLYPHS, STYLE_LABELS, pinColor } from './pinStyles'
 import type { PlacedPin } from './types'
 
 export interface Layers {
@@ -44,7 +44,7 @@ export function LayersPanel({ pins, layers, onChange }: { pins: readonly PlacedP
           {renderers.map((id) => (
             <label key={id} className="saga-map-layer-row">
               <input type="checkbox" checked={!layers.hiddenRenderers.has(id)} onChange={() => onChange({ ...layers, hiddenRenderers: toggled(layers.hiddenRenderers, id) })} />
-              <span aria-hidden="true" className="saga-map-dot" style={{ background: pinColor('auto', id) }} />
+              <span aria-hidden="true" className="saga-map-dot" style={{ background: pinColor(id) }} />
               <span className="saga-map-layer-name">{PLURAL[id]}</span>
               <span className="saga-map-layer-count">{byRenderer.get(id)}</span>
             </label>
@@ -57,7 +57,7 @@ export function LayersPanel({ pins, layers, onChange }: { pins: readonly PlacedP
           {styleList.map((style) => (
             <label key={style} className="saga-map-layer-row">
               <input type="checkbox" checked={!layers.hiddenStyles.has(style)} onChange={() => onChange({ ...layers, hiddenStyles: toggled(layers.hiddenStyles, style) })} />
-              <span aria-hidden="true" className="saga-map-dot" style={{ background: style === 'auto' ? 'var(--text-faint)' : pinColor(style, 'document') }} />
+              <svg aria-hidden="true" className="saga-map-glyph" width="14" height="14" viewBox="8 8 16 16" fill="currentColor" dangerouslySetInnerHTML={{ __html: STYLE_GLYPHS[style].replaceAll(PIN_LIGHT, 'currentColor') }} />
               <span className="saga-map-layer-name">{style === 'auto' ? 'Auto style' : STYLE_LABELS[style]}</span>
               <span className="saga-map-layer-count">{byStyle.get(style)}</span>
             </label>

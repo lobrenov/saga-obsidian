@@ -47,8 +47,8 @@ test('Faction: emblem, leader, base and allies', async () => {
   await expect.element(screen.getByRole('region', { name: 'Faction header' })).toBeVisible()
   expect(document.querySelector('.saga-header-emblem img')).not.toBeNull()
   await expect.element(screen.getByRole('button', { name: 'Bob' }).first()).toBeVisible()
-  expect(document.querySelectorAll('[aria-label="Allies"] li')).toHaveLength(2)
-  expect(document.querySelectorAll('[aria-label="Allies"] .is-unresolved')).toHaveLength(1)
+  expect(document.querySelectorAll('[aria-label="Allies"] .saga-header-chip')).toHaveLength(2)
+  expect(document.querySelectorAll('[aria-label="Allies"] .saga-header-chip.is-unresolved')).toHaveLength(1)
 })
 
 test('Item: empty banner and the holder, owner, location and origin links', async () => {
@@ -56,11 +56,11 @@ test('Item: empty banner and the holder, owner, location and origin links', asyn
     config: { typeKey: 'type', renderers: { item: { types: ['artifact'], keys: {}, templates: [] } } }
   })
   await expect.element(screen.getByRole('region', { name: 'Item header' })).toBeVisible()
-  expect(document.querySelector('.saga-header-banner [data-empty]')).not.toBeNull()
+  expect(document.querySelector('.saga-header-banner[data-empty]')).not.toBeNull()
   await expect.element(screen.getByRole('textbox', { name: 'Rarity' })).toHaveValue('legendary')
   await expect.element(screen.getByRole('button', { name: 'Bob', exact: true })).toBeVisible()
   await expect.element(screen.getByRole('button', { name: 'Harbor Guild', exact: true })).toBeVisible()
-  await expect.element(screen.getByRole('textbox', { name: 'Origin' })).toBeVisible()
+  await expect.element(screen.getByRole('button', { name: 'Add origin…' })).toBeVisible()
 })
 
 test('Map: image banner and name; a missing image is required', async () => {

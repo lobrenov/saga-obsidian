@@ -42,10 +42,10 @@ export function imageBox() {
   return { left: box.left, top: box.top, scale: box.width / 1400 }
 }
 
-/** The screen point of a pin's tip. */
+/** The screen point of a pin's tip (the outline ends 1 px above the button's bottom edge). */
 export const tipOf = (el: HTMLElement): { x: number; y: number } => {
   const box = el.getBoundingClientRect()
-  return { x: box.left + box.width / 2, y: box.bottom }
+  return { x: box.left + box.width / 2, y: box.bottom - 1 }
 }
 
 /** Dispatches a pointer event (mouse pointer 1) on `target` at client coordinates; `buttons` is 1 while the button is down. */

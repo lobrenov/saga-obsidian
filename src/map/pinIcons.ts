@@ -19,16 +19,16 @@ const WIDTH = 32
 const HEIGHT = 44
 
 const pinSvg = (sprite: string, style: PinStyle, renderer: RendererId): string =>
-  `<svg class="saga-map-pin-svg" aria-hidden="true" focusable="false" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}" style="color:${pinColor(style, renderer)}">` +
+  `<svg class="saga-map-pin-svg" aria-hidden="true" focusable="false" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}" style="--saga-map-pin:${pinColor(renderer)};color:var(--saga-map-pin)">` +
   `<use href="#${pinShapeId(sprite)}"/><use href="#${pinGlyphId(sprite, style)}"/></svg>`
 
-/** The class of a pin button: placed by its bottom tip, selected or not, with or without its label. */
-export const pinClass = (selected: boolean, label: boolean): string => `saga-map-placed saga-map-pin${selected ? ' saga-map-pin-selected' : ''}${label ? '' : ' saga-map-pin-no-label'}`
+/** The class of a pin button: placed by its bottom tip, selected or not. */
+export const pinClass = (selected: boolean): string => `saga-map-placed saga-map-pin${selected ? ' saga-map-pin-selected' : ''}`
 
-/** A pin's content: the head and tip from the sprite in the style's colour, the title under it, a visually hidden description for screen readers. */
+/** A pin's content: the head and tip from the sprite in the renderer's colour with the style's glyph, and a visually hidden name for screen readers. */
 export function pinHtml({ sprite, title, description, renderer, style }: PinHtmlOptions): string {
   const text = escapeHtml(title)
-  return `${pinSvg(sprite, style, renderer)}<span class="saga-map-pin-label" aria-hidden="true">${text}</span><span class="saga-map-sr-only">${text} — ${escapeHtml(description)}</span>`
+  return `${pinSvg(sprite, style, renderer)}<span class="saga-map-sr-only">${text} — ${escapeHtml(description)}</span>`
 }
 
 /** The content of the pin that follows the cursor or shows where a pin will go. */

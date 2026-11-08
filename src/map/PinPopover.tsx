@@ -84,7 +84,7 @@ export function PinPopover({ store, host, pin, onClose, onMove, onStyle, onRemov
           <path d="m18 6-12 12" />
         </svg>
       </button>
-      <p className="saga-map-popover-kind" style={{ color: pinColor('auto', pin.renderer) }}>
+      <p className="saga-map-popover-kind" style={{ color: pinColor(pin.renderer) }}>
         {def.label}
       </p>
       <h2 id={ids.title} className="saga-map-popover-title">
