@@ -1,6 +1,6 @@
 ---
 type: NPC
-role: Fixer
+title: Fixer
 location: "[[Places/Waterdeep]]"
 ---
 # Bob

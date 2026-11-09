@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import { missingRequired } from '../../../src/shared/renderers/compat'
 import { rendererDefs } from '../../../src/shared/renderers/definitions'
 import { convertRaw, formatWikiLink, toNoteValue } from '../../../src/shared/renderers/values'
 import { createRendererResolver, typesOf } from '../../../src/shared/renderers/resolve'
@@ -7,13 +6,6 @@ import { readFrontmatter } from '../../../src/shared/schemas/frontmatter'
 import type { Config } from '../../../src/shared/schemas/config'
 
 describe('compatibility', () => {
-  it('lists the required fields that are missing or invalid', () => {
-    const layers = readFrontmatter(rendererDefs.character, { role: 5, location: '[[Waterdeep]]' }).fields
-    expect(missingRequired(rendererDefs.character, layers)).toEqual(['role'])
-    expect(missingRequired(rendererDefs.character, readFrontmatter(rendererDefs.character, {}).fields)).toEqual(['role', 'location'])
-    expect(missingRequired(rendererDefs.document, {})).toEqual([])
-  })
-
   it('a links field holding bare names is invalid and converts to [[links]]', () => {
     const { allies } = rendererDefs.faction.fields
     const layers = readFrontmatter(rendererDefs.faction, { allies: ['[[A]]', 'B'] }).fields
@@ -39,15 +31,15 @@ describe('renderer resolution and values', () => {
 
   it('converts values that fail their schema', () => {
     const { fields } = rendererDefs.character
-    expect(convertRaw(fields.role, 5)).toBe('5')
-    expect(convertRaw(fields.role, ['a', 'b'])).toBe('a, b')
-    expect(convertRaw(fields.role, { a: 1 })).toBeUndefined()
+    expect(convertRaw(fields.title, 5)).toBe('5')
+    expect(convertRaw(fields.title, ['a', 'b'])).toBe('a, b')
+    expect(convertRaw(fields.title, { a: 1 })).toBeUndefined()
     expect(convertRaw(fields.location, 'Saltmere')).toBe('[[Saltmere]]')
     expect(convertRaw(fields.location, 'Places/Saltmere.md')).toBe('[[Places/Saltmere.md]]')
     expect(convertRaw(fields.status, 'Dead')).toBe('dead')
     expect(convertRaw(fields.status, 'zombie')).toBeUndefined()
-    expect(convertRaw({ kind: 'list', key: 'k', required: false, label: 'K' }, 'one')).toEqual(['one'])
-    expect(convertRaw({ kind: 'list', key: 'k', required: false, label: 'K' }, [1, 'b'])).toEqual(['1', 'b'])
+    expect(convertRaw({ kind: 'list', key: 'k', label: 'K' }, 'one')).toEqual(['one'])
+    expect(convertRaw({ kind: 'list', key: 'k', label: 'K' }, [1, 'b'])).toEqual(['1', 'b'])
   })
 
   it('stores links as [[wikilinks]]', () => {

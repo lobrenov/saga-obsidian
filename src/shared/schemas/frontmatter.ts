@@ -1,4 +1,4 @@
-import type { Issue, Validated } from '../result'
+import type { Validated } from '../result'
 import { fieldSchema, type FieldValue, type Fields } from '../renderers/fields'
 import { zodIssues } from './issues'
 
@@ -21,8 +21,7 @@ export function readFrontmatter<F extends Fields>(
     const key = keys[name] ?? field.key
     const input = raw[key]
     if (input === undefined || input === null) {
-      const issues: Issue[] = field.required ? [{ path: key, message: 'Required' }] : []
-      fields[name] = { value: undefined, issues }
+      fields[name] = { value: undefined, issues: [] }
       continue
     }
     const parsed = fieldSchema(field).safeParse(input)

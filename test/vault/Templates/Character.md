@@ -1,6 +1,6 @@
 ---
 type: character
-role:
+title:
 location:
 ---
 # {{title}}

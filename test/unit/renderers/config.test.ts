@@ -13,7 +13,7 @@ const entry = (over: Partial<NonNullable<Config['renderers']['character']>> = {}
 
 describe('applyConfigToYaml', () => {
   it('creates the file content from nothing, flow style, without default keys', () => {
-    const text = apply(null, config({ character: entry({ types: ['character', 'NPC'], keys: { role: 'role', portrait: 'avatar' } }) }))
+    const text = apply(null, config({ character: entry({ types: ['character', 'NPC'], keys: { title: 'title', portrait: 'avatar' } }) }))
     expect(text).toBe('renderers:\n  character:\n    types: [character, NPC]\n    keys: {portrait: avatar}\n')
     expect(parseConfig(parse(text)).config.renderers.character).toEqual({ types: ['character', 'NPC'], keys: { portrait: 'avatar' }, templates: [] })
   })
@@ -41,7 +41,7 @@ describe('applyConfigToYaml', () => {
       ''
     ].join('\n')
     const parsed = parseConfig(parse(original)).config
-    const next = config({ ...parsed.renderers, character: { ...entry(), ...parsed.renderers.character!, types: ['character', 'NPC', 'adversary'], keys: { portrait: 'avatar', role: 'job' } } })
+    const next = config({ ...parsed.renderers, character: { ...entry(), ...parsed.renderers.character!, types: ['character', 'NPC', 'adversary'], keys: { portrait: 'avatar', title: 'job' } } })
     const text = apply(original, next)
     expect(text).toContain('# Saga renderers')
     expect(text).toContain('theme: parchment # unknown, kept')
@@ -50,12 +50,12 @@ describe('applyConfigToYaml', () => {
     expect(text.indexOf('theme')).toBeLessThan(text.indexOf('renderers:'))
     expect(parse(text)).toMatchObject({
       theme: 'parchment',
-      renderers: { character: { types: ['character', 'NPC', 'adversary'], keys: { portrait: 'avatar', role: 'job' }, templates: ['Templates/Character.md'] }, monster: { types: ['beast'] } }
+      renderers: { character: { types: ['character', 'NPC', 'adversary'], keys: { portrait: 'avatar', title: 'job' }, templates: ['Templates/Character.md'] }, monster: { types: ['beast'] } }
     })
   })
 
   it('removes a key that is renamed back to its default and drops an empty keys map', () => {
-    const original = 'renderers:\n  character:\n    types: [character]\n    keys: { role: job }\n'
+    const original = 'renderers:\n  character:\n    types: [character]\n    keys: { title: job }\n'
     const text = apply(original, config({ character: entry({ types: ['character'], keys: {} }) }))
     expect(parse(text)).toEqual({ renderers: { character: { types: ['character'] } } })
   })
@@ -76,7 +76,7 @@ describe('config schema', () => {
     const { issues } = parseConfig({
       typeKey: ' ',
       renderers: {
-        character: { types: ['NPC', ' '], keys: { role: 'location', title: '' } },
+        character: { types: ['NPC', ' '], keys: { affiliation: 'location', title: '' } },
         location: { types: ['npc'] }
       }
     })
@@ -90,11 +90,11 @@ describe('config schema', () => {
   })
 
   it('reserves the type key and map-pins so a field cannot change the note renderer', () => {
-    const { issues } = parseConfig({ typeKey: 'kind', renderers: { character: { keys: { role: 'kind', title: 'map-pins' } } } })
-    expect(issues.map((i) => i.path)).toEqual(['renderers.character.keys.role', 'renderers.character.keys.title'])
+    const { issues } = parseConfig({ typeKey: 'kind', renderers: { character: { keys: { title: 'kind', affiliation: 'map-pins' } } } })
+    expect(issues.map((i) => i.path)).toEqual(['renderers.character.keys.title', 'renderers.character.keys.affiliation'])
     expect(issues[0]?.message).toContain('reserved')
     // A default key equal to the type key is caught too.
-    expect(parseConfig({ typeKey: 'role', renderers: { character: {} } }).issues.map((i) => i.path)).toEqual(['renderers.character.keys.role'])
+    expect(parseConfig({ typeKey: 'title', renderers: { character: {} } }).issues.map((i) => i.path)).toEqual(['renderers.character.keys.title'])
   })
 
   it('reports renderers whose entry cannot be read as invalid', () => {

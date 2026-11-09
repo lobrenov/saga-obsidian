@@ -6,7 +6,7 @@ A note whose `type` maps to a renderer other than `document` gets a React header
 - `index.ts`: `registerHeader(plugin, config)`. Registers the hover source `saga-header`, syncs on `file-open`, `layout-change`, `active-leaf-change`, `metadataCache` `changed`, vault `rename`, `create` and `delete`, on `config.subscribe`, and once from `onLayoutReady`. Collects the Markdown views with `workspace.iterateAllLeaves` and passes `{ containerEl, file, mode }` per leaf to the controller. Mode: `getMode() === 'preview'` is `reading`, `getState().source === true` is `source`, otherwise `live`. Unload sets a disposed flag (later syncs do nothing) and disposes the controller.
 - `controller.ts`: `createHeaderController(env, config)` with `sync(views)` and `dispose()`. One React root and one host element (`.saga-header-host`) per leaf key. `sync` resolves `config.rendererOf(frontmatterOf(app, file))`; leaves in Source mode, without a file or resolving to `document` are unmounted. `NoteHeader` is keyed by the file path, so a file switch in the same leaf unmounts the old tree (pending text edits flush to their own note) and mounts a new one. A draw is skipped when its signature (path, frontmatter, resolution, config text, Properties state) is unchanged. A mode change remounts the leaf; the Properties state is kept.
 - `dom.ts`: all knowledge of Obsidian's markup (below), `placeHost`, `markActive`, `watchPlacement`, `isolatePointer`.
-- `NoteHeader.tsx`: the section for one note: `role="status"` region, bar, layout inside `LayoutBoundary`.
+- `NoteHeader.tsx`: the section for one note: bar, layout inside `LayoutBoundary`.
 - `registry.tsx`, `layouts.tsx`, `types.ts`: `defineRendererView(def, Layout)` validates the frontmatter (`readFrontmatter` with the config's key renames) and gives the layout `title` and `field(name, className)`. `rendererRegistry` covers `character`, `location`, `faction`, `item` and `map`.
 - `FieldView.tsx`, `fieldEditors.tsx`: one field and one editor per kind.
 - `NoteTitle.tsx`, `Icon.tsx`, `LayoutBoundary.tsx`, `header.css`.
@@ -22,16 +22,16 @@ A note whose `type` maps to a renderer other than `document` gets a React header
 
 ## Layouts
 Each renderer has an accent and tint from the `--saga-<renderer>` and `--saga-<renderer>-tint` tokens in `src/styles.css` (fallback: Obsidian's colour variables). The bar (tinted) shows the renderer's icon (`setIcon`) and label, the Type selector and the Properties toggle. Inside:
-- Character: portrait card (152×192) beside the name, `title` (epithet), and facts role, affiliation, location, status.
+- Character: portrait card (152×192) beside the name, `title` (epithet), and facts affiliation, location, status.
 - Location: image banner, name, facts kind and region.
 - Faction: emblem beside the name and facts kind, leader, base, allies, rivals.
 - Item: image banner, name, facts kind, rarity, holder, owner, location, origin.
 - Map: image banner and name.
 
-Every image field keeps its frame in its real place. A set image fills the frame (portrait 152×192, emblem 112×112, banners 180 px high) with change and remove controls on hover. An empty one is a quiet dashed frame of the same place, tinted with the renderer's `-tint` token, with the renderer icon centred (portrait 120×150, emblem 96×96, banner 72 px high); "Add portrait" shows on hover and focus, and click opens the image suggester input in place (Esc cancels). Facts are a grid of fields. A layout that throws falls back to the title alone and logs to the console. The status region is always mounted and lists the required note keys (after renames) that are missing or invalid: "Missing required for the X renderer: keys".
+Every image field keeps its frame in its real place. A set image fills the frame (portrait 152×192, emblem 112×112, banners 180 px high) with change and remove controls on hover. An empty one is a quiet dashed frame of the same place, tinted with the renderer's `-tint` token, with the renderer icon centred (portrait 120×150, emblem 96×96, banner 72 px high); "Add portrait" shows on hover and focus, and click opens the image suggester input in place (Esc cancels). Facts are a grid of fields. A layout that throws falls back to the title alone and logs to the console.
 
 ## Fields
-`FieldView` shows the label, the editor, a "required" mark, and for a value failing its schema the raw value, the issue and, when `convertRaw` finds a safe conversion, a Convert button (a `setField` with the converted value). A failed write shows `role="alert"`. All writes go through `src/obsidian/vault.ts` with the note key from the config's renames; a cleared field removes its key.
+`FieldView` shows the label, the editor, and for a value failing its schema the raw value, the issue and, when `convertRaw` finds a safe conversion, a Convert button (a `setField` with the converted value). A failed write shows `role="alert"`. All writes go through `src/obsidian/vault.ts` with the note key from the config's renames; a cleared field removes its key.
 
 | Kind | Editor | Write |
 |---|---|---|

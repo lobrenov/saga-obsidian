@@ -2,12 +2,10 @@ import { useId } from 'react'
 import type { TFile } from 'obsidian'
 import { setField } from '../obsidian/vault'
 import type { RendererDef } from '../shared/renderers/define'
-import { missingRequired } from '../shared/renderers/compat'
 import { rendererDefs } from '../shared/renderers/definitions'
 import type { RendererResolution } from '../shared/renderers/resolve'
 import { typesOf } from '../shared/renderers/resolve'
 import type { Config } from '../shared/schemas/config'
-import { readFrontmatter } from '../shared/schemas/frontmatter'
 import { HeaderCtx, useHeader, type HeaderEnv } from './env'
 import { Icon } from './Icon'
 import { LayoutBoundary } from './LayoutBoundary'
@@ -49,13 +47,11 @@ function TypeField({ renderer, current }: { renderer: HeaderRendererId; current:
   )
 }
 
-/** The header of a note drawn by a renderer: the renderer's label and type selector, the Missing required banner, then the layout. */
+/** The header of a note drawn by a renderer: the renderer's label and type selector, then the layout. */
 export function NoteHeader({ env, file, frontmatter, resolution, config, properties, onToggleProperties }: NoteHeaderProps) {
   const { renderer } = resolution
   const def: RendererDef = rendererDefs[renderer]
   const keys = config.renderers[renderer]?.keys ?? NO_KEYS
-  const layers = readFrontmatter(def, frontmatter, keys).fields
-  const missing = missingRequired(def, layers).map((name) => keys[name] ?? def.fields[name]?.key ?? name)
   const { Layout } = rendererRegistry[renderer]
   const title = <NoteTitle />
   const nameId = useId()
@@ -66,19 +62,6 @@ export function NoteHeader({ env, file, frontmatter, resolution, config, propert
         <span id={nameId} hidden>
           {def.label} header
         </span>
-        <div role="status" className="saga-header-status">
-          {missing.length > 0 ? (
-            <p className="saga-header-missing">
-              Missing required for the {def.label} renderer:{' '}
-              {missing.map((key, i) => (
-                <span key={key}>
-                  {i > 0 ? ', ' : ''}
-                  <code>{key}</code>
-                </span>
-              ))}
-            </p>
-          ) : null}
-        </div>
         <div className="saga-header-bar">
           <span className="saga-header-badge">
             <Icon name={def.icon} />

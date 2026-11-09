@@ -2,7 +2,7 @@
 type: character
 aliases: [Countess, Ada]
 avatar: "[[portrait.png]]"
-role: Mathematician
+title: Mathematician
 location: "[[Waterdeep]]"
 ---
 # Ada Lovelace

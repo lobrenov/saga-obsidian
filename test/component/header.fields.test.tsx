@@ -12,56 +12,56 @@ const settle = { timeout: 3000 }
 
 test('the text editor writes only its key, on blur', async () => {
   const { screen, text, app } = await renderHeader(ada, ADA)
-  const role = screen.getByRole('textbox', { name: 'Role' })
-  await expect.element(role).toHaveValue('Mathematician')
-  await role.fill('Port warden')
+  const title = screen.getByRole('textbox', { name: 'Title' })
+  await expect.element(title).toHaveValue('Mathematician')
+  await title.fill('Port warden')
   expect(app.processed).toHaveLength(0)
-  ;(role.element() as HTMLElement).blur()
-  await vi.waitFor(() => expect(text()).toBe(ADA.replace('role: Mathematician', 'role: Port warden')))
+  ;(title.element() as HTMLElement).blur()
+  await vi.waitFor(() => expect(text()).toBe(ADA.replace('title: Mathematician', 'title: Port warden')))
 })
 
 test('typing writes once after a pause, not per keystroke, and the cursor stays put when the cache catches up', async () => {
   const { screen, text, app } = await renderHeader(ada, ADA)
-  const role = screen.getByRole('textbox', { name: 'Role' })
-  await role.fill('Alpha')
+  const title = screen.getByRole('textbox', { name: 'Title' })
+  await title.fill('Alpha')
   await userEvent.keyboard('Be')
   expect(app.processed).toHaveLength(0)
-  await vi.waitFor(() => expect(text()).toContain('role: AlphaBe'), settle)
+  await vi.waitFor(() => expect(text()).toContain('title: AlphaBe'), settle)
   await userEvent.keyboard('ta')
-  const area = role.element() as HTMLTextAreaElement
+  const area = title.element() as HTMLTextAreaElement
   expect(area.value).toBe('AlphaBeta')
   expect(area.selectionStart).toBe(9)
   expect(app.processed).toHaveLength(1)
-  await vi.waitFor(() => expect(text()).toContain('role: AlphaBeta'), settle)
+  await vi.waitFor(() => expect(text()).toContain('title: AlphaBeta'), settle)
 })
 
 test('clearing a text field removes only its key', async () => {
   const { screen, text } = await renderHeader(ada, ADA)
-  const role = screen.getByRole('textbox', { name: 'Role' })
-  await role.fill('')
-  ;(role.element() as HTMLElement).blur()
-  await vi.waitFor(() => expect(text()).toBe(ADA.replace('role: Mathematician\n', '')))
-  await expect.element(screen.getByRole('textbox', { name: 'Role' })).toHaveAttribute('placeholder', 'Add role…')
+  const title = screen.getByRole('textbox', { name: 'Title' })
+  await title.fill('')
+  ;(title.element() as HTMLElement).blur()
+  await vi.waitFor(() => expect(text()).toBe(ADA.replace('title: Mathematician\n', '')))
+  await expect.element(screen.getByRole('textbox', { name: 'Title' })).toHaveAttribute('placeholder', 'Add title…')
 })
 
 test('Enter commits and Escape reverts a text edit', async () => {
   const { screen, text, app } = await renderHeader(ada, ADA)
-  const role = screen.getByRole('textbox', { name: 'Role' })
-  await role.fill('Typed')
+  const title = screen.getByRole('textbox', { name: 'Title' })
+  await title.fill('Typed')
   await userEvent.keyboard('{Enter}')
-  await vi.waitFor(() => expect(text()).toBe(ADA.replace('role: Mathematician', 'role: Typed')))
-  await role.fill('Discarded')
+  await vi.waitFor(() => expect(text()).toBe(ADA.replace('title: Mathematician', 'title: Typed')))
+  await title.fill('Discarded')
   await userEvent.keyboard('{Escape}')
-  await expect.element(role).toHaveValue('Typed')
+  await expect.element(title).toHaveValue('Typed')
   expect(app.processed).toHaveLength(1)
 })
 
 test('the text editor grows with its content', async () => {
   const { screen } = await renderHeader(ada, ADA)
-  const role = screen.getByRole('textbox', { name: 'Role' })
-  const before = (role.element() as HTMLElement).getBoundingClientRect().height
-  await role.fill('A very long role that keeps going and going '.repeat(12))
-  await vi.waitFor(() => expect((role.element() as HTMLElement).getBoundingClientRect().height).toBeGreaterThan(before))
+  const title = screen.getByRole('textbox', { name: 'Title' })
+  const before = (title.element() as HTMLElement).getBoundingClientRect().height
+  await title.fill('A very long title that keeps going and going '.repeat(12))
+  await vi.waitFor(() => expect((title.element() as HTMLElement).getBoundingClientRect().height).toBeGreaterThan(before))
 })
 
 test('the choice editor selects, offers no empty option while set, and Clear removes only its key', async () => {
@@ -160,21 +160,21 @@ test('Convert fixes a value that fails its schema and writes only that key', asy
 })
 
 test('renamed keys write the mapped key', async () => {
-  const config = { typeKey: 'type', renderers: { character: { types: ['NPC'], keys: { role: 'job', location: 'home' }, templates: [] } } }
-  const source = '---\ntype: NPC\njob: Smith\nhome: "[[Waterdeep]]"\nrole: ignored\n---\n'
+  const config = { typeKey: 'type', renderers: { character: { types: ['NPC'], keys: { title: 'job', location: 'home' }, templates: [] } } }
+  const source = '---\ntype: NPC\njob: Smith\nhome: "[[Waterdeep]]"\ntitle: ignored\n---\n'
   const { screen, text } = await renderHeader(ada, source, { config })
-  const role = screen.getByRole('textbox', { name: 'Role' })
-  await expect.element(role).toHaveValue('Smith')
-  await role.fill('Mason')
-  ;(role.element() as HTMLElement).blur()
+  const title = screen.getByRole('textbox', { name: 'Title' })
+  await expect.element(title).toHaveValue('Smith')
+  await title.fill('Mason')
+  ;(title.element() as HTMLElement).blur()
   await vi.waitFor(() => expect(text()).toBe(source.replace('job: Smith', 'job: Mason')))
   await screen.getByRole('combobox', { name: 'Status' }).selectOptions('missing')
-  await vi.waitFor(() => expect(text()).toBe(source.replace('job: Smith', 'job: Mason').replace('role: ignored', 'role: ignored\nstatus: missing')))
+  await vi.waitFor(() => expect(text()).toBe(source.replace('job: Smith', 'job: Mason').replace('title: ignored', 'title: ignored\nstatus: missing')))
 })
 
 test('the type selector offers the renderer types and writes the type key', async () => {
   const config = { typeKey: 'kind-of', renderers: { character: { types: ['NPC', 'hero'], keys: {}, templates: [] } } }
-  const source = '---\nkind-of: NPC\nrole: R\nlocation: "[[Waterdeep]]"\n---\n'
+  const source = '---\nkind-of: NPC\ntitle: R\nlocation: "[[Waterdeep]]"\n---\n'
   const { screen, text } = await renderHeader(ada, source, { config })
   const type = screen.getByRole('combobox', { name: 'Type' })
   await expect.element(type).toHaveValue('NPC')
@@ -194,7 +194,7 @@ test('the list editor adds and removes items', async () => {
   for (const [p, t] of Object.entries(FILES)) app.addFile(p, t)
   const file = app.addFile('Notes/N.md', '---\naliases: [a]\n---\n')
   const { env } = testEnv(app)
-  const def = { kind: 'list', key: 'aliases', required: false, label: 'Aliases' } as const
+  const def = { kind: 'list', key: 'aliases', label: 'Aliases' } as const
   const layer = readFrontmatter({ fields: { aliases: def } }, { aliases: ['a'] }).fields.aliases
   const screen = await render(
     <HeaderCtx.Provider value={{ env, file, config: DEFAULT_CONFIG, renderer: 'character' }}>

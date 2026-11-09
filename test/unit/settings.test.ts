@@ -29,7 +29,7 @@ describe('settings draft', () => {
     const { app, store } = await setup()
     const draft = draftOf(store.state().config)
     draft.types.character = 'character, pc, npc'
-    draft.keys.character!.role = 'job'
+    draft.keys.character!.title = 'job'
     const result = saveText(store.state(), draft)
     expect(result.ok).toBe(true)
     if (!result.ok) return
@@ -44,7 +44,7 @@ describe('settings draft', () => {
     const { config, issues } = parseConfig(parse(text))
     expect(issues).toMatchObject([{ path: 'renderers.custom' }])
     expect(config.typeKey).toBe('category')
-    expect(config.renderers.character).toEqual({ types: ['character', 'pc', 'npc'], keys: { role: 'job' }, templates: ['Templates/Character.md'] })
+    expect(config.renderers.character).toEqual({ types: ['character', 'pc', 'npc'], keys: { title: 'job' }, templates: ['Templates/Character.md'] })
   })
 
   it('leaves the file untouched when nothing was edited', async () => {
@@ -72,7 +72,7 @@ describe('settings draft', () => {
     const twice = draftOf(base)
     twice.types.location = 'location, PC'
     const collision = draftOf(base)
-    collision.keys.character!.role = 'title'
+    collision.keys.character!.title = 'location'
     const empty = draftOf(base)
     empty.typeKey = ' '
 
@@ -107,14 +107,14 @@ describe('settings draft', () => {
     const previous = store.state().config
     const draft = draftOf(previous)
     expect(isDirty(draft, previous)).toBe(false)
-    draft.keys.character!.role = 'job'
+    draft.keys.character!.title = 'job'
     expect(isDirty(draft, previous)).toBe(true)
 
     app.setRaw(CONFIG_PATH, FILE.replace('[place]', '[place, town]'))
     await store.reload()
     const next = store.state().config
     const merged = rebase(draft, previous, next)
-    expect(merged.keys.character!.role).toBe('job')
+    expect(merged.keys.character!.title).toBe('job')
     expect(merged.types.location).toBe('place, town')
     expect(isDirty(rebase(draftOf(previous), previous, next), next)).toBe(false)
 

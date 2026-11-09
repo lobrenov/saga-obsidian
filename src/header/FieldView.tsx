@@ -39,11 +39,9 @@ export function FieldView({ def, noteKey, raw, layer, className }: FieldViewProp
 
   const invalid = present(raw) && layer.issues.length > 0
   const converted = invalid ? convertRaw(def, raw) : undefined
-  const missing = def.required && (!present(raw) || invalid)
 
   const editor = renderEditor(def, {
     id,
-    required: def.required,
     invalid,
     describedBy: invalid ? hint : undefined,
     placeholder: def.kind === 'choice' ? `Choose ${def.label.toLowerCase()}…` : `Add ${def.label.toLowerCase()}…`,
@@ -53,7 +51,7 @@ export function FieldView({ def, noteKey, raw, layer, className }: FieldViewProp
   })
 
   return (
-    <div className={`saga-header-field ${className ?? ''}`} data-field={noteKey} data-kind={def.kind} data-empty={present(raw) ? undefined : ''} data-missing={missing ? 'required' : undefined}>
+    <div className={`saga-header-field ${className ?? ''}`} data-field={noteKey} data-kind={def.kind} data-empty={present(raw) ? undefined : ''}>
       {invalid && converted !== undefined ? (
         <div role="group" aria-labelledby={`${id}-label`} aria-describedby={hint}>
           <span id={`${id}-label`} className="saga-header-label">
@@ -69,16 +67,9 @@ export function FieldView({ def, noteKey, raw, layer, className }: FieldViewProp
         </div>
       ) : (
         <>
-          <span className="saga-header-labelrow">
-            <label htmlFor={id} className="saga-header-label">
-              {def.label}
-            </label>
-            {def.required ? (
-              <span className="saga-header-required" aria-hidden="true">
-                · required
-              </span>
-            ) : null}
-          </span>
+          <label htmlFor={id} className="saga-header-label">
+            {def.label}
+          </label>
           {invalid ? (
             <div className="saga-header-raw">
               <code>{JSON.stringify(raw)}</code>

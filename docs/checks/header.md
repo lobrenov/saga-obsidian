@@ -12,8 +12,7 @@ Run on `test/vault` in Obsidian (`npm run dev`, reload the plugin). Notes: `Char
 - [ ] Light and dark theme, switched while a header is open: all text, borders, banners and the dashed empty image frame stay legible.
 - [ ] A custom theme or accent colour: renderer accent stays on the top rule, badge icon and portrait border.
 - [ ] Split pane with the same note twice (one in Live Preview, one in Reading view): each pane has its own header; editing a field in one updates the other.
-- [ ] Open `Maps/Empty Map.md`: the Missing required banner names `image`; the Image field is outlined as required. Set the image: the banner disappears.
-- [ ] A character without `role` or `location`: banner lists both note keys (after renames: `avatar` for portrait is only a rename of an optional field, no banner).
+- [ ] Open `Maps/Empty Map.md` and a character with only `type`: empty fields show their placeholders.
 - [ ] Close the leaf, reload the plugin (disable and enable): no header host or `saga-header-active` class is left behind (inspect `.workspace-leaf-content`).
 
 - [ ] Reading view: scroll-to-heading and backlink jumps still land on the right place with the header present.
@@ -28,7 +27,7 @@ Run on `test/vault` in Obsidian (`npm run dev`, reload the plugin). Notes: `Char
 - [ ] Edit `.saga/renderers.yaml` (map `npc` to Character) while a `type: npc` note is open: the header appears without reopening.
 
 ## Fields (each edit lands in the file as one key)
-- [ ] Text (Role, Title, Kind, Rarity): typing writes once after a pause or on leaving the field, not per keystroke; the cursor stays put when the write lands; Enter leaves the field; Escape restores the saved text; clearing and leaving removes the key.
+- [ ] Text (Title, Kind, Rarity): typing writes once after a pause or on leaving the field, not per keystroke; the cursor stays put when the write lands; Enter leaves the field; Escape restores the saved text; clearing and leaving removes the key.
 - [ ] Choice (Status): selecting writes the value; the list has no empty option while set; Clear (hover) removes the key and the placeholder returns.
 - [ ] Image fields without a value show a small tinted frame in the image's place (beside the title for portrait and emblem, a slim strip for banners) with the renderer icon; hover shows "Add …", click opens the image suggester in place, Esc cancels.
 - [ ] Link chips and Add pills have equal left and right padding, and no text clips, with the Saga theme (IBM Plex Sans) and without it.

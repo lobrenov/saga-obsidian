@@ -18,15 +18,8 @@ export function defineRenderer<const Id extends RendererId, const F extends Fiel
   return def
 }
 
-type Simplify<T> = { [K in keyof T]: T[K] } & {}
-type RequiredKeys<F extends Fields> = { [K in keyof F]: F[K]['required'] extends true ? K : never }[keyof F]
-
-/** Field name -> value; required fields are non-optional, choice fields are literal unions. */
-export type RendererValues<R extends { fields: Fields }> = Simplify<
-  { [K in RequiredKeys<R['fields']>]: FieldValue<R['fields'][K]> } & {
-    [K in Exclude<keyof R['fields'], RequiredKeys<R['fields']>>]?: FieldValue<R['fields'][K]>
-  }
->
+/** Field name -> value; every field is optional, choice fields are literal unions. */
+export type RendererValues<R extends { fields: Fields }> = { -readonly [K in keyof R['fields']]?: FieldValue<R['fields'][K]> }
 
 /** Field name -> note key. */
 export type KeyMap<R extends { fields: Fields }> = { -readonly [K in keyof R['fields']]: string }

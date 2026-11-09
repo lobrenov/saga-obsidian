@@ -11,7 +11,7 @@ import { HeaderFakeApp, testEnv } from '../fakes/header'
 export const ADA = `---
 type: character
 portrait: "[[portrait.png]]"
-role: Mathematician
+title: Mathematician
 location: "[[Waterdeep]]"
 status: alive
 ---

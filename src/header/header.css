@@ -123,23 +123,6 @@
   color: var(--text-on-accent);
 }
 
-/* Missing required banner. */
-.saga-header-status:empty {
-  display: none;
-}
-
-.saga-header-missing {
-  margin: 0;
-  padding: var(--size-4-2) var(--saga-header-pad);
-  background: rgba(var(--color-yellow-rgb), 0.16);
-  border-bottom: 1px solid rgba(var(--color-yellow-rgb), 0.45);
-  font-size: var(--font-ui-small);
-}
-
-.saga-header-missing code {
-  font-family: var(--font-monospace);
-}
-
 /* Body. */
 .saga-header-body {
   padding: var(--saga-header-pad);
@@ -215,22 +198,6 @@
   color: var(--text-muted);
 }
 
-.saga-header-labelrow {
-  display: flex;
-  align-items: baseline;
-  gap: var(--size-2-2);
-}
-
-.saga-header-required {
-  font-size: var(--font-ui-smaller);
-  text-transform: uppercase;
-  color: var(--text-error);
-}
-
-.saga-header-field[data-missing='required'] .saga-header-label {
-  color: var(--text-error);
-}
-
 .saga-header-control {
   min-width: 0;
 }
@@ -239,10 +206,6 @@
   width: 100%;
   box-sizing: border-box;
   box-shadow: none;
-}
-
-.saga-header-field[data-missing='required'] :is(.saga-header-text, .saga-header-input, .saga-header-select) {
-  border: 1px dashed var(--text-error);
 }
 
 .saga-header-field :is(.saga-header-text, .saga-header-input)[aria-invalid='true'] {
@@ -278,7 +241,7 @@
   color: var(--text-muted);
 }
 
-.saga-header-epithet .saga-header-labelrow {
+.saga-header-epithet .saga-header-label {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -516,7 +479,7 @@
   opacity: 1;
 }
 
-.saga-header-field[data-kind='image'] > .saga-header-labelrow {
+.saga-header-field[data-kind='image'] > .saga-header-label {
   position: absolute;
   width: 1px;
   height: 1px;

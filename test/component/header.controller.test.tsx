@@ -177,16 +177,16 @@ test('dispose unmounts every header', async () => {
 
 test('a pending text edit is written to its own note when the leaf switches files', async () => {
   const { controller, app, file } = await setup()
-  const bob = app.addFile('Characters/Bob.md', '---\ntype: character\nrole: Fixer\nlocation: "[[Waterdeep]]"\n---\n')
+  const bob = app.addFile('Characters/Bob.md', '---\ntype: character\ntitle: Fixer\nlocation: "[[Waterdeep]]"\n---\n')
   const { containerEl } = liveView()
   const leaf = {}
   controller.sync([[leaf, { containerEl, file, mode: 'live' }]])
   await vi.waitFor(() => expect(headers(containerEl)).toHaveLength(1))
-  const role = containerEl.querySelector<HTMLTextAreaElement>('[data-field="role"] textarea')
-  role?.focus()
+  const title = containerEl.querySelector<HTMLTextAreaElement>('[data-field="title"] textarea')
+  title?.focus()
   await userEvent.keyboard('X')
   controller.sync([[leaf, { containerEl, file: bob, mode: 'live' }]])
-  await vi.waitFor(() => expect(app.text(ada)).toContain('role: XMathematician'))
-  expect(app.text('Characters/Bob.md')).toContain('role: Fixer\n')
-  expect(containerEl.querySelector<HTMLTextAreaElement>('[data-field="role"] textarea')?.value).toBe('Fixer')
+  await vi.waitFor(() => expect(app.text(ada)).toContain('title: XMathematician'))
+  expect(app.text('Characters/Bob.md')).toContain('title: Fixer\n')
+  expect(containerEl.querySelector<HTMLTextAreaElement>('[data-field="title"] textarea')?.value).toBe('Fixer')
 })

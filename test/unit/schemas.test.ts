@@ -91,12 +91,12 @@ describe('config', () => {
     const { config, issues } = parseConfig({
       typeKey: 'kind',
       renderers: {
-        character: { types: ['NPC'], keys: { role: 'job', mood: 'mood' }, templates: ['T/C.md'] },
+        character: { types: ['NPC'], keys: { title: 'job', mood: 'mood' }, templates: ['T/C.md'] },
         monster: { types: ['monster'] }
       }
     })
     expect(config.typeKey).toBe('kind')
-    expect(config.renderers).toEqual({ character: { types: ['NPC'], keys: { role: 'job' }, templates: ['T/C.md'] } })
+    expect(config.renderers).toEqual({ character: { types: ['NPC'], keys: { title: 'job' }, templates: ['T/C.md'] } })
     expect(issues.map((i) => i.path)).toEqual(['renderers.character.keys.mood', 'renderers.monster'])
   })
   it('reports a type mapped to two renderers, case-insensitively', () => {
@@ -104,8 +104,8 @@ describe('config', () => {
     expect(issues.map((i) => i.path)).toEqual(['renderers.faction.types'])
   })
   it('reports two fields sharing a note key', () => {
-    const { issues } = parseConfig({ renderers: { character: { keys: { role: 'portrait' } } } })
-    expect(issues.map((i) => i.path)).toEqual(['renderers.character.keys.role'])
+    const { issues } = parseConfig({ renderers: { character: { keys: { title: 'portrait' } } } })
+    expect(issues.map((i) => i.path)).toEqual(['renderers.character.keys.title'])
   })
   it('rejects template paths that are not note paths', () => {
     expect(parseConfig({ renderers: { character: { templates: ['../x.md'] } } }).issues).toHaveLength(1)
@@ -119,20 +119,20 @@ describe('config', () => {
 
 describe('readFrontmatter layers', () => {
   it('keeps raw and validates each field with key renames', () => {
-    const layers = readFrontmatter(character, { portrait: '[[a.png]]', job: 'Smith', location: 42, extra: true }, { role: 'job' })
+    const layers = readFrontmatter(character, { portrait: '[[a.png]]', job: 'Smith', location: 42, extra: true }, { title: 'job' })
     expect(layers.raw).toEqual({ portrait: '[[a.png]]', job: 'Smith', location: 42, extra: true })
-    expect(layers.fields.role).toEqual({ value: 'Smith', issues: [] })
+    expect(layers.fields.title).toEqual({ value: 'Smith', issues: [] })
     expect(layers.fields.portrait.value).toEqual({ target: 'a.png', embed: false })
     expect(layers.fields.location.value).toBeUndefined()
     expect(layers.fields.location.issues).toHaveLength(1)
   })
-  it('flags missing required fields', () => {
-    expect(readFrontmatter(map, {}).fields.image).toEqual({ value: undefined, issues: [{ path: 'image', message: 'Required' }] })
+  it('reads a missing field as empty, without issues', () => {
+    expect(readFrontmatter(map, {}).fields.image).toEqual({ value: undefined, issues: [] })
   })
   it('validates choice options', () => {
     const r = defineRenderer({
       id: 'item', label: '', icon: '', color: '', pinStyle: 'auto',
-      fields: { rarity: { kind: 'choice', key: 'rarity', required: false, label: 'R', options: ['common', 'rare'] } }
+      fields: { rarity: { kind: 'choice', key: 'rarity', label: 'R', options: ['common', 'rare'] } }
     })
     expect(readFrontmatter(r, { rarity: 'rare' }).fields.rarity.value).toBe('rare')
     expect(readFrontmatter(r, { rarity: 'epic' }).fields.rarity.issues).toHaveLength(1)

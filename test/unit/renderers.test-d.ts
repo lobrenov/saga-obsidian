@@ -11,34 +11,33 @@ const sample = defineRenderer({
   color: 'item',
   pinStyle: 'auto',
   fields: {
-    title: { kind: 'text', key: 'title', required: true, label: 'Title' },
-    tags: { kind: 'list', key: 'tags', required: false, label: 'Tags' },
-    home: { kind: 'link', key: 'home', required: true, label: 'Home' },
-    art: { kind: 'image', key: 'art', required: false, label: 'Art' },
-    rarity: { kind: 'choice', key: 'rarity', required: true, label: 'Rarity', options: ['common', 'rare'] }
+    title: { kind: 'text', key: 'title', label: 'Title' },
+    tags: { kind: 'list', key: 'tags', label: 'Tags' },
+    home: { kind: 'link', key: 'home', label: 'Home' },
+    art: { kind: 'image', key: 'art', label: 'Art' },
+    rarity: { kind: 'choice', key: 'rarity', label: 'Rarity', options: ['common', 'rare'] }
   }
 })
 
 void sample
 
-test('RendererValues splits required and optional fields', () => {
+test('RendererValues makes every field optional', () => {
   expectTypeOf<RendererValues<typeof sample>>().toEqualTypeOf<{
-    title: string
-    home: WikiLink
-    rarity: 'common' | 'rare'
+    title?: string
     tags?: string[]
+    home?: WikiLink
     art?: WikiLink
+    rarity?: 'common' | 'rare'
   }>()
 })
 
 test('shipped renderers', () => {
-  expectTypeOf<RendererValues<typeof map>>().toEqualTypeOf<{ image: WikiLink }>()
+  expectTypeOf<RendererValues<typeof map>>().toEqualTypeOf<{ image?: WikiLink }>()
   expectTypeOf<RendererValues<typeof character>>().toEqualTypeOf<{
-    role: string
-    location: WikiLink
     portrait?: WikiLink
     title?: string
     affiliation?: WikiLink
+    location?: WikiLink
     status?: 'alive' | 'dead' | 'missing'
   }>()
   expectTypeOf<keyof RendererValues<typeof document>>().toBeNever()

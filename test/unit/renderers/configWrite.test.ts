@@ -33,7 +33,7 @@ describe('buildConfigText', () => {
       'renderers:',
       '  character:',
       '    types: not-a-list # broken on purpose',
-      '    keys: { role: job }',
+      '    keys: { title: job }',
       '    templates: [Templates/Character.md]',
       '  location:',
       '    types: [location]',
@@ -44,17 +44,17 @@ describe('buildConfigText', () => {
     expect(result.ok).toBe(true)
     if (!result.ok) return
     expect(result.value).toContain('types: not-a-list # broken on purpose')
-    expect(result.value).toContain('keys: {role: job}')
+    expect(result.value).toContain('keys: {title: job}')
     expect(result.value).toContain('templates: [Templates/Character.md]')
     expect((parse(result.value) as { renderers: { location: { types: string[] } } }).renderers.location.types).toEqual(['location', 'place'])
   })
 
   it('applies only what changed between the base and the new config', () => {
-    const original = 'renderers:\n  character:\n    types: [character]\n    keys: { role: job }\n'
-    const loaded: Config = { typeKey: 'type', renderers: { character: entry({ types: ['character'], keys: { role: 'job' } }) } }
+    const original = 'renderers:\n  character:\n    types: [character]\n    keys: { title: job }\n'
+    const loaded: Config = { typeKey: 'type', renderers: { character: entry({ types: ['character'], keys: { title: 'job' } }) } }
     // An edit that only adds a type must not rewrite the keys, even though the new config carries them.
     const next: Config = { ...loaded, renderers: { character: { ...loaded.renderers.character!, types: ['character', 'NPC'] } } }
-    expect(buildConfigText(original, next, loaded, [])).toEqual({ ok: true, value: 'renderers:\n  character:\n    types: [character, NPC]\n    keys: {role: job}\n' })
+    expect(buildConfigText(original, next, loaded, [])).toEqual({ ok: true, value: 'renderers:\n  character:\n    types: [character, NPC]\n    keys: {title: job}\n' })
   })
 
   it('reports YAML that cannot be parsed', () => {

@@ -4,7 +4,6 @@ import { wikiLinkSchema, type WikiLink } from '../wikilink'
 interface FieldBase {
   /** Default note (frontmatter) key; the config may rename it. */
   key: string
-  required: boolean
   label: string
 }
 

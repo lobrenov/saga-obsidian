@@ -12,7 +12,7 @@ function Identity({ title, children }: { title: ReactNode; children: ReactNode }
   )
 }
 
-/** Portrait card beside the name, epithet and facts (role, affiliation, location, status). */
+/** Portrait card beside the name, epithet and facts (affiliation, location, status). */
 export function CharacterLayout({ title, field }: LayoutProps<typeof character>) {
   return (
     <div className="saga-header-split">
@@ -20,7 +20,6 @@ export function CharacterLayout({ title, field }: LayoutProps<typeof character>)
       <Identity title={title}>
         {field('title', 'saga-header-epithet')}
         <div className="saga-header-facts">
-          {field('role')}
           {field('affiliation')}
           {field('location')}
           {field('status')}

@@ -12,10 +12,9 @@ import { Icon } from './Icon'
 export interface EditorCtx {
   /** Id of the editor's primary control, for the field's `<label>`. */
   id: string
-  required: boolean
   invalid: boolean
   describedBy: string | undefined
-  /** Shown while the field is empty, e.g. "Add role…". */
+  /** Shown while the field is empty, e.g. "Add title…". */
   placeholder: string
   /** Rewrites the field's raw array as written in the note at write time. */
   update: (change: (current: unknown[]) => unknown[]) => void
@@ -99,7 +98,7 @@ function RemoveButton({ label, onClick }: { label: string; onClick: () => void }
   )
 }
 
-function TextEditor({ value, onChange, id, required, invalid, describedBy, placeholder }: EditorProps<'text'> & EditorCtx) {
+function TextEditor({ value, onChange, id, invalid, describedBy, placeholder }: EditorProps<'text'> & EditorCtx) {
   const text = value ?? ''
   const { draft, setDraft, written, focused } = useDraft(text)
   const area = useRef<HTMLTextAreaElement>(null)
@@ -137,7 +136,6 @@ function TextEditor({ value, onChange, id, required, invalid, describedBy, place
       value={draft}
       placeholder={placeholder}
       spellCheck={false}
-      aria-required={required || undefined}
       aria-invalid={invalid || undefined}
       aria-describedby={describedBy}
       onFocus={() => (focused.current = true)}
@@ -421,14 +419,13 @@ function ImageEditor({ field, value, onChange, id, invalid, describedBy, placeho
   )
 }
 
-function ChoiceEditor({ field, value, onChange, id, required, invalid, describedBy, placeholder }: EditorProps<'choice'> & EditorCtx) {
+function ChoiceEditor({ field, value, onChange, id, invalid, describedBy, placeholder }: EditorProps<'choice'> & EditorCtx) {
   return (
     <span className="saga-header-choice">
       <select
         id={id}
         className="dropdown saga-header-select"
         value={value ?? ''}
-        aria-required={required || undefined}
         aria-invalid={invalid || undefined}
         aria-describedby={describedBy}
         onChange={(event) => onChange(event.target.value)}
