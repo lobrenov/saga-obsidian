@@ -1,5 +1,6 @@
 import type { TFile } from 'obsidian'
 import type { HeaderEnv } from '../../src/header/env'
+import type { MenuAt, MenuItem } from '../../src/ui/menu'
 import { FakeApp } from './obsidian'
 
 /** The fake `App` with `fileManager.renameFile` recording its calls. */
@@ -22,10 +23,18 @@ export interface Suggester {
   pick(target: string): void
 }
 
-/** A `HeaderEnv` over the fake app: links go through `workspace.openLinkText`, hovers and suggesters are recorded. */
-export function testEnv(app: HeaderFakeApp): { env: HeaderEnv; suggesters: Suggester[]; hovered: string[] } {
+/** A `HeaderEnv` over the fake app: links go through `workspace.openLinkText`; hovers, suggesters and menus are recorded. */
+export function testEnv(app: HeaderFakeApp): {
+  env: HeaderEnv
+  suggesters: Suggester[]
+  hovered: string[]
+  menus: { at: MenuAt; items: MenuItem[] }[]
+  /** Chooses an item of the newest menu by title, as a click would. */
+  choose: (title: string) => void
+} {
   const suggesters: Suggester[] = []
   const hovered: string[] = []
+  const menus: { at: MenuAt; items: MenuItem[] }[] = []
   const env: HeaderEnv = {
     app: app.asApp(),
     openLink: (target, from, event) => void app.workspace.openLinkText(target, from, event.metaKey || event.ctrlKey),
@@ -33,6 +42,7 @@ export function testEnv(app: HeaderFakeApp): { env: HeaderEnv; suggesters: Sugge
     setIcon: (el, name) => {
       el.dataset.icon = name
     },
+    showMenu: (at, items) => void menus.push({ at, items }),
     suggest(input, kind, from, onPick) {
       const suggester: Suggester = {
         input,
@@ -48,5 +58,10 @@ export function testEnv(app: HeaderFakeApp): { env: HeaderEnv; suggesters: Sugge
       return () => void suggesters.splice(suggesters.indexOf(suggester), 1)
     }
   }
-  return { env, suggesters, hovered }
+  const choose = (title: string): void => {
+    const item = menus.at(-1)?.items.find((candidate) => candidate.title === title)
+    if (!item) throw new Error(`no menu item ${title}`)
+    item.onClick()
+  }
+  return { env, suggesters, hovered, menus, choose }
 }

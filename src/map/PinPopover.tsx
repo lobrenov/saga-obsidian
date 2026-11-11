@@ -4,6 +4,7 @@ import { rendererDefs } from '../shared/renderers/definitions'
 import { PIN_STYLES, type PinStyle } from '../shared/schemas/pins'
 import { toExcerpt } from './excerpt'
 import type { MapHost } from './host'
+import { MenuSelect } from '../ui/MenuSelect'
 import { STYLE_LABELS, pinColor } from './pinStyles'
 import type { PlacedPin } from './types'
 import type { ViewportStore } from './viewportStore'
@@ -102,13 +103,14 @@ export function PinPopover({ store, host, pin, onClose, onStyle, busy }: PinPopo
       {excerpt ? <p className="saga-map-popover-excerpt">{excerpt}</p> : null}
       <div className="saga-map-popover-style">
         <label htmlFor={ids.style}>Style</label>
-        <select id={ids.style} className="dropdown" value={pin.style} disabled={busy} onChange={(event) => onStyle(pin, event.target.value as PinStyle)}>
-          {PIN_STYLES.map((style) => (
-            <option key={style} value={style}>
-              {style === 'auto' ? `Auto (${def.label})` : STYLE_LABELS[style]}
-            </option>
-          ))}
-        </select>
+        <MenuSelect
+          id={ids.style}
+          value={pin.style}
+          options={PIN_STYLES.map((style) => ({ value: style, label: style === 'auto' ? `Auto (${def.label})` : STYLE_LABELS[style] }))}
+          disabled={busy}
+          showMenu={host.showMenu}
+          onChange={(style) => onStyle(pin, style as PinStyle)}
+        />
       </div>
       {pin.issues.length > 0 ? (
         <ul className="saga-map-popover-issues" aria-label="Problems with this pin">

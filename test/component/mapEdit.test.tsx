@@ -198,10 +198,21 @@ test('the card changes a pin\'s style, and Auto removes the override', async () 
   await vi.waitFor(() => expect(markers()).toHaveLength(3))
   await screen.getByRole('button', { name: 'The Gull King — Character, danger' }).click()
   const card = screen.getByRole('dialog', { name: 'The Gull King' })
-  await expect.element(card.getByLabelText('Style')).toHaveValue('danger')
-  await card.getByLabelText('Style').selectOptions('quest')
+  const style = card.getByRole('button', { name: 'Style' })
+  await expect.element(style).toHaveTextContent('Danger')
+  await style.click()
+  expect(fake.menus.at(-1)?.items.map((item) => [item.title, item.checked])).toEqual([
+    ['Auto (Character)', false],
+    ['Rumour', false],
+    ['Danger', true],
+    ['Treasure', false],
+    ['Quest', false],
+    ['Camp', false]
+  ])
+  fake.choose('Quest')
   await vi.waitFor(() => expect(fake.text('People/The Gull King.md')).toContain('style: quest\n    note: keep'))
-  await card.getByLabelText('Style').selectOptions('auto')
+  await style.click()
+  fake.choose('Auto (Character)')
   await vi.waitFor(() => expect(fake.text('People/The Gull King.md')).not.toContain('style:'))
   expect(fake.text('People/The Gull King.md')).toContain('note: keep')
   expect(fake.text('People/The Gull King.md')).toContain('[[Elsewhere]]')

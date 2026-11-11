@@ -3,14 +3,7 @@ import type { Result } from '../shared/result'
 import { resolveLink } from '../obsidian/vault'
 import { mapLinkFrom } from './pins'
 import { updatePins, type PinOpBuilder } from '../obsidian/vault'
-
-export interface MenuItem {
-  title: string
-  icon: string
-  /** Drawn as a destructive action. */
-  warning?: boolean
-  onClick: () => void
-}
+import type { ShowMenu } from '../ui/menu'
 
 /** What the map stage asks of its surroundings; the Obsidian UI parts (modals, notices, hover) are `HostUi`. */
 export interface MapHost {
@@ -29,8 +22,7 @@ export interface MapHost {
   confirmRemove(pin: { title: string; file: TFile }): Promise<boolean>
   notify(message: string): void
   hoverNote(event: MouseEvent, target: HTMLElement, file: TFile): void
-  /** Opens a menu at a screen point. */
-  showMenu(at: { x: number; y: number }, items: MenuItem[]): void
+  showMenu: ShowMenu
 }
 
 export type HostUi = Pick<MapHost, 'pickNote' | 'confirmRemove' | 'notify' | 'hoverNote' | 'showMenu'>

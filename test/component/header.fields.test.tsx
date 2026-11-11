@@ -64,15 +64,27 @@ test('the text editor grows with its content', async () => {
   await vi.waitFor(() => expect((title.element() as HTMLElement).getBoundingClientRect().height).toBeGreaterThan(before))
 })
 
-test('the choice editor selects, offers no empty option while set, and Clear removes only its key', async () => {
-  const { screen, text } = await renderHeader(ada, ADA)
-  const status = screen.getByRole('combobox', { name: 'Status' })
-  expect([...(status.element() as HTMLSelectElement).options].map((option) => option.value)).toEqual(['alive', 'dead', 'missing'])
-  await status.selectOptions('dead')
+test('the choice editor opens a menu below it with the value checked, writes a changed choice, and Clear removes only its key', async () => {
+  const { screen, text, app, menus, choose } = await renderHeader(ada, ADA)
+  const status = screen.getByRole('button', { name: 'Status' })
+  await expect.element(status).toHaveTextContent('Alive')
+  await status.click()
+  const box = (status.element() as HTMLElement).getBoundingClientRect()
+  expect(menus.at(-1)?.at).toEqual({ x: box.left, y: box.bottom, width: box.width })
+  expect(menus.at(-1)?.items.map((item) => [item.title, item.checked])).toEqual([
+    ['Alive', true],
+    ['Dead', false],
+    ['Missing', false]
+  ])
+  choose('Alive')
+  expect(app.processed).toHaveLength(0)
+  await status.click()
+  choose('Dead')
   await vi.waitFor(() => expect(text()).toBe(ADA.replace('status: alive', 'status: dead')))
   await screen.getByRole('button', { name: 'Clear Status' }).click()
   await vi.waitFor(() => expect(text()).toBe(ADA.replace('status: alive\n', '')))
   await expect.element(screen.getByRole('button', { name: 'Clear Status' })).not.toBeInTheDocument()
+  await expect.element(status).toHaveTextContent('Choose status…')
 })
 
 test('a link opens its note, in a new tab on a modifier-click, and previews on hover', async () => {
@@ -162,30 +174,36 @@ test('Convert fixes a value that fails its schema and writes only that key', asy
 test('renamed keys write the mapped key', async () => {
   const config = { typeKey: 'type', renderers: { character: { types: ['NPC'], keys: { title: 'job', location: 'home' }, templates: [] } } }
   const source = '---\ntype: NPC\njob: Smith\nhome: "[[Waterdeep]]"\ntitle: ignored\n---\n'
-  const { screen, text } = await renderHeader(ada, source, { config })
+  const { screen, text, choose } = await renderHeader(ada, source, { config })
   const title = screen.getByRole('textbox', { name: 'Title' })
   await expect.element(title).toHaveValue('Smith')
   await title.fill('Mason')
   ;(title.element() as HTMLElement).blur()
   await vi.waitFor(() => expect(text()).toBe(source.replace('job: Smith', 'job: Mason')))
-  await screen.getByRole('combobox', { name: 'Status' }).selectOptions('missing')
+  await screen.getByRole('button', { name: 'Status' }).click()
+  choose('Missing')
   await vi.waitFor(() => expect(text()).toBe(source.replace('job: Smith', 'job: Mason').replace('title: ignored', 'title: ignored\nstatus: missing')))
 })
 
 test('the type selector offers the renderer types and writes the type key', async () => {
   const config = { typeKey: 'kind-of', renderers: { character: { types: ['NPC', 'hero'], keys: {}, templates: [] } } }
   const source = '---\nkind-of: NPC\ntitle: R\nlocation: "[[Waterdeep]]"\n---\n'
-  const { screen, text } = await renderHeader(ada, source, { config })
-  const type = screen.getByRole('combobox', { name: 'Type' })
-  await expect.element(type).toHaveValue('NPC')
-  expect(type.element().querySelectorAll('option')).toHaveLength(2)
-  await type.selectOptions('hero')
+  const { screen, text, menus, choose } = await renderHeader(ada, source, { config })
+  const type = screen.getByRole('button', { name: 'Type' })
+  await expect.element(type).toHaveTextContent('NPC')
+  await type.click()
+  expect(menus.at(-1)?.items.map((item) => [item.title, item.checked])).toEqual([
+    ['NPC', true],
+    ['hero', false]
+  ])
+  choose('hero')
   await vi.waitFor(() => expect(text()).toBe(source.replace('kind-of: NPC', 'kind-of: hero')))
 })
 
 test('changing the type to another renderer redraws the header', async () => {
-  const { screen, text } = await renderHeader(ada, ADA, { config: { typeKey: 'type', renderers: { character: { types: ['character', 'location'], keys: {}, templates: [] } } } })
-  await screen.getByRole('combobox', { name: 'Type' }).selectOptions('location')
+  const { screen, text, choose } = await renderHeader(ada, ADA, { config: { typeKey: 'type', renderers: { character: { types: ['character', 'location'], keys: {}, templates: [] } } } })
+  await screen.getByRole('button', { name: 'Type' }).click()
+  choose('location')
   await vi.waitFor(() => expect(text()).toContain('type: location'))
 })
 

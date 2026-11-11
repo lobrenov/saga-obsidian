@@ -1,7 +1,8 @@
 import type { App, TFile } from 'obsidian'
 import { CONFIG_PATH, createConfigStore, type ConfigStore } from '../../src/obsidian/vault'
 import type { MapState } from '../../src/map/types'
-import { createHost, type HostUi, type MapHost, type MenuItem } from '../../src/map/host'
+import { createHost, type HostUi, type MapHost } from '../../src/map/host'
+import type { MenuAt, MenuItem } from '../../src/ui/menu'
 import { mapStateOf } from '../../src/map/mapState'
 import { FakeApp } from './obsidian'
 
@@ -37,7 +38,7 @@ export class MapFake {
   /** The Pin labels setting. */
   pinLabels: 'always' | 'hover' = 'always'
   /** Menus the view opened, newest last. */
-  readonly menus: { at: { x: number; y: number }; items: MenuItem[] }[] = []
+  readonly menus: { at: MenuAt; items: MenuItem[] }[] = []
   readonly notices: string[] = []
   readonly hovered: string[] = []
   readonly prompts: string[] = []

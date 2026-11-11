@@ -6,6 +6,7 @@ import type { FieldDef } from '../shared/renderers/fields'
 import { createRendererResolver } from '../shared/renderers/resolve'
 import { parseWikiLink, type WikiLink } from '../shared/wikilink'
 import { useHeader } from './env'
+import { MenuSelect } from '../ui/MenuSelect'
 import { Icon } from './Icon'
 
 /** What every field editor receives besides the field, its value and `onChange`. */
@@ -420,27 +421,20 @@ function ImageEditor({ field, value, onChange, id, invalid, describedBy, placeho
 }
 
 function ChoiceEditor({ field, value, onChange, id, invalid, describedBy, placeholder }: EditorProps<'choice'> & EditorCtx) {
+  const { env } = useHeader()
   return (
     <span className="saga-header-choice">
-      <select
+      <MenuSelect
         id={id}
-        className="dropdown saga-header-select"
-        value={value ?? ''}
-        aria-invalid={invalid || undefined}
-        aria-describedby={describedBy}
-        onChange={(event) => onChange(event.target.value)}
-      >
-        {value === undefined ? (
-          <option value="" disabled hidden>
-            {placeholder}
-          </option>
-        ) : null}
-        {field.options.map((option) => (
-          <option key={option} value={option}>
-            {capitalise(option)}
-          </option>
-        ))}
-      </select>
+        className="saga-header-select"
+        value={value}
+        options={field.options.map((option) => ({ value: option, label: capitalise(option) }))}
+        placeholder={placeholder}
+        invalid={invalid}
+        describedBy={describedBy}
+        showMenu={env.showMenu}
+        onChange={onChange}
+      />
       {value === undefined ? null : (
         <button type="button" className="saga-header-chip-action" aria-label={`Clear ${field.label}`} onClick={() => onChange(undefined)}>
           <Icon name="x" />

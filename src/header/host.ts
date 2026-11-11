@@ -1,4 +1,5 @@
 import { AbstractInputSuggest, Keymap, prepareFuzzySearch, setIcon, type App, type HoverParent, type TFile } from 'obsidian'
+import { showMenu } from '../ui/menu'
 import type { HeaderEnv } from './env'
 
 export const HOVER_SOURCE = 'saga-header'
@@ -39,7 +40,7 @@ class FileSuggest extends AbstractInputSuggest<TFile> {
   }
 }
 
-/** The Obsidian side of the header: link opening with hover previews, icons and file suggesters. */
+/** The Obsidian side of the header: link opening with hover previews, icons, menus and file suggesters. */
 export function createHeaderEnv(app: App): HeaderEnv {
   const hoverParent: HoverParent = { hoverPopover: null }
   return {
@@ -48,6 +49,7 @@ export function createHeaderEnv(app: App): HeaderEnv {
     hover: (event, targetEl, linktext, sourcePath) =>
       app.workspace.trigger('hover-link', { event, source: HOVER_SOURCE, hoverParent, targetEl, linktext, sourcePath }),
     setIcon,
+    showMenu,
     suggest(input, kind, from, onPick) {
       const files = kind === 'note' ? () => app.vault.getMarkdownFiles() : () => app.vault.getFiles().filter((file) => IMAGE_EXTENSIONS.has(file.extension.toLowerCase()))
       const suggest = new FileSuggest(app, input, files, from, onPick)

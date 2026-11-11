@@ -103,7 +103,7 @@
   white-space: nowrap;
 }
 
-.saga-header-type select {
+.saga-header-type .dropdown {
   height: var(--input-height);
   font-size: var(--font-ui-small);
 }

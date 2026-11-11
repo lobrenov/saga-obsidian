@@ -45,7 +45,7 @@ test('pins are coloured by their note renderer whatever their style, which shows
   const card = screen.getByRole('dialog', { name: 'The Brine Vaults' })
   await expect.element(card).toBeVisible()
   expect(card.getByRole('list', { name: 'Problems with this pin' }).element().textContent).toContain('Unknown pin style "sparkly"; using auto')
-  await expect.element(card.getByLabelText('Style')).toHaveValue('auto')
+  await expect.element(card.getByRole('button', { name: 'Style' })).toHaveTextContent('Auto (Location)')
 })
 
 test('two map views in one window draw from their own sprites', async () => {
@@ -166,7 +166,7 @@ test('the card shows an excerpt; its title opens the note, in a new tab with ⌘
   const card = screen.getByRole('dialog', { name: 'Saltmere' })
   await vi.waitFor(() => expect(card.element().textContent).toContain('A harbour town that taxes the tide.'))
   expect(card.element().textContent).not.toContain('map-pins')
-  expect(card.getByRole('button').elements().map((el) => el.getAttribute('aria-label') ?? el.textContent)).toEqual(['Close'])
+  expect(card.getByRole('button').elements().map((el) => el.getAttribute('aria-label') ?? el.textContent)).toEqual(['Close', 'Auto (Location)'])
   const title = card.getByRole('link', { name: 'Saltmere' })
   await title.click()
   expect(fake.opened).toEqual([{ linktext: 'Places/Saltmere.md', sourcePath: MAP, newLeaf: false }])

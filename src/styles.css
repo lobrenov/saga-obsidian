@@ -28,3 +28,10 @@ body.theme-dark {
   --saga-map-tint: #2b3122;
   --saga-document-tint: #2f2a24;
 }
+
+/* Menu selects (`src/ui/MenuSelect.tsx`) keep a select's single line. */
+.saga-menu-select {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

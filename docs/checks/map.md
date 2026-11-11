@@ -33,7 +33,7 @@ Vault facts used below: `Maps/The Shattered Coast.md` (`type: map`, `image: "[[c
 ### Pin card, open and hover
 
 1. Click the Moonblade pin: a card appears beside it with "Item", "Moonblade", an excerpt (`Held by Ada Lovelace.`), the style select (Treasure) and a close button; no Open note, Move or Remove buttons and no "Pin saved in" line. The title is a link and has focus; Esc, the close button or a click on the map closes the card and focus returns to the pin. The selected pin looks like the others (same size and colour, same label).
-2. Click the Waterdeep pin at 10,20: the card lists "Unknown pin style "sparkly"; using auto" and the select reads Auto (Location).
+2. Click the Waterdeep pin at 10,20: the card lists "Unknown pin style "sparkly"; using auto" and Style reads Auto (Location).
 3. Click the card title: `Moonblade` opens in the current tab. Reopen the map, select the pin again, ⌘-click (Ctrl on Windows or Linux) the title: it opens in a new tab and the map stays. Hovering the title shows the page preview (with ⌘/Ctrl unless Page preview says otherwise).
 4. Settings → Core plugins → Page preview is on. Hover a pin while holding ⌘ (Ctrl): the note's hover preview appears. Settings → Page preview lists "Saga map" as a source; turning its modifier requirement off shows the preview on a plain hover.
 
@@ -83,7 +83,7 @@ Each write must show in `git diff` as a change of the `map-pins` value only: no 
 
 ### Style
 
-1. Select Moonblade, change Style to Quest: only `style:` of that entry changes (`style: quest`); the pin's glyph and colour change.
+1. Select Moonblade and click Style: an Obsidian menu opens below it (the macOS menu with Settings → Appearance → Native menus on), the current style checked. Choose Quest: only `style:` of that entry changes (`style: quest`); the pin's glyph and colour change.
 2. Change it to Auto: the `style:` line is removed from that entry and the entry's other keys stay in order. The pin takes the Item colour.
 3. Select Waterdeep's 10,20 pin (unknown `sparkly` style): choose Danger; `style: danger` replaces `sparkly`; the issue on the card disappears.
 
@@ -95,7 +95,7 @@ Each write must show in `git diff` as a change of the `map-pins` value only: no 
 
 ### Keyboard route
 
-1. Tab into the map: the stage takes focus (focus ring), then each pin in turn; Enter on a pin opens its card; Tab moves to the title link, the style select and Close. The ContextMenu key (Shift+F10) on a pin opens its menu at the pin.
+1. Tab into the map: the stage takes focus (focus ring), then each pin in turn; Enter on a pin opens its card; Tab moves to the title link, Style and Close; Enter or Space on Style opens its menu, arrow keys and Enter choose. The ContextMenu key (Shift+F10) on a pin opens its menu at the pin.
 2. A pin tabbed to outside the view pans into view. The Pins list reaches every pin without the pointer: selecting a row centres the map on the pin and opens its card. The list has no Move buttons and no "Add pin at centre".
 
 ### Labels and pin look

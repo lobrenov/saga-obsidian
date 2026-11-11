@@ -6,6 +6,7 @@ import { rendererDefs } from '../shared/renderers/definitions'
 import type { RendererResolution } from '../shared/renderers/resolve'
 import { typesOf } from '../shared/renderers/resolve'
 import type { Config } from '../shared/schemas/config'
+import { MenuSelect } from '../ui/MenuSelect'
 import { HeaderCtx, useHeader, type HeaderEnv } from './env'
 import { Icon } from './Icon'
 import { LayoutBoundary } from './LayoutBoundary'
@@ -36,13 +37,13 @@ function TypeField({ renderer, current }: { renderer: HeaderRendererId; current:
   return (
     <span className="saga-header-type">
       <label htmlFor={id}>Type</label>
-      <select id={id} className="dropdown" value={match ?? current ?? ''} onChange={(event) => void setField(env.app, file, config.typeKey, event.target.value)}>
-        {options.map((type) => (
-          <option key={type} value={type}>
-            {type}
-          </option>
-        ))}
-      </select>
+      <MenuSelect
+        id={id}
+        value={match ?? current ?? undefined}
+        options={options.map((type) => ({ value: type, label: type }))}
+        showMenu={env.showMenu}
+        onChange={(type) => void setField(env.app, file, config.typeKey, type)}
+      />
     </span>
   )
 }

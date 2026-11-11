@@ -23,12 +23,12 @@ Run on `test/vault` in Obsidian (`npm run dev`, reload the plugin). Notes: `Char
 - [ ] The toggle is per pane: turning it on in one split leaves the other unchanged.
 
 ## Type
-- [ ] The Type selector lists the types mapped to the renderer in `.saga/renderers.yaml`; choosing another renderer's type (add it to `types` first) redraws the header without reopening the note, and only `type:` changes in the file.
+- [ ] The Type selector opens an Obsidian menu below it (the macOS menu with Settings → Appearance → Native menus on) listing the types mapped to the renderer in `.saga/renderers.yaml`, the current one checked; choosing another renderer's type (add it to `types` first) redraws the header without reopening the note, and only `type:` changes in the file.
 - [ ] Edit `.saga/renderers.yaml` (map `npc` to Character) while a `type: npc` note is open: the header appears without reopening.
 
 ## Fields (each edit lands in the file as one key)
 - [ ] Text (Title, Kind, Rarity): typing writes once after a pause or on leaving the field, not per keystroke; the cursor stays put when the write lands; Enter leaves the field; Escape restores the saved text; clearing and leaving removes the key.
-- [ ] Choice (Status): selecting writes the value; the list has no empty option while set; Clear (hover) removes the key and the placeholder returns.
+- [ ] Choice (Status): its menu has the current value checked and no empty item; choosing another writes the value; Clear (hover) removes the key and the placeholder returns.
 - [ ] Image fields without a value show a small tinted frame in the image's place (beside the title for portrait and emblem, a slim strip for banners) with the renderer icon; hover shows "Add …", click opens the image suggester in place, Esc cancels.
 - [ ] Link chips and Add pills have equal left and right padding, and no text clips, with the Saga theme (IBM Plex Sans) and without it.
 - [ ] Link (Location, Region, Leader, Base, Holder, Owner, Origin): the value shows as a chip with the linked note's renderer icon; click opens the note, Cmd/Ctrl-click opens a new tab, hovering with the modifier shows the page preview; the pencil (on hover) edits in place, Esc cancels, the x clears; the suggester lists notes; picking writes `[[Name]]`; clearing and Enter removes the key; an unresolved name is styled as an unresolved link.

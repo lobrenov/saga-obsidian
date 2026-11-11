@@ -57,9 +57,9 @@ export async function renderHeader(path: string, text: string, options: { files?
   const app = new HeaderFakeApp()
   for (const [p, t] of Object.entries({ ...FILES, ...options.files })) app.addFile(p, t)
   const file = app.addFile(path, text)
-  const { env, suggesters, hovered } = testEnv(app)
+  const { env, suggesters, hovered, menus, choose } = testEnv(app)
   const screen = await render(<Live app={app} env={env} file={file} config={options.config ?? DEFAULT_CONFIG} />)
-  return { screen, app, file, env, suggesters, hovered, text: () => app.text(path) }
+  return { screen, app, file, env, suggesters, hovered, menus, choose, text: () => app.text(path) }
 }
 
 /** Obsidian's Live Preview markup, as far as `dom.ts` reads it. */

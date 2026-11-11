@@ -17,6 +17,7 @@ An Obsidian plugin (id `saga`, desktop, Obsidian 1.10.2+) carrying functions of 
 - `src/header` the note header (`docs/header.md`); every Obsidian DOM selector is in `src/header/dom.ts`
 - `src/links` renderer icons on wikilinks in note text (`docs/links.md`)
 - `src/settings` the renderer settings tab (`docs/settings.md`)
+- `src/ui` Obsidian menus (`showMenu`) and `MenuSelect`, the dropdown button the map and header use in place of `<select>`
 - `test/unit`, `test/component`, `test/fakes`; `test/vault` is the manual-check vault
 - `docs/checks` manual checks in Obsidian per feature
 
