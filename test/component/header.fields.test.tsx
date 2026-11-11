@@ -70,7 +70,7 @@ test('the choice editor opens a menu below it with the value checked, writes a c
   await expect.element(status).toHaveTextContent('Alive')
   await status.click()
   const box = (status.element() as HTMLElement).getBoundingClientRect()
-  expect(menus.at(-1)?.at).toEqual({ x: box.left, y: box.bottom, width: box.width })
+  expect(menus.at(-1)?.at).toEqual({ x: box.left, y: box.bottom, width: box.width, overlap: true })
   expect(menus.at(-1)?.items.map((item) => [item.title, item.checked])).toEqual([
     ['Alive', true],
     ['Dead', false],

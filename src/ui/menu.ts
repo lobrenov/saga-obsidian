@@ -10,11 +10,12 @@ export interface MenuItem {
   onClick: () => void
 }
 
-/** Where a menu opens: a screen point, and the width of the control it opens from. */
+/** Where a menu opens: a screen point, the width of the control it opens from, and whether it opens over that control instead of beside it. */
 export interface MenuAt {
   x: number
   y: number
   width?: number
+  overlap?: boolean
 }
 
 export type ShowMenu = (at: MenuAt, items: MenuItem[]) => void

@@ -35,7 +35,7 @@ export function MenuSelect({ id, className, value, options, placeholder, disable
       onClick={(event) => {
         const box = event.currentTarget.getBoundingClientRect()
         showMenu(
-          { x: box.left, y: box.bottom, width: box.width },
+          { x: box.left, y: box.bottom, width: box.width, overlap: true },
           options.map((option) => ({
             title: option.label,
             checked: option.value === value,
