@@ -43,7 +43,7 @@ async function setup(initial: Partial<Prefs> = {}) {
 
 test('folders get closed and open folder icons in their collapse icon; typed notes their renderer icon and untyped notes the document icon, before the name; other files get none', async () => {
   const { iconOf, folderIcons } = await setup()
-  expect(folderIcons('Characters')).toEqual(['folder', 'folder-open'])
+  expect(folderIcons('Characters')).toEqual(['folder-closed', 'folder-open'])
   expect(iconOf('Characters')?.parentElement?.classList.contains('collapse-icon')).toBe(true)
   expect(iconOf('Characters/Ada.md')?.nextElementSibling?.classList.contains('tree-item-inner')).toBe(true)
   expect(iconOf('Characters/Ada.md')?.dataset).toMatchObject({ icon: 'user', renderer: 'character' })
@@ -57,7 +57,7 @@ test('a map icon look shows the note’s pin icon and colour on that map, else t
   expect(iconOf('Places/Docks.md')?.dataset).toMatchObject({ icon: 'anchor', color: 'plum' })
   expect(iconOf('Characters/Ada.md')?.dataset).toMatchObject({ icon: 'user', renderer: 'character' })
   expect(iconOf('Characters/Ada.md')?.dataset.color).toBeUndefined()
-  expect(folderIcons('Characters')).toEqual(['folder', 'folder-open'])
+  expect(folderIcons('Characters')).toEqual(['folder-closed', 'folder-open'])
 })
 
 test('untyped notes get no icon with fileIconsUntyped off', async () => {
@@ -81,7 +81,7 @@ test('rows the explorer adds later get icons', async () => {
   const { explorer, iconOf, folderIcons } = await setup()
   explorer.querySelector('[data-path="Places"] + .nav-folder-children')!.insertAdjacentHTML('beforeend', folder('Places/Docks', file('Places/Docks/Bob.md')))
   await new Promise((resolve) => setTimeout(resolve))
-  expect(folderIcons('Places/Docks')).toEqual(['folder', 'folder-open'])
+  expect(folderIcons('Places/Docks')).toEqual(['folder-closed', 'folder-open'])
   expect(iconOf('Places/Docks/Bob.md')).toBeNull()
 })
 
@@ -100,7 +100,7 @@ test('a collapsed folder shows only the closed folder icon and an expanded one o
       .flatMap((el) => (el.classList.contains('saga-file-icon') ? Array.from(el.children as HTMLCollectionOf<HTMLElement>) : [el]))
       .filter((el) => getComputedStyle(el).display !== 'none')
       .map((el) => el.dataset.icon ?? el.getAttribute('class'))
-  expect(shown('Characters')).toEqual(['folder'])
+  expect(shown('Characters')).toEqual(['folder-closed'])
   expect(shown('Places')).toEqual(['folder-open'])
   iconOf('Characters')!.parentElement!.classList.remove('is-collapsed')
   expect(shown('Characters')).toEqual(['folder-open'])

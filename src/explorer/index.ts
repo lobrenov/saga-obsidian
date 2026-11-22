@@ -9,7 +9,7 @@ import './explorer.css'
 /** The closed and open folder icons; CSS shows the one matching the folder's state. */
 function folderIcon(doc: Document): HTMLElement {
   const el = doc.createElement('span')
-  for (const icon of ['folder', 'folder-open']) el.appendChild(linkIcon(doc, { renderer: 'document', icon, color: null })).classList.add(`saga-${icon}`)
+  for (const icon of ['folder-closed', 'folder-open']) el.appendChild(linkIcon(doc, { renderer: 'document', icon, color: null })).classList.add(`saga-${icon}`)
   return el
 }
 
