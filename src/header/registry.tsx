@@ -4,7 +4,7 @@ import { rendererDefs } from '../shared/renderers/definitions'
 import { readFrontmatter } from '../shared/schemas/frontmatter'
 import type { Validated } from '../shared/result'
 import { FieldView } from './FieldView'
-import { CharacterLayout, FactionLayout, ItemLayout, LocationLayout, MapLayout } from './layouts'
+import { CharacterLayout, DocumentLayout, FactionLayout, ItemLayout, LocationLayout, MapLayout } from './layouts'
 import type { HeaderRendererId, LayoutInput, LayoutProps, RegisteredRenderer } from './types'
 
 /** Pairs a shared renderer definition with its layout; the returned `Layout` validates the note's frontmatter and hands the layout its field editors. */
@@ -23,13 +23,14 @@ function defineRendererView<R extends RendererDef>(def: R, Layout: ComponentType
   return { Layout: TypedLayout }
 }
 
-const { character, location, faction, item, map } = rendererDefs
+const { character, location, faction, item, map, document } = rendererDefs
 
-/** Every renderer with a header layout (`document` has none). */
+/** Every renderer's header layout. */
 export const rendererRegistry: Record<HeaderRendererId, RegisteredRenderer> = {
   character: defineRendererView(character, CharacterLayout),
   location: defineRendererView(location, LocationLayout),
   faction: defineRendererView(faction, FactionLayout),
   item: defineRendererView(item, ItemLayout),
-  map: defineRendererView(map, MapLayout)
+  map: defineRendererView(map, MapLayout),
+  document: defineRendererView(document, DocumentLayout)
 }

@@ -6,7 +6,7 @@ import { resourceUrl } from '../obsidian/vault'
 import { BANNER_Y_KEY, type Banner as BannerData } from '../shared/renderers/banner'
 import { toNoteValue } from '../shared/renderers/values'
 import { BannerPicker } from './BannerPicker'
-import { useWrite } from './useWrite'
+import { removeBanner, useWrite } from './useWrite'
 
 export interface BannerProps {
   banner: BannerData
@@ -58,10 +58,6 @@ export function Banner({ banner, image, repositioning, onRepositioningChange }: 
 
   const save = async (): Promise<void> => {
     if (draft === null || draft === banner.y || (await write(BANNER_Y_KEY, draft))) onRepositioningChange(false)
-  }
-
-  const remove = async (): Promise<void> => {
-    if (await write(banner.key, undefined)) await write(BANNER_Y_KEY, undefined)
   }
 
   return (
@@ -128,7 +124,7 @@ export function Banner({ banner, image, repositioning, onRepositioningChange }: 
               Change banner
             </button>
             {banner.removable ? (
-              <button type="button" className="saga-banner-control mod-warning" onClick={() => void remove()}>
+              <button type="button" className="saga-banner-control mod-warning" onClick={() => void removeBanner(write, banner.key)}>
                 <Icon name="trash-2" />
                 Remove
               </button>

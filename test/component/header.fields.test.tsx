@@ -147,19 +147,19 @@ test('the links editor adds a picked note, ignores a duplicate and removes a chi
 })
 
 test('the image editor shows a preview, picks an image and removes it', async () => {
-  const { screen, text, suggesters } = await renderHeader('Places/Docks.md', '---\ntype: location\nkind: Harbour\n---\n')
-  await screen.getByRole('button', { name: 'Add image…' }).click()
+  const { screen, text, suggesters } = await renderHeader('Characters/Ada.md', '---\ntype: character\n---\n')
+  await screen.getByRole('button', { name: 'Add portrait…' }).click()
   expect(suggesters.map((s) => s.kind)).toContain('image')
   suggesters.find((s) => s.kind === 'image')?.pick('coast.jpg')
-  await vi.waitFor(() => expect(text()).toBe('---\ntype: location\nkind: Harbour\nimage: "[[coast.jpg]]"\n---\n'))
-  await expect.element(screen.getByRole('img', { name: 'Image' })).toBeVisible()
-  expect(screen.getByRole('img', { name: 'Image' }).element().getAttribute('src')).toContain('coast.jpg')
-  await screen.getByRole('button', { name: 'Remove image' }).click()
-  await vi.waitFor(() => expect(text()).toBe('---\ntype: location\nkind: Harbour\n---\n'))
+  await vi.waitFor(() => expect(text()).toBe('---\ntype: character\nportrait: "[[coast.jpg]]"\n---\n'))
+  await expect.element(screen.getByRole('img', { name: 'Portrait' })).toBeVisible()
+  expect(screen.getByRole('img', { name: 'Portrait' }).element().getAttribute('src')).toContain('coast.jpg')
+  await screen.getByRole('button', { name: 'Remove portrait' }).click()
+  await vi.waitFor(() => expect(text()).toBe('---\ntype: character\n---\n'))
 })
 
 test('an image that does not resolve is flagged', async () => {
-  const { screen } = await renderHeader('Places/Docks.md', '---\ntype: location\nimage: "[[gone.png]]"\n---\n')
+  const { screen } = await renderHeader('Characters/Ada.md', '---\ntype: character\nportrait: "[[gone.png]]"\n---\n')
   await expect.element(screen.getByText('gone.png was not found in the vault.')).toBeVisible()
 })
 

@@ -16,7 +16,7 @@ export interface LayoutInput {
   keys: Readonly<Record<string, string>>
 }
 
-export type HeaderRendererId = 'character' | 'location' | 'faction' | 'item' | 'map'
+export type HeaderRendererId = 'character' | 'location' | 'faction' | 'item' | 'map' | 'document'
 
 export interface RegisteredRenderer {
   Layout: ComponentType<LayoutInput>

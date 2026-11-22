@@ -18,10 +18,10 @@ test('Character facts are affiliation, location and status', async () => {
   expect(document.querySelector('[role="status"]')).toBeNull()
 })
 
-test('Location: image banner, kind and region', async () => {
+test('Location: kind and region, with no image frame in the body', async () => {
   const { screen } = await renderHeader('Places/Docks.md', '---\ntype: location\nimage: "[[coast.jpg]]"\nkind: Harbour\nregion: "[[Waterdeep]]"\n---\n')
   await expect.element(screen.getByRole('region', { name: 'Location header' })).toBeVisible()
-  expect(document.querySelector('.saga-header-banner img')?.getAttribute('src')).toContain('coast.jpg')
+  expect(document.querySelector('.saga-header-body img, .saga-header-body .saga-header-frame')).toBeNull()
   await expect.element(screen.getByRole('textbox', { name: 'Kind' })).toHaveValue('Harbour')
   await expect.element(screen.getByRole('button', { name: 'Waterdeep', exact: true })).toBeVisible()
 })
@@ -40,19 +40,19 @@ test('Faction: emblem, leader, base and allies', async () => {
   expect(document.querySelector('.saga-header[aria-label]')).toBeNull()
 })
 
-test('Item: empty banner and the holder, owner, location and origin links', async () => {
+test('Item: the holder, owner, location and origin links', async () => {
   const { screen } = await renderHeader('Items/Moonblade.md', '---\ntype: artifact\nrarity: legendary\nholder: "[[Bob]]"\nowner: "[[Harbor Guild]]"\n---\n', {
     config: { typeKey: 'type', renderers: { item: { types: ['artifact'], keys: {}, templates: [] } } }
   })
   await expect.element(screen.getByRole('region', { name: 'Item header' })).toBeVisible()
-  expect(document.querySelector('.saga-header-banner[data-empty]')).not.toBeNull()
+  expect(document.querySelector('.saga-header-body .saga-header-frame')).toBeNull()
   await expect.element(screen.getByRole('textbox', { name: 'Rarity' })).toHaveValue('legendary')
   await expect.element(screen.getByRole('button', { name: 'Bob', exact: true })).toBeVisible()
   await expect.element(screen.getByRole('button', { name: 'Harbor Guild', exact: true })).toBeVisible()
   await expect.element(screen.getByRole('button', { name: 'Add origin…' })).toBeVisible()
 })
 
-test('Map: image banner and name', async () => {
+test('Map: name only', async () => {
   const { screen } = await renderHeader('Maps/The Shattered Coast.md', '---\ntype: map\nimage: "[[coast.jpg]]"\n---\n')
   await expect.element(screen.getByRole('region', { name: 'Map header' })).toBeVisible()
   await expect.element(screen.getByRole('heading', { name: 'The Shattered Coast' })).toBeVisible()

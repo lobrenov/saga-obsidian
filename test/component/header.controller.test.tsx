@@ -19,7 +19,7 @@ async function setup(text = ADA) {
   const file = app.addFile(ada, text)
   const { env } = testEnv(app)
   const config = await createConfigStore(app.asApp(), app.owner())
-  const controller = createHeaderController(env, config)
+  const controller = createHeaderController(env, config, () => undefined)
   const view = (containerEl: HTMLElement, mode: LeafView['mode'] = 'live'): LeafView => ({ containerEl, file, mode })
   return { app, file, controller, view }
 }
@@ -189,4 +189,18 @@ test('a pending text edit is written to its own note when the leaf switches file
   await vi.waitFor(() => expect(app.text(ada)).toContain('title: XMathematician'))
   expect(app.text('Characters/Bob.md')).toContain('title: Fixer\n')
   expect(containerEl.querySelector<HTMLTextAreaElement>('[data-field="title"] textarea')?.value).toBe('Fixer')
+})
+
+test('a document note mounts a header while it has a banner, and unmounts when it has none', async () => {
+  const { controller, view, app } = await setup('---\ntype: note\nbanner: "[[coast.jpg]]"\n---\n')
+  const { containerEl } = liveView()
+  const leaf = {}
+  controller.sync([[leaf, view(containerEl)]])
+  await vi.waitFor(() => expect(headers(containerEl)).toHaveLength(1))
+  expect(containerEl.classList.contains('saga-header-active')).toBe(true)
+
+  app.addFile(ada, '---\ntype: note\n---\n')
+  controller.sync([[leaf, view(containerEl)]])
+  expect(containerEl.querySelector('.saga-header-host')).toBeNull()
+  expect(containerEl.classList.contains('saga-header-active')).toBe(false)
 })

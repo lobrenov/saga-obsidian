@@ -17,12 +17,12 @@ function markdownViews(app: App): [WorkspaceLeaf, LeafView][] {
   return views
 }
 
-/** Draws the header of every open note whose `type` maps to a renderer other than `document`, and the banners, until the plugin unloads. */
+/** Draws the header of every open note whose `type` maps to a renderer or that has a banner, and the banners, until the plugin unloads. */
 export function registerHeader(plugin: Plugin, config: ConfigStore): void {
   const { app } = plugin
   const env = createHeaderEnv(app)
-  const controller = createHeaderController(env, config)
   const banners = createBannerController(env, config)
+  const controller = createHeaderController(env, config, (key) => banners.reposition(key))
   let disposed = false
   const sync = (): void => {
     if (disposed) return

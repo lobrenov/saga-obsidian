@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { character, faction, item, location, map } from '../shared/renderers/definitions'
+import type { character, document, faction, item, location, map } from '../shared/renderers/definitions'
 import type { LayoutProps } from './types'
 
 /** The note's title and facts to the right of the field beside them. */
@@ -29,11 +29,10 @@ export function CharacterLayout({ title, field }: LayoutProps<typeof character>)
   )
 }
 
-/** Image banner above the name, kind and region. */
+/** Name, kind and region. */
 export function LocationLayout({ title, field }: LayoutProps<typeof location>) {
   return (
     <>
-      {field('image', 'saga-header-banner')}
       <Identity title={title}>
         <div className="saga-header-facts">
           {field('kind')}
@@ -62,11 +61,10 @@ export function FactionLayout({ title, field }: LayoutProps<typeof faction>) {
   )
 }
 
-/** Image banner above the name, kind, rarity, holder, owner, location and origin. */
+/** Name, kind, rarity, holder, owner, location and origin. */
 export function ItemLayout({ title, field }: LayoutProps<typeof item>) {
   return (
     <>
-      {field('image', 'saga-header-banner')}
       <Identity title={title}>
         <div className="saga-header-facts">
           {field('kind')}
@@ -81,12 +79,12 @@ export function ItemLayout({ title, field }: LayoutProps<typeof item>) {
   )
 }
 
-/** The map's image as a banner above its name. */
-export function MapLayout({ title, field }: LayoutProps<typeof map>) {
-  return (
-    <>
-      {field('image', 'saga-header-banner')}
-      <Identity title={title}>{null}</Identity>
-    </>
-  )
+/** The map's name. */
+export function MapLayout({ title }: LayoutProps<typeof map>) {
+  return <Identity title={title}>{null}</Identity>
+}
+
+/** The title alone. */
+export function DocumentLayout({ title }: LayoutProps<typeof document>) {
+  return <Identity title={title}>{null}</Identity>
 }

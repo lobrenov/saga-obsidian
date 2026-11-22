@@ -38,16 +38,16 @@ function Live({ app, env, file, config }: { app: HeaderFakeApp; env: HeaderEnv; 
   }, [app])
   const frontmatter = frontmatterOf(app.asApp(), file)
   const resolution = createRendererResolver(config)(frontmatter)
-  if (resolution.renderer === 'document') return null
   return (
     <NoteHeader
       env={env}
       file={file}
       frontmatter={frontmatter}
-      resolution={{ ...resolution, renderer: resolution.renderer }}
+      resolution={resolution}
       config={config}
       properties={properties}
       onToggleProperties={() => setProperties(!properties)}
+      onRepositionBanner={() => undefined}
     />
   )
 }

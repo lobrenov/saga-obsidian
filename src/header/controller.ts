@@ -2,6 +2,8 @@ import { createElement } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import type { TFile } from 'obsidian'
 import { frontmatterOf, type ConfigStore } from '../obsidian/vault'
+import { bannerOf } from '../shared/renderers/banner'
+import { rendererDefs } from '../shared/renderers/definitions'
 import { isolatePointer, markActive, placeHost, watchPlacement, type ViewMode } from './dom'
 import type { HeaderEnv } from './env'
 import { NoteHeader, type NoteHeaderProps } from './NoteHeader'
@@ -13,7 +15,7 @@ export interface LeafView {
   mode: ViewMode
 }
 
-type Drawn = Omit<NoteHeaderProps, 'properties' | 'onToggleProperties'>
+type Drawn = Omit<NoteHeaderProps, 'properties' | 'onToggleProperties' | 'onRepositionBanner'>
 
 interface Mount {
   containerEl: HTMLElement
@@ -34,13 +36,15 @@ export interface HeaderController {
   dispose(): void
 }
 
-/** One React root per leaf whose note has a renderer other than `document`, in Live Preview and Reading view. */
-export function createHeaderController(env: HeaderEnv, config: ConfigStore): HeaderController {
+const NO_KEYS: Readonly<Record<string, string>> = {}
+
+/** One React root per leaf whose note has a renderer, or is a `document` note with a banner, in Live Preview and Reading view; `repositionBanner(key)` puts the leaf's banner into reposition mode. */
+export function createHeaderController(env: HeaderEnv, config: ConfigStore, repositionBanner: (key: object) => void): HeaderController {
   const mounts = new Map<object, Mount>()
 
   const place = (mount: Mount): void => markActive(mount.containerEl, placeHost(mount.containerEl, mount.host, mount.mode), mount.properties)
 
-  const draw = (mount: Mount): void => {
+  const draw = (key: object, mount: Mount): void => {
     const signature = JSON.stringify([mount.drawn.file.path, mount.drawn.frontmatter, mount.drawn.resolution, config.state().text, mount.properties])
     if (signature === mount.signature) return
     mount.signature = signature
@@ -52,8 +56,9 @@ export function createHeaderController(env: HeaderEnv, config: ConfigStore): Hea
         onToggleProperties: () => {
           mount.properties = !mount.properties
           place(mount)
-          draw(mount)
-        }
+          draw(key, mount)
+        },
+        onRepositionBanner: () => repositionBanner(key)
       })
     )
   }
@@ -89,13 +94,15 @@ export function createHeaderController(env: HeaderEnv, config: ConfigStore): Hea
         if (!file || mode === 'source') continue
         const frontmatter = frontmatterOf(env.app, file)
         const resolution = config.rendererOf(frontmatter)
-        if (resolution.renderer === 'document') continue
+        const { renderer } = resolution
+        const keys = config.state().config.renderers[renderer]?.keys ?? NO_KEYS
+        if (renderer === 'document' && !bannerOf(rendererDefs.document, keys, frontmatter).link) continue
         live.add(key)
-        const drawn: Drawn = { env, file, frontmatter, resolution: { ...resolution, renderer: resolution.renderer }, config: config.state().config }
+        const drawn: Drawn = { env, file, frontmatter, resolution, config: config.state().config }
         const mount = mountFor(key, containerEl, mode, drawn)
         mount.drawn = drawn
         place(mount)
-        draw(mount)
+        draw(key, mount)
       }
       for (const key of [...mounts.keys()]) if (!live.has(key)) unmount(key)
     },
