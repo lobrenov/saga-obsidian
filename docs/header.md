@@ -21,7 +21,7 @@ A note whose `type` maps to a renderer other than `document`, or a `document` no
 - Width: the host is `width: 100%` of the sizer, which Obsidian already caps at `--file-line-width` (readable width on) and pads with the scroller's `--file-margins`; the header's left edge and width equal the text column's in Live Preview and Reading view.
 
 ## Layouts
-Each renderer has an accent and tint from the `--saga-<renderer>` and `--saga-<renderer>-tint` tokens in `src/styles.css` (fallback: Obsidian's colour variables). The bar (tinted) shows the renderer's icon (`setIcon`) and label, the banner control, the Type selector and the Properties toggle. Inside:
+Each renderer has an accent and tint from the `--saga-<renderer>` and `--saga-<renderer>-tint` tokens in `src/styles.css` (fallback: Obsidian's colour variables). The bar (tinted) shows the renderer's icon (`setIcon`) and label on the left; the banner control, the Type selector and the Properties toggle on the right. Inside:
 - Character: portrait card (152×192) beside the name, `title` (epithet), and facts affiliation, location, status.
 - Location: name, facts kind and region.
 - Faction: emblem beside the name and facts kind, leader, base, allies, rivals.

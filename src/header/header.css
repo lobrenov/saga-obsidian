@@ -106,7 +106,7 @@
 .saga-header-banner-control .saga-banner-popover {
   position: absolute;
   top: 100%;
-  left: var(--saga-header-pad);
+  right: var(--saga-header-pad);
   z-index: 3;
   max-width: calc(100% - 2 * var(--saga-header-pad));
   margin-top: var(--size-2-2);
@@ -117,7 +117,8 @@
   flex-basis: 100%;
 }
 
-.saga-header-type {
+/* The banner control starts the bar's right-hand group. */
+.saga-header-banner-control {
   margin-left: auto;
 }
 

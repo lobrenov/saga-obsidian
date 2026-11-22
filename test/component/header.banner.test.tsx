@@ -1,5 +1,6 @@
 import { afterEach, beforeAll, expect, test, vi } from 'vitest'
 import bannerCss from '../../src/banner/banner.css?inline'
+import headerCss from '../../src/header/header.css?inline'
 import { createBannerController } from '../../src/banner/controller'
 import { createHeaderController, type LeafView } from '../../src/header/controller'
 import { createConfigStore } from '../../src/obsidian/vault'
@@ -9,7 +10,7 @@ import { FILES, liveView } from './header.support'
 beforeAll(() => {
   ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = false
   const style = document.createElement('style')
-  style.textContent = bannerCss
+  style.textContent = `${headerCss} ${bannerCss}`
   document.head.append(style)
 })
 afterEach(() => document.body.replaceChildren())
@@ -149,4 +150,15 @@ test('the bar picker stays inside the card, the error wraps in the bar, and focu
   expect(alert.right).toBeLessThanOrEqual(card.right)
   expect(alert.top).toBeGreaterThanOrEqual(trigger.getBoundingClientRect().bottom)
   await vi.waitFor(() => expect(document.activeElement).toBe(trigger))
+})
+
+test('the banner control sits on the right, just before the Type selector', async () => {
+  const { containerEl, bar } = await setup(PLAIN)
+  containerEl.style.width = '1000px'
+  await vi.waitFor(() => expect(button(bar(), 'Add banner')).not.toBeNull())
+  const badge = bar()!.querySelector('.saga-header-badge')!.getBoundingClientRect()
+  const control = button(bar(), 'Add banner')!.getBoundingClientRect()
+  const type = bar()!.querySelector('.saga-header-type')!.getBoundingClientRect()
+  expect(control.left - badge.right).toBeGreaterThan(200)
+  expect(type.left - control.right).toBeLessThan(24)
 })

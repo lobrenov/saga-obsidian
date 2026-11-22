@@ -17,7 +17,6 @@ afterEach(() => document.body.replaceChildren())
 const note = 'Notes/Test.md'
 const LOCATION = '---\ntype: location\nimage: "[[coast.jpg]]"\n---\n'
 const DOCUMENT = '---\ntype: note\nbanner: "[[coast.jpg]]"\nbanner-y: 20\n---\n'
-const MAP = '---\ntype: map\nimage: "[[coast.jpg]]"\n---\n'
 /** A 1000 x 1000 image, so a vertical drag has room to move. */
 const SQUARE = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000"><rect width="1000" height="1000" fill="teal"/></svg>')}`
 
@@ -101,15 +100,6 @@ test('Escape closes the Add banner popover and writes nothing', async () => {
   expect(app.processed).toEqual([])
 })
 
-test('Change opens the image suggester and a pick rewrites the banner key', async () => {
-  const { host, suggesters, text } = await setup(DOCUMENT)
-  await vi.waitFor(() => expect(button(host()!, 'Change banner')).not.toBeNull())
-  button(host()!, 'Change banner')?.click()
-  await vi.waitFor(() => expect(suggesters).toHaveLength(1))
-  suggesters[0]?.pick('portrait.png')
-  await vi.waitFor(() => expect(text()).toBe(DOCUMENT.replace('coast.jpg', 'portrait.png')))
-})
-
 test('banner-tall on the view makes the banner 440 px, else 300 px', async () => {
   const { host, containerEl } = await setup(DOCUMENT)
   await vi.waitFor(() => expect(host()).not.toBeNull())
@@ -118,36 +108,13 @@ test('banner-tall on the view makes the banner 440 px, else 300 px', async () =>
   expect(host()?.offsetHeight).toBe(440)
 })
 
-test('Remove deletes the banner key and banner-y; the banner goes and Add banner returns', async () => {
-  const { host, containerEl, text } = await setup(DOCUMENT)
-  await vi.waitFor(() => expect(button(host()!, 'Remove')).not.toBeNull())
-  button(host()!, 'Remove')?.click()
-  await vi.waitFor(() => expect(text()).toBe('---\ntype: note\n---\n'))
-  await vi.waitFor(() => expect(containerEl.querySelector('.saga-banner-add-host')).not.toBeNull())
-  expect(host()).toBeNull()
-  expect(containerEl.classList.contains('saga-banner-active')).toBe(false)
-})
-
-test('a Map banner has no Remove', async () => {
-  const { host } = await setup(MAP)
-  await vi.waitFor(() => expect(button(host()!, 'Change banner')).not.toBeNull())
-  expect(button(host()!, 'Remove')).toBeNull()
-})
-
-const touch = (target: Element, type: string, x = 10, y = 10): void =>
-  void target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 5, pointerType: 'touch', clientX: x, clientY: y }))
-const tap = (target: Element): void => {
-  touch(target, 'pointerdown')
-  touch(target, 'pointerup')
-}
-
 async function reposition() {
   const context = await setup(DOCUMENT)
   ;(context.app.vault as { getResourcePath: (file: unknown) => string }).getResourcePath = () => SQUARE
   context.sync()
   const { host } = context
   await vi.waitFor(() => expect(host()?.querySelector('img')?.naturalWidth).toBe(1000))
-  button(host()!, 'Reposition')?.click()
+  context.controller.reposition(context.leaf)
   await vi.waitFor(() => expect(host()?.textContent).toContain('Drag the image to reposition'))
   const image = host()!.querySelector('.saga-banner-image')!
   const start = image.getBoundingClientRect().top + 100
@@ -193,15 +160,6 @@ test('reposition(key) puts the leaf into reposition mode', async () => {
   await vi.waitFor(() => expect(host()?.querySelector('.saga-banner')).not.toBeNull())
   controller.reposition(leaf)
   await vi.waitFor(() => expect(host()?.textContent).toContain('Drag the image to reposition'))
-})
-
-test('a tap on a touch screen shows the controls', async () => {
-  const { host } = await setupLoaded(DOCUMENT)
-  await vi.waitFor(() => expect(host()?.querySelector('.saga-banner-image')).not.toBeNull())
-  const controls = host()!.querySelector('.saga-banner-controls')!
-  expect(getComputedStyle(controls).opacity).toBe('0')
-  tap(host()!.querySelector('.saga-banner-image')!)
-  await vi.waitFor(() => expect(getComputedStyle(controls).opacity).toBe('1'))
 })
 
 test('the view header is transparent over the banner and gets its background back once scrolled past it', async () => {
@@ -266,19 +224,6 @@ test('an embed inside the view keeps its own sizer unpadded and clickable', asyn
   expect(getComputedStyle(inner.parentElement!).position).toBe('static')
 })
 
-test('hidden controls take no pointer or focus; hover, focus and a tap reveal them', async () => {
-  const { host } = await setupLoaded(DOCUMENT)
-  await vi.waitFor(() => expect(button(host()!, 'Remove')).not.toBeNull())
-  const controls = host()!.querySelector<HTMLElement>('.saga-banner-controls')!
-  expect(getComputedStyle(controls).visibility).toBe('hidden')
-  expect(getComputedStyle(controls).pointerEvents).toBe('none')
-  host()!.querySelector<HTMLElement>('.saga-banner-image')!.focus()
-  await vi.waitFor(() => expect(getComputedStyle(controls).visibility).toBe('visible'))
-  expect(getComputedStyle(controls).pointerEvents).toBe('auto')
-  button(host()!, 'Remove')!.focus()
-  expect(document.activeElement).toBe(button(host()!, 'Remove'))
-})
-
 test('Escape in another leaf does not cancel this leaf, and one aimed into it does', async () => {
   const { host, containerEl, controller, leaf } = await setup(DOCUMENT)
   await vi.waitFor(() => expect(host()?.querySelector('.saga-banner')).not.toBeNull())
@@ -306,14 +251,23 @@ test('Escape listens on the banner document, not the global one', async () => {
 })
 
 test('a write error shows as an alert', async () => {
-  const { host, app, suggesters } = await setup(DOCUMENT)
-  await vi.waitFor(() => expect(button(host()!, 'Change banner')).not.toBeNull())
+  const { containerEl, app, suggesters } = await setup('---\ntype: note\n---\n')
+  await vi.waitFor(() => expect(button(containerEl, 'Add banner')).not.toBeNull())
   app.vault.process = () => Promise.reject(new Error('disk full'))
-  button(host()!, 'Change banner')?.click()
+  button(containerEl, 'Add banner')?.click()
   await vi.waitFor(() => expect(suggesters).toHaveLength(1))
   suggesters[0]?.pick('portrait.png')
+  await vi.waitFor(() => expect(containerEl.querySelector('[role="alert"]')?.textContent).toContain('disk full'))
+  expect(getComputedStyle(containerEl.querySelector('.saga-banner-error')!).overflowWrap).toBe('anywhere')
+})
+
+test('a failed Save position shows as an alert and stays in reposition mode', async () => {
+  const { host, app, image } = await reposition()
+  await vi.waitFor(() => expect(image.querySelector('img')?.style.objectPosition).not.toBe('50% 20%'))
+  app.vault.process = () => Promise.reject(new Error('disk full'))
+  button(host()!, 'Save position')?.click()
   await vi.waitFor(() => expect(host()?.querySelector('[role="alert"]')?.textContent).toContain('disk full'))
-  expect(getComputedStyle(host()!.querySelector('.saga-banner-error')!).overflowWrap).toBe('anywhere')
+  expect(image.closest('.saga-banner')?.hasAttribute('data-repositioning')).toBe(true)
 })
 
 test('the view header turns opaque once content reaches it, before the banner is fully scrolled', async () => {
@@ -385,21 +339,6 @@ test('the controls wrap within a narrow pane', async () => {
   }
 })
 
-test('a scroll gesture does not toggle the tapped state, a tap does, and a tap elsewhere clears it', async () => {
-  const { host } = await setup(DOCUMENT)
-  await vi.waitFor(() => expect(host()?.querySelector('.saga-banner-image')).not.toBeNull())
-  const banner = host()!.querySelector('.saga-banner')!
-  const image = banner.querySelector('.saga-banner-image')!
-  touch(image, 'pointerdown', 10, 10)
-  touch(image, 'pointerup', 10, 60)
-  await new Promise((resolve) => setTimeout(resolve, 20))
-  expect(banner.hasAttribute('data-tapped')).toBe(false)
-  tap(image)
-  await vi.waitFor(() => expect(banner.hasAttribute('data-tapped')).toBe(true))
-  touch(document.body, 'pointerdown')
-  await vi.waitFor(() => expect(banner.hasAttribute('data-tapped')).toBe(false))
-})
-
 test('touch targets are 44 px on a coarse pointer', () => {
   const rules = [...document.styleSheets].flatMap((sheet) => [...sheet.cssRules]).filter((rule): rule is CSSMediaRule => rule instanceof CSSMediaRule && rule.conditionText.includes('pointer: coarse'))
   const text = rules.map((rule) => rule.cssText).join('')
@@ -408,8 +347,9 @@ test('touch targets are 44 px on a coarse pointer', () => {
   expect(text).toContain('.saga-banner-control')
 })
 
-test('with a readable line length the controls sit at the column right edge', async () => {
-  const { host, containerEl } = await setupLoaded(DOCUMENT)
+test('with a readable line length the reposition controls sit at the column right edge', async () => {
+  const { host, containerEl, controller, leaf } = await setupLoaded(DOCUMENT)
+  controller.reposition(leaf)
   await vi.waitFor(() => expect(host()?.querySelector('.saga-banner-actions')).not.toBeNull())
   const view = containerEl.querySelector<HTMLElement>('.markdown-source-view')!
   containerEl.style.width = '1000px'
@@ -421,14 +361,18 @@ test('with a readable line length the controls sit at the column right edge', as
   expect(gap()).toBeCloseTo(216, 0)
 })
 
-test('an unresolved link shows a visible message with a Change banner button', async () => {
+test('an unresolved link shows a visible message and no controls', async () => {
   const { host } = await setup('---\ntype: note\nbanner: "[[gone.jpg]]"\n---\n')
   await vi.waitFor(() => expect(host()?.querySelector('.saga-banner-missing')?.textContent).toBe('Image not found: gone.jpg'))
-  const controls = host()!.querySelector('.saga-banner-controls')!
-  expect(getComputedStyle(controls).visibility).toBe('visible')
-  expect(getComputedStyle(controls).opacity).toBe('1')
-  expect(button(host()!, 'Change banner')).not.toBeNull()
-  expect(button(host()!, 'Reposition')).toBeNull()
+  expect(host()!.querySelector('button')).toBeNull()
+})
+
+test('outside reposition mode the banner has no buttons, focus stop or label', async () => {
+  const { host } = await setupLoaded(DOCUMENT)
+  const image = host()!.querySelector('.saga-banner-image')!
+  expect(host()!.querySelector('button')).toBeNull()
+  expect(image.hasAttribute('tabindex')).toBe(false)
+  expect(image.hasAttribute('aria-label')).toBe(false)
 })
 
 test('an image that fails to load shows the message', async () => {
@@ -438,34 +382,25 @@ test('an image that fails to load shows the message', async () => {
 })
 
 test('the picker is a labelled group; Esc returns focus to the trigger and the trigger reports aria-expanded', async () => {
-  const { host, suggesters } = await setup(DOCUMENT)
-  await vi.waitFor(() => expect(button(host()!, 'Change banner')).not.toBeNull())
-  const trigger = button(host()!, 'Change banner')!
+  const { containerEl, suggesters } = await setup('---\ntype: note\n---\n')
+  await vi.waitFor(() => expect(button(containerEl, 'Add banner')).not.toBeNull())
+  const trigger = button(containerEl, 'Add banner')!
   trigger.click()
   await vi.waitFor(() => expect(suggesters).toHaveLength(1))
   expect(trigger.getAttribute('aria-expanded')).toBe('true')
-  const popover = host()!.querySelector('.saga-banner-popover')!
+  const popover = containerEl.querySelector('.saga-banner-popover')!
   expect(popover.getAttribute('role')).toBe('group')
   expect(popover.getAttribute('aria-label')).toBe('Choose banner image')
   suggesters[0]?.input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
-  await vi.waitFor(() => expect(host()!.querySelector('.saga-banner-popover')).toBeNull())
+  await vi.waitFor(() => expect(containerEl.querySelector('.saga-banner-popover')).toBeNull())
   await vi.waitFor(() => expect(document.activeElement).toBe(trigger))
   expect(trigger.getAttribute('aria-expanded')).toBe('false')
 })
 
-test('a pick returns focus to Change banner', async () => {
-  const { host, suggesters } = await setup(DOCUMENT)
-  await vi.waitFor(() => expect(button(host()!, 'Change banner')).not.toBeNull())
-  button(host()!, 'Change banner')!.click()
-  await vi.waitFor(() => expect(suggesters).toHaveLength(1))
-  suggesters[0]?.pick('portrait.png')
-  await vi.waitFor(() => expect(document.activeElement?.textContent?.trim()).toBe('Change banner'))
-})
-
 test('the popover stays open when focus moves to a suggestion, and closes on a plain blur', async () => {
-  const { host, suggesters } = await setup(DOCUMENT)
-  await vi.waitFor(() => expect(button(host()!, 'Change banner')).not.toBeNull())
-  button(host()!, 'Change banner')!.click()
+  const { containerEl, suggesters } = await setup('---\ntype: note\n---\n')
+  await vi.waitFor(() => expect(button(containerEl, 'Add banner')).not.toBeNull())
+  button(containerEl, 'Add banner')!.click()
   await vi.waitFor(() => expect(suggesters).toHaveLength(1))
   const input = suggesters[0]!.input
   const item = document.createElement('div')
@@ -475,12 +410,12 @@ test('the popover stays open when focus moves to a suggestion, and closes on a p
   input.focus()
   item.focus()
   await new Promise((resolve) => setTimeout(resolve, 30))
-  expect(host()!.querySelector('.saga-banner-popover')).not.toBeNull()
+  expect(containerEl.querySelector('.saga-banner-popover')).not.toBeNull()
   const plain = document.createElement('button')
   document.body.append(plain)
   input.focus()
   plain.focus()
-  await vi.waitFor(() => expect(host()!.querySelector('.saga-banner-popover')).toBeNull())
+  await vi.waitFor(() => expect(containerEl.querySelector('.saga-banner-popover')).toBeNull())
   expect(document.activeElement).toBe(plain)
 })
 

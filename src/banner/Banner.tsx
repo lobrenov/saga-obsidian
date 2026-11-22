@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import type { TFile } from 'obsidian'
 import { useHeader } from '../header/env'
-import { Icon } from '../header/Icon'
 import { resourceUrl } from '../obsidian/vault'
 import { BANNER_Y_KEY, clamp, type Banner as BannerData } from '../shared/renderers/banner'
 import { leafOf } from './dom'
-import { useBannerPicker } from './useBannerPicker'
-import { removeBanner } from './useWrite'
+import { useWrite } from './useWrite'
 
 export interface BannerProps {
   banner: BannerData
@@ -16,21 +14,16 @@ export interface BannerProps {
   onRepositioningChange: (on: boolean) => void
 }
 
-/** A touch that moves less than this many pixels is a tap. */
-const TAP_SLOP = 4
-
-/** The banner image with hover controls (Reposition, Change, Remove) and the reposition mode. */
+/** The banner image and its reposition mode; changing and removing it are in the header bar's banner control. */
 export function Banner({ banner, image, repositioning, onRepositioningChange }: BannerProps) {
   const { env } = useHeader()
-  const { write, picking, open, trigger, fallback, popover, alert } = useBannerPicker(banner.key)
-  const [tapped, setTapped] = useState(false)
+  const { write, error } = useWrite()
   /** The `src` that failed to load. */
   const [failed, setFailed] = useState<string | null>(null)
   /** The position while repositioning, and after Save until the note delivers it. */
   const [draft, setDraft] = useState<number | null>(null)
   const [seenY, setSeenY] = useState(banner.y)
   const drag = useRef<{ startY: number; startPosition: number } | null>(null)
-  const tap = useRef<{ x: number; y: number } | null>(null)
   const root = useRef<HTMLDivElement>(null)
   const imageEl = useRef<HTMLDivElement>(null)
   const position = draft ?? banner.y
@@ -57,16 +50,6 @@ export function Banner({ banner, image, repositioning, onRepositioningChange }: 
     return () => el.ownerDocument.removeEventListener('keydown', onKey)
   }, [repositioning, onRepositioningChange])
 
-  useEffect(() => {
-    if (!tapped || !root.current) return
-    const el = root.current
-    const onDown = (event: PointerEvent): void => {
-      if (!el.contains(event.target as Node | null)) setTapped(false)
-    }
-    el.ownerDocument.addEventListener('pointerdown', onDown)
-    return () => el.ownerDocument.removeEventListener('pointerdown', onDown)
-  }, [tapped])
-
   const move = (event: React.PointerEvent<HTMLDivElement>): void => {
     const start = drag.current
     const img = event.currentTarget.querySelector('img')
@@ -82,21 +65,13 @@ export function Banner({ banner, image, repositioning, onRepositioningChange }: 
   }
 
   return (
-    <div
-      ref={root}
-      className="saga-banner"
-      data-repositioning={repositioning || undefined}
-      data-tapped={tapped || undefined}
-      data-picking={picking || undefined}
-      data-missing={missing || undefined}
-    >
+    <div ref={root} className="saga-banner" data-repositioning={repositioning || undefined} data-missing={missing || undefined}>
       <div
         ref={imageEl}
         className="saga-banner-image"
-        tabIndex={0}
-        role={repositioning ? 'slider' : 'group'}
-        aria-label={repositioning ? 'Banner position' : 'Banner'}
-        {...(repositioning ? { 'aria-orientation': 'vertical' as const, 'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-valuenow': position } : {})}
+        {...(repositioning
+          ? { tabIndex: 0, role: 'slider', 'aria-label': 'Banner position', 'aria-orientation': 'vertical' as const, 'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-valuenow': position }
+          : {})}
         onKeyDown={(event) => {
           if (!repositioning || (event.key !== 'ArrowUp' && event.key !== 'ArrowDown')) return
           event.preventDefault()
@@ -104,74 +79,46 @@ export function Banner({ banner, image, repositioning, onRepositioningChange }: 
           setDraft(clamp(position + step))
         }}
         onPointerDown={(event) => {
-          tap.current = { x: event.clientX, y: event.clientY }
           if (!repositioning) return
           event.currentTarget.setPointerCapture(event.pointerId)
           drag.current = { startY: event.clientY, startPosition: position }
         }}
         onPointerMove={move}
-        onPointerUp={(event) => {
-          drag.current = null
-          const start = tap.current
-          tap.current = null
-          if (event.pointerType === 'touch' && !repositioning && start && Math.hypot(event.clientX - start.x, event.clientY - start.y) < TAP_SLOP) setTapped(!tapped)
-        }}
-        onPointerCancel={() => (tap.current = null)}
+        onPointerUp={() => (drag.current = null)}
         onLostPointerCapture={() => (drag.current = null)}
       >
         {src ? <img src={src} alt="" draggable={false} hidden={missing} style={{ objectPosition: `50% ${position}%` }} onError={() => setFailed(src)} /> : null}
       </div>
       {missing ? <p className="saga-banner-missing">Image not found: {banner.link?.target}</p> : null}
-      <div className="saga-banner-actions">
-        {popover}
-        {alert}
-        {repositioning ? (
-          <div ref={fallback} tabIndex={-1} className="saga-banner-controls">
-            <span role="status" className="saga-banner-hint">
-              Drag the image to reposition (or use the arrow keys)
-            </span>
-            <button type="button" className="saga-banner-control mod-cta" onClick={() => void save()}>
-              Save position
-            </button>
-            <button
-              type="button"
-              className="saga-banner-control"
-              onClick={() => {
-                setDraft(null)
-                onRepositioningChange(false)
-              }}
-            >
-              Cancel
-            </button>
-          </div>
-        ) : (
-          <div ref={fallback} tabIndex={-1} className="saga-banner-controls">
-            {missing ? null : (
+      {repositioning || error ? (
+        <div className="saga-banner-actions">
+          {error ? (
+            <p role="alert" className="saga-banner-error">
+              {error}
+            </p>
+          ) : null}
+          {repositioning ? (
+            <div className="saga-banner-controls">
+              <span role="status" className="saga-banner-hint">
+                Drag the image to reposition (or use the arrow keys)
+              </span>
+              <button type="button" className="saga-banner-control mod-cta" onClick={() => void save()}>
+                Save position
+              </button>
               <button
                 type="button"
                 className="saga-banner-control"
                 onClick={() => {
                   setDraft(null)
-                  onRepositioningChange(true)
+                  onRepositioningChange(false)
                 }}
               >
-                <Icon name="move-vertical" />
-                Reposition
+                Cancel
               </button>
-            )}
-            <button ref={trigger} type="button" className="saga-banner-control" aria-expanded={picking} onClick={open}>
-              <Icon name="image" />
-              Change banner
-            </button>
-            {banner.removable ? (
-              <button type="button" className="saga-banner-control mod-warning" onClick={() => void removeBanner(write, banner.key)}>
-                <Icon name="trash-2" />
-                Remove
-              </button>
-            ) : null}
-          </div>
-        )}
-      </div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   )
 }
