@@ -130,4 +130,56 @@ describe('settings draft', () => {
     const result = saveText(store.state(), merged)
     expect(result.ok && parseConfig(parse(result.value)).config.renderers.location?.types).toEqual(['place', 'town'])
   })
+
+  describe('pin defaults', () => {
+    it('draws each renderer\'s built-in look, or its configured keys over it', async () => {
+      const { store } = await setup('renderers:\n  faction:\n    pin: { shape: herald }\n')
+      const draft = draftOf(store.state().config)
+      expect(draft.pin.character).toEqual({ shape: 'pin', color: 'crimson', icon: 'user' })
+      expect(draft.pin.faction).toEqual({ shape: 'herald', color: 'indigo', icon: 'flag' })
+      expect(draft.pin.document).toEqual({ shape: 'pin', color: 'umber', icon: 'file-text' })
+    })
+
+    it('writes a changed key only, keeping comments, and drops a key set back to its default', async () => {
+      const { app, store } = await setup('# cfg\nrenderers:\n  faction:\n    types: [faction] # fx\n    pin: { shape: herald, color: rust }\n')
+      const draft = draftOf(store.state().config)
+      draft.pin.faction = { shape: 'herald', color: 'indigo', icon: 'skull' }
+      const result = saveText(store.state(), draft)
+      expect(result.ok).toBe(true)
+      if (!result.ok) return
+      await store.writeConfig(result.value)
+      expect(app.text(CONFIG_PATH)).toContain('# fx')
+      expect(parseConfig(parse(app.text(CONFIG_PATH))).config.renderers.faction?.pin).toEqual({ shape: 'herald', icon: 'skull' })
+    })
+
+    it('writes nothing for a value equal to the built-in default and removes an emptied pin', async () => {
+      const { store } = await setup()
+      const draft = draftOf(store.state().config)
+      draft.pin.item = { shape: 'pin', color: 'ochre', icon: 'gem' }
+      expect(saveText(store.state(), draft)).toEqual({ ok: true, value: FILE })
+      draft.pin.item = { shape: 'circle', color: 'ochre', icon: 'gem' }
+      const result = saveText(store.state(), draft)
+      expect(result.ok && parseConfig(parse(result.value)).config.renderers.item?.pin).toEqual({ shape: 'circle' })
+    })
+
+    it('saves document\'s pin look', async () => {
+      const { store } = await setup()
+      const draft = draftOf(store.state().config)
+      draft.pin.document = { shape: 'flag', color: 'umber', icon: 'file-text' }
+      const result = saveText(store.state(), draft)
+      expect(result.ok && parseConfig(parse(result.value)).config.renderers.document?.pin).toEqual({ shape: 'flag' })
+    })
+
+    it('rebases pin edits per key', async () => {
+      const { app, store } = await setup('renderers:\n  faction: { types: [faction], pin: { color: rust } }\n')
+      const previous = store.state().config
+      const draft = draftOf(previous)
+      draft.pin.faction = { ...draft.pin.faction!, icon: 'skull' }
+      expect(isDirty(draft, previous)).toBe(true)
+      app.setRaw(CONFIG_PATH, 'renderers:\n  faction: { types: [faction], pin: { color: plum, shape: flag } }\n')
+      await store.reload()
+      const merged = rebase(draft, previous, store.state().config)
+      expect(merged.pin.faction).toEqual({ shape: 'flag', color: 'plum', icon: 'skull' })
+    })
+  })
 })

@@ -36,3 +36,29 @@
 .saga-settings-issue {
   color: var(--text-error);
 }
+
+.saga-pin-preview {
+  display: flex;
+  align-items: center;
+  height: var(--size-4-8);
+}
+
+.saga-pin-preview svg {
+  height: 100%;
+  width: auto;
+}
+
+.saga-pin-preview-icon {
+  color: #fff;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+.theme-dark .saga-pin-preview-icon {
+  color: var(--background-primary);
+}
+
+.saga-pin-reset-hidden {
+  visibility: hidden;
+}

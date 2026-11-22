@@ -1,13 +1,28 @@
-import { Notice, PluginSettingTab, Setting, type App, type Plugin } from 'obsidian'
+import { getIcon, Notice, PluginSettingTab, setIcon, Setting, type App, type Plugin } from 'obsidian'
 import type { PinLabels, PrefsStore } from '../obsidian/prefs'
 import type { ConfigStore } from '../obsidian/vault'
+import { FALLBACK_ICON, PIN_COLORS, PIN_DEFAULTS, SHAPES, type ColorId, type PinLook, type ShapeId } from '../shared/pins/look'
 import { rendererDefs } from '../shared/renderers/definitions'
 import type { Fields } from '../shared/renderers/fields'
 import type { Issue } from '../shared/result'
 import type { Config } from '../shared/schemas/config'
-import type { RendererId } from '../shared/renderers/ids'
+import { RENDERER_IDS, type RendererId } from '../shared/renderers/ids'
+import { IconPicker } from '../ui/iconPicker'
 import { draftIssues, draftOf, EDITABLE_IDS, isDirty, rebase, saveText, type Draft } from './draft'
 import './settings.css'
+
+/** Draws a pin of `look` into `el`: its shape filled with the colour's variable and the icon in the shape's icon box. */
+function drawPinPreview(el: HTMLElement, look: PinLook): void {
+  el.empty()
+  const shape = SHAPES.find((candidate) => candidate.id === look.shape) ?? SHAPES[0]!
+  const svg = el.createSvg('svg', { attr: { viewBox: `0 0 ${shape.w} ${shape.h}` } })
+  svg.createSvg('path', { attr: { d: shape.d, fill: `var(--saga-pin-${look.color})` } })
+  const icon = getIcon(look.icon) ?? getIcon(FALLBACK_ICON)
+  if (!icon) return
+  icon.classList.add('saga-pin-preview-icon')
+  for (const [name, value] of Object.entries({ x: shape.ix, y: shape.iy, width: shape.is, height: shape.is })) icon.setAttribute(name, String(value))
+  svg.appendChild(icon)
+}
 
 class SettingsTab extends PluginSettingTab {
   private draft: Draft
@@ -148,6 +163,67 @@ class SettingsTab extends PluginSettingTab {
     const fallback = containerEl.createDiv({ cls: 'saga-settings-renderer saga-settings-fallback' })
     fallback.createSpan({ cls: 'saga-settings-renderer-name', text: rendererDefs.document.label })
     fallback.createSpan({ cls: 'saga-settings-renderer-types', text: 'any other type' })
+
+    new Setting(containerEl).setName('Pin defaults').setDesc('The shape, colour and icon of a renderer’s map pins. A pin’s own settings win.').setHeading()
+    for (const id of RENDERER_IDS) this.renderPinRow(id, state.invalid.includes(id))
+  }
+
+  /** One renderer's pin defaults: preview, Shape, Colour, Icon and Reset; edits update the row in place. */
+  private renderPinRow(id: RendererId, readOnly: boolean): void {
+    const look = (): PinLook => (this.draft.pin[id] ??= { ...PIN_DEFAULTS[id] })
+    const setting = new Setting(this.containerEl).setName(rendererDefs[id].label)
+    const preview = createDiv({ cls: 'saga-pin-preview' })
+    setting.controlEl.prepend(preview)
+    let reset: HTMLElement | undefined
+    let shape: { setValue: (value: string) => unknown } | undefined
+    let color: { setValue: (value: string) => unknown } | undefined
+    let iconButton: HTMLElement | undefined
+    const refresh = (): void => {
+      drawPinPreview(preview, look())
+      if (iconButton) setIcon(iconButton, look().icon)
+      const { shape: s, color: c, icon: i } = PIN_DEFAULTS[id]
+      reset?.toggleClass('saga-pin-reset-hidden', look().shape === s && look().color === c && look().icon === i)
+    }
+    const edit = (change: Partial<PinLook>): void => {
+      this.draft.pin[id] = { ...look(), ...change }
+      refresh()
+      this.changed()
+    }
+    setting
+      .addDropdown((dropdown) => {
+        shape = dropdown
+        dropdown
+          .addOptions(Object.fromEntries(SHAPES.map((entry) => [entry.id, entry.label])))
+          .setValue(look().shape)
+          .setDisabled(readOnly)
+          .onChange((value) => edit({ shape: value as ShapeId }))
+      })
+      .addDropdown((dropdown) => {
+        color = dropdown
+        dropdown
+          .addOptions(Object.fromEntries(PIN_COLORS.map((entry) => [entry.id, entry.name])))
+          .setValue(look().color)
+          .setDisabled(readOnly)
+          .onChange((value) => edit({ color: value as ColorId }))
+      })
+      .addExtraButton((button) => {
+        iconButton = button.extraSettingsEl
+        button
+          .setTooltip('Icon')
+          .setDisabled(readOnly)
+          .onClick(() => new IconPicker(this.app, (icon) => edit({ icon })).open())
+      })
+      .addExtraButton((button) => {
+        reset = button.extraSettingsEl
+        button.setIcon('rotate-ccw').setTooltip('Reset to default').onClick(() => {
+          this.draft.pin[id] = { ...PIN_DEFAULTS[id] }
+          shape?.setValue(PIN_DEFAULTS[id].shape)
+          color?.setValue(PIN_DEFAULTS[id].color)
+          refresh()
+          this.changed()
+        })
+      })
+    refresh()
   }
 
   /** Writes the draft when it is valid; a refused draft shows its issues and writes nothing. */
