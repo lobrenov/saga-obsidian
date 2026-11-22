@@ -2,39 +2,59 @@ import { syntaxTree } from '@codemirror/language'
 import { RangeSetBuilder, StateEffect, type Extension } from '@codemirror/state'
 import { Decoration, ViewPlugin, WidgetType, type DecorationSet, type EditorView, type ViewUpdate } from '@codemirror/view'
 import { editorInfoField, editorLivePreviewField, setIcon } from 'obsidian'
-import { rendererDefs } from '../shared/renderers/definitions'
-import type { RendererId } from '../shared/renderers/ids'
+import type { LinkIcon, LinkMarks } from './renderers'
 import { wikilinksIn } from './syntax'
 
-export type RendererOf = (target: string, fromPath: string) => RendererId | null
+export type MarksOf = (target: string, fromPath: string) => LinkMarks
 
-/** Redraws the link icons of an editor. */
+/** Redraws the link icons and titles of an editor. */
 export const refreshLinkIcons = StateEffect.define<null>()
 
-/** The icon drawn before a link: the renderer's icon, coloured by its `--saga-<renderer>` token. */
-export function linkIcon(doc: Document, renderer: RendererId): HTMLElement {
+/** The icon drawn before a link, coloured by its pin colour's `--saga-pin-<colour>` token, else its renderer's `--saga-<renderer>` token. */
+export function linkIcon(doc: Document, icon: LinkIcon): HTMLElement {
   const el = doc.createElement('span')
   el.className = 'saga-link-icon'
-  el.dataset.renderer = renderer
+  el.dataset.renderer = icon.renderer
+  if (icon.color) el.dataset.color = icon.color
   el.setAttribute('aria-hidden', 'true')
-  setIcon(el, rendererDefs[renderer].icon)
+  setIcon(el, icon.icon)
+  return el
+}
+
+/** The `, Title` drawn after a link to a character. */
+export function linkTitle(doc: Document, title: string): HTMLElement {
+  const el = doc.createElement('span')
+  el.className = 'saga-link-title'
+  el.textContent = `, ${title}`
   return el
 }
 
 class LinkIconWidget extends WidgetType {
-  constructor(readonly renderer: RendererId) {
+  constructor(readonly icon: LinkIcon) {
     super()
   }
   override eq(other: LinkIconWidget): boolean {
-    return other.renderer === this.renderer
+    return other.icon.renderer === this.icon.renderer && other.icon.icon === this.icon.icon && other.icon.color === this.icon.color
   }
   override toDOM(view: EditorView): HTMLElement {
-    return linkIcon(view.dom.ownerDocument, this.renderer)
+    return linkIcon(view.dom.ownerDocument, this.icon)
   }
 }
 
-/** Live Preview: an icon widget before each visible wikilink whose note has a renderer. `editors` holds the open editors, for `refreshLinkIcons`. */
-export function linkIconsExtension(rendererOf: RendererOf, editors: Set<EditorView>): Extension {
+class LinkTitleWidget extends WidgetType {
+  constructor(readonly title: string) {
+    super()
+  }
+  override eq(other: LinkTitleWidget): boolean {
+    return other.title === this.title
+  }
+  override toDOM(view: EditorView): HTMLElement {
+    return linkTitle(view.dom.ownerDocument, this.title)
+  }
+}
+
+/** Live Preview: an icon widget before and a title widget after each visible wikilink that has them. `editors` holds the open editors, for `refreshLinkIcons`. */
+export function linkIconsExtension(marksOf: MarksOf, editors: Set<EditorView>): Extension {
   return ViewPlugin.fromClass(
     class {
       decorations: DecorationSet
@@ -60,10 +80,15 @@ export function linkIconsExtension(rendererOf: RendererOf, editors: Set<EditorVi
         const path = state.field(editorInfoField, false)?.file?.path
         if (path === undefined || !state.field(editorLivePreviewField, false)) return Decoration.none
         const builder = new RangeSetBuilder<Decoration>()
+        let last = -1
         for (const { from, to } of this.view.visibleRanges) {
           for (const link of wikilinksIn(state, from, to)) {
-            const renderer = rendererOf(link.target, path)
-            if (renderer) builder.add(link.from, link.from, Decoration.widget({ widget: new LinkIconWidget(renderer), side: -1 }))
+            // A link across two visible ranges is found in both.
+            if (link.from <= last) continue
+            last = link.from
+            const { icon, title } = marksOf(link.target, path)
+            if (icon) builder.add(link.from, link.from, Decoration.widget({ widget: new LinkIconWidget(icon), side: -1 }))
+            if (title) builder.add(link.to, link.to, Decoration.widget({ widget: new LinkTitleWidget(title), side: 1 }))
           }
         }
         return builder.finish()

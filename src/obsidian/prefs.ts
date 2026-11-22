@@ -1,12 +1,17 @@
 import type { Plugin } from 'obsidian'
 
 export type PinLabels = 'always' | 'hover'
+export type LinkIconLook = 'renderer' | 'pin'
 
 /** Obsidian-only preferences, stored in the plugin's `data.json` (not in `.saga/renderers.yaml`). */
 export interface Prefs {
   pinLabels: PinLabels
   /** Wikilinks in note text show the linked note's renderer icon. */
   linkIcons: boolean
+  /** Link icons show the renderer's icon and colour, or the linked note's pin look. */
+  linkIconLook: LinkIconLook
+  /** Wikilinks to characters show the character's title after the link. */
+  linkTitles: boolean
 }
 
 export interface PrefsStore {
@@ -18,7 +23,12 @@ export interface PrefsStore {
 
 export async function createPrefsStore(plugin: Plugin): Promise<PrefsStore> {
   const saved = (await plugin.loadData()) as Partial<Prefs> | null
-  let prefs: Prefs = { pinLabels: saved?.pinLabels === 'hover' ? 'hover' : 'always', linkIcons: saved?.linkIcons === true }
+  let prefs: Prefs = {
+    pinLabels: saved?.pinLabels === 'hover' ? 'hover' : 'always',
+    linkIcons: saved?.linkIcons === true,
+    linkIconLook: saved?.linkIconLook === 'pin' ? 'pin' : 'renderer',
+    linkTitles: saved?.linkTitles === true
+  }
   const listeners = new Set<(prefs: Prefs) => void>()
   return {
     get: () => prefs,

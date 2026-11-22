@@ -3,15 +3,18 @@ import { MarkdownView, type Plugin } from 'obsidian'
 import type { PrefsStore } from '../obsidian/prefs'
 import type { ConfigStore } from '../obsidian/vault'
 import { parseWikiInner } from '../shared/markdown/wikiSyntax'
-import { linkIcon, linkIconsExtension, refreshLinkIcons, type RendererOf } from './editor'
+import { linkIcon, linkIconsExtension, linkTitle, refreshLinkIcons, type MarksOf } from './editor'
 import './links.css'
-import { createLinkRenderers } from './renderers'
+import { createLinkRenderers, linkMarks, NO_MARKS } from './renderers'
 
-/** While the `linkIcons` pref is on, wikilinks in Live Preview and Reading view show the linked note's renderer icon. */
+/** While the `linkIcons` or `linkTitles` pref is on, wikilinks in Live Preview and Reading view show the linked note's icon or a character's title. */
 export function registerLinkIcons(plugin: Plugin, config: ConfigStore, prefs: PrefsStore): void {
   const { app } = plugin
   const renderers = createLinkRenderers(app, config)
-  const rendererOf: RendererOf = (target, fromPath) => (prefs.get().linkIcons ? renderers.of(target, fromPath) : null)
+  const marksOf: MarksOf = (target, fromPath) => {
+    const current = prefs.get()
+    return current.linkIcons || current.linkTitles ? linkMarks(renderers.of(target, fromPath), current) : NO_MARKS
+  }
   const editors = new Set<EditorView>()
   const refresh = (): void => {
     for (const view of editors) view.dispatch({ effects: refreshLinkIcons.of(null) })
@@ -20,20 +23,21 @@ export function registerLinkIcons(plugin: Plugin, config: ConfigStore, prefs: Pr
     })
   }
 
-  plugin.registerEditorExtension(linkIconsExtension(rendererOf, editors))
+  plugin.registerEditorExtension(linkIconsExtension(marksOf, editors))
   plugin.registerMarkdownPostProcessor((el, ctx) => {
     for (const a of Array.from(el.querySelectorAll('a.internal-link'))) {
       const href = a.getAttribute('data-href')
-      const renderer = href ? rendererOf(parseWikiInner(href).target, ctx.sourcePath) : null
-      if (renderer) a.prepend(linkIcon(a.ownerDocument, renderer))
+      const { icon, title } = href ? marksOf(parseWikiInner(href).target, ctx.sourcePath) : NO_MARKS
+      if (icon) a.prepend(linkIcon(a.ownerDocument, icon))
+      if (title) a.after(linkTitle(a.ownerDocument, title))
     }
   })
 
-  let enabled = prefs.get().linkIcons
+  let shown = prefs.get()
   plugin.register(
     prefs.subscribe((next) => {
-      if (next.linkIcons === enabled) return
-      enabled = next.linkIcons
+      if (next.linkIcons === shown.linkIcons && next.linkIconLook === shown.linkIconLook && next.linkTitles === shown.linkTitles) return
+      shown = next
       refresh()
     })
   )

@@ -1,5 +1,5 @@
 import { Notice, PluginSettingTab, setIcon, Setting, type App, type Plugin } from 'obsidian'
-import type { PinLabels, PrefsStore } from '../obsidian/prefs'
+import type { LinkIconLook, PinLabels, PrefsStore } from '../obsidian/prefs'
 import type { ConfigStore } from '../obsidian/vault'
 import { PIN_COLORS, PIN_DEFAULTS, SHAPES, type ColorId, type PinLook, type ShapeId } from '../shared/pins/look'
 import { rendererDefs } from '../shared/renderers/definitions'
@@ -91,11 +91,30 @@ class SettingsTab extends PluginSettingTab {
           .onChange((value) => void this.prefs.set({ pinLabels: value as PinLabels }))
       )
 
-    new Setting(containerEl).setName('Links').setHeading()
+    new Setting(containerEl).setName('Markdown rendering').setHeading()
     new Setting(containerEl)
-      .setName('Link icons')
-      .setDesc('Wikilinks in note text show the linked note’s renderer icon.')
-      .addToggle((toggle) => toggle.setValue(this.prefs.get().linkIcons).onChange((value) => void this.prefs.set({ linkIcons: value })))
+      .setName('Render icons with wikilinks?')
+      .setDesc('Wikilinks in note text show an icon for the linked note.')
+      .addToggle((toggle) =>
+        toggle.setValue(this.prefs.get().linkIcons).onChange((value) => {
+          iconLook.settingEl.toggle(value)
+          void this.prefs.set({ linkIcons: value })
+        })
+      )
+    const iconLook = new Setting(containerEl)
+      .setName('Icon look')
+      .setDesc('The renderer’s icon and colour, or the icon and colour of the linked note’s first map pin.')
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOptions({ renderer: 'Renderer', pin: 'Pin' })
+          .setValue(this.prefs.get().linkIconLook)
+          .onChange((value) => void this.prefs.set({ linkIconLook: value as LinkIconLook }))
+      )
+    iconLook.settingEl.toggle(this.prefs.get().linkIcons)
+    new Setting(containerEl)
+      .setName('Render character titles with wikilinks?')
+      .setDesc('Wikilinks to characters read “Name, Title” when the character has a title.')
+      .addToggle((toggle) => toggle.setValue(this.prefs.get().linkTitles).onChange((value) => void this.prefs.set({ linkTitles: value })))
 
     new Setting(containerEl).setName('Renderers').setHeading()
     new Setting(containerEl)

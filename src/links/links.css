@@ -26,3 +26,44 @@
 .saga-link-icon[data-renderer='map'] {
   --saga-link-accent: var(--saga-map, var(--color-blue));
 }
+
+.saga-link-icon[data-color='crimson'] {
+  --saga-link-accent: var(--saga-pin-crimson);
+}
+.saga-link-icon[data-color='rust'] {
+  --saga-link-accent: var(--saga-pin-rust);
+}
+.saga-link-icon[data-color='ochre'] {
+  --saga-link-accent: var(--saga-pin-ochre);
+}
+.saga-link-icon[data-color='olive'] {
+  --saga-link-accent: var(--saga-pin-olive);
+}
+.saga-link-icon[data-color='moss'] {
+  --saga-link-accent: var(--saga-pin-moss);
+}
+.saga-link-icon[data-color='teal'] {
+  --saga-link-accent: var(--saga-pin-teal);
+}
+.saga-link-icon[data-color='sea'] {
+  --saga-link-accent: var(--saga-pin-sea);
+}
+.saga-link-icon[data-color='indigo'] {
+  --saga-link-accent: var(--saga-pin-indigo);
+}
+.saga-link-icon[data-color='violet'] {
+  --saga-link-accent: var(--saga-pin-violet);
+}
+.saga-link-icon[data-color='plum'] {
+  --saga-link-accent: var(--saga-pin-plum);
+}
+.saga-link-icon[data-color='slate'] {
+  --saga-link-accent: var(--saga-pin-slate);
+}
+.saga-link-icon[data-color='umber'] {
+  --saga-link-accent: var(--saga-pin-umber);
+}
+
+.saga-link-title {
+  color: var(--text-muted);
+}
