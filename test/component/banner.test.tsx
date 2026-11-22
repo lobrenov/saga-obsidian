@@ -26,7 +26,7 @@ async function setup(text: string, mode: LeafView['mode'] = 'live') {
   const file = app.addFile(note, text)
   const { env, suggesters } = testEnv(app)
   const config = await createConfigStore(app.asApp(), app.owner())
-  const controller = createBannerController(env, config)
+  const controller = createBannerController(env, config, () => false)
   const leaf = {}
   const dom = mode === 'reading' ? readingView() : liveView()
   const sync = (nextMode: LeafView['mode'] = mode): void => controller.sync([[leaf, { containerEl: dom.containerEl, file, mode: nextMode }]])

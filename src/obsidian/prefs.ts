@@ -17,6 +17,8 @@ export interface Prefs {
   fileIcons: boolean
   /** With `fileIcons`, notes with no renderer type show the `document` icon. */
   fileIconsUntyped: boolean
+  /** Notes with no renderer type always show the Document card; off, only while they have a banner. */
+  documentCard: boolean
 }
 
 export interface PrefsStore {
@@ -34,7 +36,8 @@ export async function createPrefsStore(plugin: Plugin): Promise<PrefsStore> {
     linkIconLook: typeof saved?.linkIconLook === 'string' && saved.linkIconLook.endsWith('.md') ? saved.linkIconLook : 'renderer',
     linkTitles: saved?.linkTitles === true,
     fileIcons: saved?.fileIcons === true,
-    fileIconsUntyped: saved?.fileIconsUntyped !== false
+    fileIconsUntyped: saved?.fileIconsUntyped !== false,
+    documentCard: saved?.documentCard !== false
   }
   const listeners = new Set<(prefs: Prefs) => void>()
   const set = async (patch: Partial<Prefs>): Promise<void> => {

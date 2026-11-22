@@ -120,6 +120,10 @@ class SettingsTab extends PluginSettingTab {
       .setName('Render character titles with wikilinks?')
       .setDesc('Wikilinks to characters read “Name, Title” when the character has a title.')
       .addToggle((toggle) => toggle.setValue(this.prefs.get().linkTitles).onChange((value) => void this.prefs.set({ linkTitles: value })))
+    new Setting(containerEl)
+      .setName('Render a header on untyped notes?')
+      .setDesc('Notes with no renderer type show a Document card in place of their title and properties. Off, they show Obsidian’s own title with + Add banner under it, and the card only while they have a banner.')
+      .addToggle((toggle) => toggle.setValue(this.prefs.get().documentCard).onChange((value) => void this.prefs.set({ documentCard: value })))
 
     new Setting(containerEl).setName('File explorer').setHeading()
     new Setting(containerEl)

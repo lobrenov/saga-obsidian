@@ -112,7 +112,7 @@ describe('createLinkRenderers', () => {
 
 describe('linkMarks', () => {
   const target: LinkTarget = { renderer: 'character', pins: { 'Maps/Coast.md': { shape: 'pin', color: 'plum', icon: 'anchor' } }, title: 'Mathematician' }
-  const prefs: Prefs = { pinLabels: 'always', linkIcons: true, linkIconLook: 'renderer', linkTitles: true, fileIcons: false, fileIconsUntyped: true }
+  const prefs: Prefs = { pinLabels: 'always', linkIcons: true, linkIconLook: 'renderer', linkTitles: true, fileIcons: false, fileIconsUntyped: true, documentCard: true }
 
   it('gives the renderer’s icon, or the icon and colour of the note’s pin on the chosen map, else the renderer’s', () => {
     expect(linkMarks(target, prefs)).toEqual({ icon: { renderer: 'character', icon: 'user', color: null }, title: 'Mathematician' })
@@ -132,7 +132,8 @@ describe('createPrefsStore', () => {
     createPrefsStore(Object.assign(new FakePlugin(app.asApp(), { id: 'saga' }), { loadData: () => Promise.resolve(saved), saveData: () => Promise.resolve() }) as unknown as Plugin)
 
   it('defaults the link and file icon prefs and keeps saved ones', async () => {
-    expect((await store(null)).get()).toEqual({ pinLabels: 'always', linkIcons: false, linkIconLook: 'renderer', linkTitles: false, fileIcons: false, fileIconsUntyped: true })
+    expect((await store(null)).get()).toEqual({ pinLabels: 'always', linkIcons: false, linkIconLook: 'renderer', linkTitles: false, fileIcons: false, fileIconsUntyped: true, documentCard: true })
+    expect((await store({ documentCard: false })).get().documentCard).toBe(false)
     expect((await store({ fileIcons: true, fileIconsUntyped: false })).get()).toMatchObject({ fileIcons: true, fileIconsUntyped: false })
     expect((await store({ linkIcons: true })).get()).toMatchObject({ linkIcons: true, linkIconLook: 'renderer', linkTitles: false })
     expect((await store({ linkIconLook: 'Maps/Coast.md', linkTitles: true })).get()).toMatchObject({ linkIconLook: 'Maps/Coast.md', linkTitles: true })

@@ -38,8 +38,8 @@ export interface HeaderController {
 
 const NO_KEYS: Readonly<Record<string, string>> = {}
 
-/** One React root per leaf whose note has a renderer, or is a `document` note with a banner, in Live Preview and Reading view; `repositionBanner(key)` puts the leaf's banner into reposition mode. */
-export function createHeaderController(env: HeaderEnv, config: ConfigStore, repositionBanner: (key: object) => void): HeaderController {
+/** One React root per leaf whose note has a renderer, or is a `document` note while `documentCard()` is on or it has a banner, in Live Preview and Reading view; `repositionBanner(key)` puts the leaf's banner into reposition mode. */
+export function createHeaderController(env: HeaderEnv, config: ConfigStore, repositionBanner: (key: object) => void, documentCard: () => boolean): HeaderController {
   const mounts = new Map<object, Mount>()
 
   const place = (mount: Mount): void => markActive(mount.containerEl, placeHost(mount.containerEl, mount.host, mount.mode), mount.properties)
@@ -96,7 +96,7 @@ export function createHeaderController(env: HeaderEnv, config: ConfigStore, repo
         const resolution = config.rendererOf(frontmatter)
         const { renderer } = resolution
         const keys = config.state().config.renderers[renderer]?.keys ?? NO_KEYS
-        if (renderer === 'document' && !bannerOf(rendererDefs.document, keys, frontmatter).link) continue
+        if (renderer === 'document' && !documentCard() && !bannerOf(rendererDefs.document, keys, frontmatter).link) continue
         live.add(key)
         const drawn: Drawn = { env, file, frontmatter, resolution, config: config.state().config }
         const mount = mountFor(key, containerEl, mode, drawn)

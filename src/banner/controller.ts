@@ -47,7 +47,7 @@ export interface BannerController {
 const NO_KEYS: Readonly<Record<string, string>> = {}
 
 /** One React root per leaf whose note has a banner, or is a `document` note without one (the Add button), in Live Preview and Reading view. */
-export function createBannerController(env: HeaderEnv, config: ConfigStore): BannerController {
+export function createBannerController(env: HeaderEnv, config: ConfigStore, documentCard: () => boolean): BannerController {
   const mounts = new Map<object, Mount>()
 
   const place = (mount: Mount): void => {
@@ -109,7 +109,7 @@ export function createBannerController(env: HeaderEnv, config: ConfigStore): Ban
         const frontmatter = frontmatterOf(env.app, file)
         const { renderer } = config.rendererOf(frontmatter)
         const banner = bannerOf(rendererDefs[renderer], config.state().config.renderers[renderer]?.keys ?? NO_KEYS, frontmatter)
-        const kind: Kind | null = banner.link ? 'banner' : renderer === 'document' ? 'add' : null
+        const kind: Kind | null = banner.link ? 'banner' : renderer === 'document' && !documentCard() ? 'add' : null
         if (!kind) continue
         live.add(key)
         const drawn: Drawn = { file, renderer, banner, image: banner.link ? resolveLink(env.app, banner.link, file.path) : null }

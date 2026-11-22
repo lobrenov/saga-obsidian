@@ -19,7 +19,7 @@ async function setup(text = ADA) {
   const file = app.addFile(ada, text)
   const { env } = testEnv(app)
   const config = await createConfigStore(app.asApp(), app.owner())
-  const controller = createHeaderController(env, config, () => undefined)
+  const controller = createHeaderController(env, config, () => undefined, () => false)
   const view = (containerEl: HTMLElement, mode: LeafView['mode'] = 'live'): LeafView => ({ containerEl, file, mode })
   return { app, file, controller, view }
 }

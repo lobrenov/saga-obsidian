@@ -23,7 +23,7 @@ async function setup(initial: Partial<Prefs> = {}) {
   explorer.innerHTML = folder('Characters', file('Characters/Ada.md')) + folder('Places', file('Places/Docks.md'), false) + folder('Notes', file('Notes/Plain.md')) + file('Attachments/map.png')
   app.workspace.getLeavesOfType = () => [{ view: { containerEl: explorer } }]
 
-  let prefs: Prefs = { pinLabels: 'always', linkIcons: false, linkIconLook: 'renderer', linkTitles: false, fileIcons: true, fileIconsUntyped: true, ...initial }
+  let prefs: Prefs = { pinLabels: 'always', linkIcons: false, linkIconLook: 'renderer', linkTitles: false, fileIcons: true, fileIconsUntyped: true, documentCard: true, ...initial }
   const listeners = new Set<(prefs: Prefs) => void>()
   const store: PrefsStore = {
     get: () => prefs,

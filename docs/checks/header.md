@@ -5,7 +5,7 @@ Run on `test/vault` in Obsidian (`npm run dev`, reload the plugin). Notes: `Char
 ## Display
 - [ ] Each renderer note shows its header in Live Preview: Character portrait card, Faction emblem, facts grid, renderer label and icon in the bar.
 - [ ] The same notes in Reading view show the header above the content; the native title and properties are hidden.
-- [ ] `Notes/Type Unknown.md` and a note with no frontmatter, without a banner: no header, native title and properties as usual (banners: `docs/checks/banner.md`).
+- [ ] `Notes/Type Unknown.md` and a note with no frontmatter: a Document card (title only) in place of the native title and properties; with Render a header on untyped notes? off and no banner, no header (banners: `docs/checks/banner.md`).
 - [ ] Source mode: no header, native title and properties visible.
 - [ ] Toggle Live Preview, Reading view and Source mode on one note: the header appears and disappears with the mode, once, never duplicated.
 - [ ] Settings, Appearance, Readable line width on and off, in Live Preview and Reading view: the header's left edge and width match the text column exactly.

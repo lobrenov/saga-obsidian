@@ -13,7 +13,7 @@ export default class SagaPlugin extends Plugin {
     const config = await createConfigStore(this.app, this)
     const prefs = await createPrefsStore(this)
     registerMapView(this, config, prefs)
-    registerHeader(this, config)
+    registerHeader(this, config, prefs)
     registerLinkIcons(this, config, prefs)
     registerFileIcons(this, config, prefs)
     registerSettings(this, config, prefs)

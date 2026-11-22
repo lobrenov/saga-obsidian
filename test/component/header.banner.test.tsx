@@ -21,14 +21,14 @@ const PLAIN = '---\ntype: character\n---\n'
 const MAP = '---\ntype: map\nimage: "[[coast.jpg]]"\n---\n'
 
 /** Both controllers over one leaf, wired as `registerHeader` does. */
-async function setup(text: string) {
+async function setup(text: string, documentCard = false) {
   const app = new HeaderFakeApp()
   for (const [path, content] of Object.entries(FILES)) app.addFile(path, content)
   const file = app.addFile(note, text)
   const { env, suggesters, menus, choose } = testEnv(app)
   const config = await createConfigStore(app.asApp(), app.owner())
-  const banners = createBannerController(env, config)
-  const headers = createHeaderController(env, config, (key) => banners.reposition(key))
+  const banners = createBannerController(env, config, () => documentCard)
+  const headers = createHeaderController(env, config, (key) => banners.reposition(key), () => documentCard)
   const leaf = {}
   const { containerEl } = liveView()
   const sync = (): void => {
@@ -161,4 +161,23 @@ test('the banner control sits on the right, just before the Type selector', asyn
   const type = bar()!.querySelector('.saga-header-type')!.getBoundingClientRect()
   expect(control.left - badge.right).toBeGreaterThan(200)
   expect(type.left - control.right).toBeLessThan(24)
+})
+
+test('with the Document card setting on, an untyped note without a banner gets the card with Add banner and no Add host', async () => {
+  const { containerEl, bar } = await setup('---\ntype: note\n---\n', true)
+  await vi.waitFor(() => expect(containerEl.querySelector('.saga-header-badge')?.textContent).toBe('Document'))
+  expect(button(bar(), 'Add banner')).not.toBeNull()
+  expect(containerEl.querySelector('.saga-banner-add-host')).toBeNull()
+  expect(containerEl.classList.contains('saga-header-active')).toBe(true)
+})
+
+test('with the Document card setting on, removing the banner keeps the card', async () => {
+  const { containerEl, bar, choose, text } = await setup(DOCUMENT, true)
+  await vi.waitFor(() => expect(button(bar(), 'Banner')).not.toBeNull())
+  button(bar(), 'Banner')?.click()
+  choose('Remove banner')
+  await vi.waitFor(() => expect(text()).toBe('---\ntype: note\n---\n'))
+  await vi.waitFor(() => expect(button(bar(), 'Add banner')).not.toBeNull())
+  expect(containerEl.querySelector('.saga-header-badge')?.textContent).toBe('Document')
+  expect(containerEl.querySelector('.saga-banner-host')).toBeNull()
 })

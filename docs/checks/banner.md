@@ -19,9 +19,10 @@ Run on `test/vault` in Obsidian (`npm run dev`, reload the plugin). Notes: `Plac
 - [ ] Location, Item and Map have no image frame inside the card.
 
 ## Notes without a renderer
-- [ ] `Notes/Type Unknown.md`: native title and properties, + Add banner under the title; picking writes `banner` and the note gets a Document card with Banner, Set type and Properties.
+- [ ] `Notes/Type Unknown.md` and a note with no frontmatter: a Document card with Add banner, Set type and Properties; adding a banner keeps the same card, now over the banner.
 - [ ] Set type lists every configured type; choosing one writes `type` and the renderer's header replaces the Document card.
-- [ ] Remove banner: the card goes, the native title and properties return.
+- [ ] Remove banner: the banner goes, the Document card stays.
+- [ ] Settings → Saga, Render a header on untyped notes? off: native title and properties with + Add banner under the title; picking writes `banner` and the Document card shows while the banner is there; Remove banner brings back the native title and properties. On again: the card returns without reopening the note.
 
 ## Bar menu
 - [ ] Change banner…: popover with the image suggester; Esc closes it and focus returns to the button; a pick writes `[[coast.jpg]]`.

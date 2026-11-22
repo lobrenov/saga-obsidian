@@ -1,4 +1,5 @@
 import { MarkdownView, type App, type Plugin, type WorkspaceLeaf } from 'obsidian'
+import type { PrefsStore } from '../obsidian/prefs'
 import type { ConfigStore } from '../obsidian/vault'
 import { createBannerController } from '../banner/controller'
 import '../banner/banner.css'
@@ -17,12 +18,13 @@ function markdownViews(app: App): [WorkspaceLeaf, LeafView][] {
   return views
 }
 
-/** Draws the header of every open note whose `type` maps to a renderer or that has a banner, and the banners, until the plugin unloads. */
-export function registerHeader(plugin: Plugin, config: ConfigStore): void {
+/** Draws the header of every open note whose `type` maps to a renderer, and of untyped notes while the `documentCard` pref is on or they have a banner, and the banners, until the plugin unloads. */
+export function registerHeader(plugin: Plugin, config: ConfigStore, prefs: PrefsStore): void {
   const { app } = plugin
   const env = createHeaderEnv(app)
-  const banners = createBannerController(env, config)
-  const controller = createHeaderController(env, config, (key) => banners.reposition(key))
+  const documentCard = (): boolean => prefs.get().documentCard
+  const banners = createBannerController(env, config, documentCard)
+  const controller = createHeaderController(env, config, (key) => banners.reposition(key), documentCard)
   let disposed = false
   const sync = (): void => {
     if (disposed) return
@@ -40,6 +42,7 @@ export function registerHeader(plugin: Plugin, config: ConfigStore): void {
   plugin.registerEvent(app.vault.on('create', sync))
   plugin.registerEvent(app.vault.on('delete', sync))
   plugin.register(config.subscribe(sync))
+  plugin.register(prefs.subscribe(sync))
   plugin.register(() => {
     disposed = true
     controller.dispose()
