@@ -33,4 +33,6 @@ export type MapState =
       pins: readonly PlacedPin[]
       labels: PinLabels
       layers: boolean
+      /** Layers open as a sidebar from a header button, in place of the floating panel. */
+      mobile: boolean
     }

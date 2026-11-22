@@ -159,8 +159,7 @@
   box-shadow: var(--shadow-s);
 }
 
-.saga-map-layers-heading,
-.saga-map-pin-list-head h2 {
+.saga-map-layers-heading {
   margin: 0 0 var(--size-4-2);
   font-size: var(--font-ui-smaller);
   font-weight: var(--font-semibold);
@@ -339,77 +338,19 @@
   color: var(--text-error);
 }
 
-/* Pin list */
-.saga-map-pin-list {
-  display: flex;
+/* Layers beside the map (mobile): a column at the stage row's right. */
+.saga-map-layers.saga-map-layers-sidebar {
+  position: static;
   flex: none;
-  flex-direction: column;
-  width: 280px;
+  width: 220px;
+  border: 0;
   border-left: 1px solid var(--background-modifier-border);
+  border-radius: 0;
   background: var(--background-primary);
+  box-shadow: none;
   overflow-y: auto;
 }
 
-.saga-map-pin-list-head {
-  display: flex;
-  flex-direction: column;
-  gap: var(--size-4-2);
-  padding: var(--size-4-3);
-  border-bottom: 1px solid var(--background-modifier-border);
-}
-
-.saga-map-pin-list ul {
-  margin: 0;
-  padding: var(--size-4-1);
-  list-style: none;
-}
-
-.saga-map-pin-list-empty {
-  margin: 0;
-  padding: var(--size-4-3);
-  color: var(--text-muted);
-}
-
-.saga-map-pin-row {
-  display: flex;
-  align-items: stretch;
-  gap: var(--size-2-2);
-}
-
-.saga-map-pin-row button {
-  min-height: 30px;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-  color: var(--text-normal);
-}
-
-.saga-map-pin-row button:hover {
-  background: var(--background-modifier-hover);
-}
-
-.saga-map-pin-row-main {
-  display: flex;
-  flex: 1;
-  align-items: center;
-  gap: var(--size-4-2);
-  min-width: 0;
-  text-align: left;
-}
-
-.saga-map-pin-row-main[aria-current='true'] {
-  background: var(--background-modifier-active-hover);
-}
-
-.saga-map-pin-row-title {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.saga-map-pin-row-meta,
 /* Markers: the specificity beats Obsidian's button styles. */
 .saga-map button.saga-map-pin,
 .saga-map button.saga-map-cluster {

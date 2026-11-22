@@ -107,7 +107,7 @@ export function MapCanvas({ store, imageUrl, title, onMapClick, onMapMenu, stage
     event.currentTarget.scrollTop = 0
     event.currentTarget.scrollLeft = 0
   }
-  // A pin focused off screen (Tab, the Pins list) is panned into view.
+  // A pin focused off screen (Tab) is panned into view.
   const onFocus = (event: FocusEvent<HTMLDivElement>): void => {
     const pin = event.target instanceof Element ? event.target.closest(OVER_PIN) : null
     const stage = element.current

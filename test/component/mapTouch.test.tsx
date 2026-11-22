@@ -160,3 +160,25 @@ test('a second finger during a pin drag cancels the drag: the pin returns and no
   expect((back.x - after.left) / after.scale).toBeCloseTo(point.x, 0)
   expect((back.y - after.top) / after.scale).toBeCloseTo(point.y, 0)
 })
+
+test('touches on the map do not reach Obsidian: touchstart and touchmove stop at the stage, and touchmove has no default action', async () => {
+  await renderMap()
+  await vi.waitFor(() => expect(markers()).toHaveLength(3))
+  const seen: string[] = []
+  const listen = (event: Event): void => void seen.push(event.type)
+  document.addEventListener('touchstart', listen)
+  document.addEventListener('touchmove', listen)
+  try {
+    const image = document.querySelector('img[data-map-image]')!
+    const point = new Touch({ identifier: 1, target: image, clientX: 400, clientY: 300 })
+    const init = { bubbles: true, cancelable: true, touches: [point], targetTouches: [point], changedTouches: [point] }
+    image.dispatchEvent(new TouchEvent('touchstart', init))
+    const move = new TouchEvent('touchmove', init)
+    image.dispatchEvent(move)
+    expect(seen).toEqual([])
+    expect(move.defaultPrevented).toBe(true)
+  } finally {
+    document.removeEventListener('touchstart', listen)
+    document.removeEventListener('touchmove', listen)
+  }
+})

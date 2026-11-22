@@ -9,6 +9,8 @@ import type { MapState } from './types'
 export interface MapViewInput {
   option: (key: string) => unknown
   pinLabels: PinLabels
+  /** Obsidian runs on a phone or tablet. */
+  mobile: boolean
   files: () => TFile[]
   /** The host of a map; the view keeps it while the map is unchanged. */
   host: (map: TFile) => MapHost
@@ -41,6 +43,7 @@ export function mapStateOf(app: App, settings: ConfigStore, input: MapViewInput)
     imageUrl: resourceUrl(app, image),
     pins: collectPins(app, settings, files, map),
     labels: input.pinLabels,
-    layers: input.option('layers') !== false
+    layers: input.option('layers') !== false,
+    mobile: input.mobile
   }
 }

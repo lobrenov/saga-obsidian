@@ -23,8 +23,8 @@ const toggled = <T,>(set: ReadonlySet<T>, value: T): Set<T> => {
   return next
 }
 
-/** Layer toggles: by the renderer of the pinned note and by pin icon. Only what the map has is listed. */
-export function LayersPanel({ pins, layers, onChange }: { pins: readonly PlacedPin[]; layers: Layers; onChange: (layers: Layers) => void }) {
+/** Layer toggles: by the renderer of the pinned note and by pin icon. Only what the map has is listed. Floats over the map, or with `sidebar` stands beside it. */
+export function LayersPanel({ pins, layers, onChange, sidebar = false }: { pins: readonly PlacedPin[]; layers: Layers; onChange: (layers: Layers) => void; sidebar?: boolean }) {
   const heading = useId()
   const sprite = useContext(SpriteContext)
   const byRenderer = new Map<RendererId, { count: number; color: ColorId }>()
@@ -37,7 +37,7 @@ export function LayersPanel({ pins, layers, onChange }: { pins: readonly PlacedP
   const icons = [...byIcon.keys()].sort((a, b) => iconLabel(a).localeCompare(iconLabel(b)))
 
   return (
-    <section aria-labelledby={heading} className="saga-map-layers">
+    <section aria-labelledby={heading} className={sidebar ? 'saga-map-layers saga-map-layers-sidebar' : 'saga-map-layers'}>
       <h2 id={heading} className="saga-map-layers-heading">
         Layers
       </h2>

@@ -102,7 +102,7 @@ Each write changes only the keys of that entry's `map-pins` item (`shape`, `colo
 ### Keyboard route
 
 1. Tab into the map: the stage takes focus (focus ring), then each pin in turn; Enter on a pin opens its card; Tab moves to the title link, Shape, Colour, Icon and Close; Enter or Space on Shape or Colour opens its menu, arrow keys and Enter choose; Enter on Icon opens the icon picker. The ContextMenu key (Shift+F10) on a pin opens its menu at the pin.
-2. A pin tabbed to outside the view pans into view. The Pins list reaches every pin without the pointer: selecting a row centres the map on the pin and opens its card. The list has no Move buttons and no "Add pin at centre".
+2. A pin tabbed to outside the view pans into view.
 
 ### Labels and pin look
 
@@ -118,9 +118,11 @@ Each write changes only the keys of that entry's `map-pins` item (`shape`, `colo
 
 Saga installed through BRAT on the device; open the base with the Saga map view.
 
-1. One finger on the map pans it; one finger on a pin drags it and writes once on release, as with a mouse.
+1. One finger on the map (on the image, on the margin around it, from near the screen's edge) pans it and never opens Obsidian's side drawers; one finger on a pin drags it and writes once on release, as with a mouse.
 2. Two fingers pinch: the map zooms around the fingers and follows them as they move. No page zoom, no jump at the end of the pinch.
 3. A second finger while dragging a pin: the pin returns to its place and nothing is written; the two fingers pinch.
 4. Press and hold the map (about half a second, without moving): the menu opens at the finger with "Add pin here"; lifting the finger leaves the menu open. Press and hold a pin: "Remove pin", and the pin's card does not open. No text selection or iOS callout appears.
 5. A finger that moves before the hold time pans and opens no menu.
 6. Tap a pin: its card opens; tap the title to open the note. Tap the map: the card closes. Double-tap the map: it zooms one level.
+7. The map header shows the map name and a Layers button, and no Pins button. Layers opens the layer toggles in a column beside the map; the map narrows to fit. Unticking a layer hides its pins; closing the column keeps them hidden. With the view option "Layers panel" off, there is no Layers button.
+8. On desktop the header shows only the map name and the Layers panel floats over the map as before.

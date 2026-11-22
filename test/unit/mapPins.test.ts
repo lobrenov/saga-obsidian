@@ -109,7 +109,7 @@ describe('mapStateOf', () => {
   })
 
   it('shows only the pins of the notes the base lists', () => {
-    const state = mapStateOf(fake.app, fake.settings, { option: (key) => fake.options[key], pinLabels: 'always', files: () => [fake.file('Places/Saltmere.md')], host: (map) => createHost(fake.app, map, { pickNote: () => Promise.resolve(null), pickIcon: () => Promise.resolve(null), confirmRemove: () => Promise.resolve(true), notify: () => {}, hoverNote: () => {}, showMenu: () => {} }) })
+    const state = mapStateOf(fake.app, fake.settings, { option: (key) => fake.options[key], pinLabels: 'always', mobile: false, files: () => [fake.file('Places/Saltmere.md')], host: (map) => createHost(fake.app, map, { pickNote: () => Promise.resolve(null), pickIcon: () => Promise.resolve(null), confirmRemove: () => Promise.resolve(true), notify: () => {}, hoverNote: () => {}, showMenu: () => {} }) })
     expect(state.kind === 'map' && state.pins.map((pin) => pin.title)).toEqual(['Saltmere'])
   })
 })

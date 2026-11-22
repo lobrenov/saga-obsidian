@@ -26,7 +26,8 @@ let spriteCount = 0
 
 function MapView({ state }: { state: Extract<MapState, { kind: 'map' }> }) {
   const size = useImageSize(state.imageUrl)
-  const [listOpen, setListOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const sidebar = state.mobile && state.layers
 
   let body
   if (size === 'error') body = <p className="saga-map-state">The map image could not be loaded.</p>
@@ -40,9 +41,9 @@ function MapView({ state }: { state: Extract<MapState, { kind: 'map' }> }) {
         imageUrl={state.imageUrl}
         size={size}
         pins={state.pins}
-        listOpen={listOpen}
         labels={state.labels}
-        layersOpen={state.layers}
+        layersOn={state.layers}
+        layersPanel={!state.layers ? null : !state.mobile ? 'floating' : sidebarOpen ? 'sidebar' : null}
       />
     )
   const ready = typeof size === 'object' && size !== null
@@ -51,9 +52,11 @@ function MapView({ state }: { state: Extract<MapState, { kind: 'map' }> }) {
     <>
       <header className="saga-map-header">
         <h2 className="saga-map-name">{state.title}</h2>
-        <button type="button" aria-expanded={listOpen} disabled={!ready} onClick={() => setListOpen((open) => !open)}>
-          Pins · {state.pins.length}
-        </button>
+        {sidebar ? (
+          <button type="button" aria-expanded={sidebarOpen} disabled={!ready} onClick={() => setSidebarOpen((open) => !open)}>
+            Layers
+          </button>
+        ) : null}
       </header>
       <div className="saga-map-body">{body}</div>
     </>

@@ -239,21 +239,42 @@ test('hovering a pin asks for the note\'s hover preview', async () => {
   expect(fake.hovered).toContain('People/The Gull King.md')
 })
 
-test('the pin list is sorted by title and opens the card of a pin', async () => {
+test('the header shows the map name and no Pins button or list', async () => {
   const { screen } = await renderMap()
   await vi.waitFor(() => expect(markers()).toHaveLength(3))
-  await screen.getByRole('button', { name: /Pins ·/ }).click()
-  const list = screen.getByRole('complementary', { name: 'Pins on this map' })
-  expect(list.getByRole('button', { name: /Move|Add pin/ }).elements()).toHaveLength(0)
-  const rows = list
-    .getByRole('listitem')
-    .elements()
-    .map((el) => el.querySelector('.saga-map-pin-row-title')?.textContent)
-  expect(rows).toEqual(['Saltmere', 'The Brine Vaults', 'The Gull King'])
-  await list.getByRole('button', { name: /^Saltmere/ }).click()
-  const card = screen.getByRole('dialog', { name: 'Saltmere' })
-  await expect.element(card).toBeVisible()
-  await vi.waitFor(() => expect(card.element().contains(document.activeElement)).toBe(true))
+  expect(screen.getByRole('button', { name: /Pins/ }).elements()).toHaveLength(0)
+  expect(screen.getByRole('button', { name: 'Layers' }).elements()).toHaveLength(0)
+  expect(screen.getByRole('complementary').elements()).toHaveLength(0)
+  expect(document.querySelector('.saga-map-layers')?.classList.contains('saga-map-layers-sidebar')).toBe(false)
+})
+
+test('on mobile the Layers button opens the layers as a sidebar beside the map; hidden layers stay hidden when it closes', async () => {
+  const { screen } = await renderMap((fake) => void (fake.mobile = true))
+  await vi.waitFor(() => expect(markers()).toHaveLength(3))
+  expect(document.querySelector('.saga-map-layers')).toBeNull()
+  const button = screen.getByRole('button', { name: 'Layers' })
+  await expect.element(button).toHaveAttribute('aria-expanded', 'false')
+  await button.click()
+  await expect.element(button).toHaveAttribute('aria-expanded', 'true')
+  const sidebar = document.querySelector<HTMLElement>('.saga-map-layers')!
+  expect(sidebar.classList.contains('saga-map-layers-sidebar')).toBe(true)
+  const map = document.querySelector('.saga-map-canvas-wrap')!.getBoundingClientRect()
+  expect(sidebar.getBoundingClientRect().left).toBeGreaterThanOrEqual(map.right - 1)
+  await screen.getByRole('checkbox', { name: /Characters/ }).click()
+  await vi.waitFor(() => expect(markers()).toHaveLength(2))
+  await button.click()
+  expect(document.querySelector('.saga-map-layers')).toBeNull()
+  await new Promise((resolve) => setTimeout(resolve, 50))
+  expect(markers()).toHaveLength(2)
+})
+
+test('on mobile with the layers option off there is no Layers button', async () => {
+  const { screen } = await renderMap((fake) => {
+    fake.mobile = true
+    fake.options['layers'] = false
+  })
+  await vi.waitFor(() => expect(markers()).toHaveLength(3))
+  expect(screen.getByRole('button', { name: 'Layers' }).elements()).toHaveLength(0)
 })
 
 test('a note edited elsewhere moves its pin and a removed pin disappears, without reloading', async () => {

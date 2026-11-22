@@ -37,6 +37,8 @@ export class MapFake {
   readonly options: Record<string, unknown> = { map: MAP }
   /** The Pin labels setting. */
   pinLabels: 'always' | 'hover' = 'always'
+  /** Whether Obsidian runs on a phone or tablet. */
+  mobile = false
   /** Menus the view opened, newest last. */
   readonly menus: { at: MenuAt; items: MenuItem[] }[] = []
   readonly notices: string[] = []
@@ -98,6 +100,7 @@ export class MapFake {
     this.last = mapStateOf(this.app, this.settings, {
       option: (key) => this.options[key],
       pinLabels: this.pinLabels,
+      mobile: this.mobile,
       files: () => this.base.map((path) => this.file(path)),
       host: (map) => {
         if (this.cached?.path !== map.path) this.cached = { path: map.path, host: createHost(this.app, map, this.ui()) }

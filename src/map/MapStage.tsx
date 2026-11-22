@@ -11,7 +11,6 @@ import type { MapHost } from './host'
 import { MapCanvas } from './MapCanvas'
 import { LayersPanel, NO_LAYERS, isVisible, type Layers } from './LayersPanel'
 import { FixedGhost, PinLayer } from './PinLayer'
-import { PinList } from './PinList'
 import { PinPopover, type LookChange } from './PinPopover'
 import { PinSprite, SpriteContext } from './PinSprite'
 import type { PinOpBuilder } from '../obsidian/vault'
@@ -26,9 +25,11 @@ interface MapStageProps {
   /** The image's pixel size. */
   size: { width: number; height: number }
   pins: readonly PlacedPin[]
-  listOpen: boolean
   labels: PinLabels
-  layersOpen: boolean
+  /** Hidden layers apply (the view's `layers` option). */
+  layersOn: boolean
+  /** Where the layer toggles show: over the map, beside it, or not at all. */
+  layersPanel: 'floating' | 'sidebar' | null
 }
 
 /** A written change is shown as written for this long at most while the base catches up. */
@@ -38,8 +39,8 @@ type Point = { x: number; y: number }
 /** A pin shown at `to` until the base reports a position other than `from` (or `HOLD_MS` pass). */
 type Held = { from: Point; to: Point }
 
-/** The map of one image with its pins and the tools around it (layers, zoom, pin list, popover). */
-export function MapStage({ host, title, imageUrl, size, pins, listOpen, labels, layersOpen }: MapStageProps) {
+/** The map of one image with its pins and the tools around it (layers, zoom, popover). */
+export function MapStage({ host, title, imageUrl, size, pins, labels, layersOn, layersPanel }: MapStageProps) {
   const sprite = useContext(SpriteContext)
   const root = useRef<HTMLDivElement>(null)
   const [stage, setStage] = useState<HTMLElement | null>(null)
@@ -53,7 +54,7 @@ export function MapStage({ host, title, imageUrl, size, pins, listOpen, labels, 
   const { width, height } = size
   const store = useMemo(() => new ViewportStore({ width, height }, imageZoomLimits({ width, height })), [imageUrl, width, height])
   const icons = useMemo(() => [...new Set([FALLBACK_ICON, ...pins.map((pin) => pin.look.icon)])].sort(), [pins])
-  const activeLayers = layersOpen ? layers : NO_LAYERS
+  const activeLayers = layersOn ? layers : NO_LAYERS
 
   const placed = useMemo(
     () =>
@@ -101,14 +102,10 @@ export function MapStage({ host, title, imageUrl, size, pins, listOpen, labels, 
 
   const fitMap = useCallback(() => store.fit(), [store])
   const closeCard = useCallback(() => setSelectedKey(null), [])
-  const select = useCallback(
-    (pin: PlacedPin, centre = false) => {
-      setDraft(null)
-      setSelectedKey(pinKey(pin))
-      if (centre) store.set({ ...store.get(), cx: pin.x, cy: pin.y })
-    },
-    [store]
-  )
+  const select = useCallback((pin: PlacedPin) => {
+    setDraft(null)
+    setSelectedKey(pinKey(pin))
+  }, [])
 
   const place = useCallback(
     (x: number, y: number): Point => {
@@ -195,12 +192,12 @@ export function MapStage({ host, title, imageUrl, size, pins, listOpen, labels, 
           </MapCanvas>
         </div>
 
-        {layersOpen ? <LayersPanel pins={placed} layers={layers} onChange={setLayers} /> : null}
+        {layersPanel === 'floating' ? <LayersPanel pins={placed} layers={layers} onChange={setLayers} /> : null}
         <ZoomControls store={store} onFit={fitMap} />
         <Readout store={store} stage={stage} />
         {selected ? <PinPopover store={store} host={host} pin={selected} busy={busy} onClose={closeCard} onLook={(pin, change) => void relook(pin, change)} /> : null}
       </div>
-      {listOpen ? <PinList pins={visible} selectedKey={selectedKey} onSelect={(pin) => select(pin, true)} /> : null}
+      {layersPanel === 'sidebar' ? <LayersPanel pins={placed} layers={layers} onChange={setLayers} sidebar /> : null}
     </div>
   )
 }

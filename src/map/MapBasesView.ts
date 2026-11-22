@@ -1,4 +1,4 @@
-import { BasesView, type HoverPopover, type QueryController, type TFile } from 'obsidian'
+import { BasesView, Platform, type HoverPopover, type QueryController, type TFile } from 'obsidian'
 import { createElement } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import type { PrefsStore } from '../obsidian/prefs'
@@ -35,7 +35,7 @@ export class MapBasesView extends BasesView {
   onDataUpdated(): void {
     if (!this.data) return
     const files = (): TFile[] => this.data.data.map((entry) => entry.file)
-    const state = mapStateOf(this.app, this.settings, { option: (key) => this.config.get(key), pinLabels: this.prefs.get().pinLabels, files, host: (map) => this.hostFor(map, files) })
+    const state = mapStateOf(this.app, this.settings, { option: (key) => this.config.get(key), pinLabels: this.prefs.get().pinLabels, mobile: Platform.isMobile, files, host: (map) => this.hostFor(map, files) })
     this.root.render(createElement(MapRoot, { state }))
   }
 
