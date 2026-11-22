@@ -2,7 +2,7 @@ import type { Plugin } from 'obsidian'
 
 export type PinLabels = 'always' | 'hover'
 
-/** Obsidian-only preferences, stored in the plugin's `data.json` (not shared with the Saga app). */
+/** Obsidian-only preferences, stored in the plugin's `data.json` (not in `.saga/renderers.yaml`). */
 export interface Prefs {
   pinLabels: PinLabels
   /** Wikilinks in note text show the linked note's renderer icon. */

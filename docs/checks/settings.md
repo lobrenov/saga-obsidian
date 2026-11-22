@@ -10,5 +10,4 @@ Open `test/vault` in Obsidian with the plugin enabled; Settings → Saga.
 - **Field rename.** Set Character's Title key to `epithet`; a note with `epithet:` shows it as the title in its header. Clear the input; the key returns to the default and the `keys` entry is removed.
 - **Refusal.** Map a type that another renderer holds, or give two fields the same key: the issue shows inline, nothing is written and the file is unchanged.
 - **Unreadable entry.** Make a renderer's entry unreadable in the file (`item: 3`): its inputs are disabled and the issue shows inline.
-- **Shared file.** The same `.saga/renderers.yaml` opens in the Saga app with the same mappings.
 - **Focus while typing.** Type a long types list slowly: saves happen between pauses and the cursor stays in the input.

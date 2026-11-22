@@ -2,7 +2,7 @@
   "name": "saga",
   "version": "0.4.1",
   "private": true,
-  "description": "Saga for Obsidian: a map Bases view and note renderers over Saga's vault format",
+  "description": "Saga for Obsidian: a map Bases view and note renderers over notes' frontmatter",
   "type": "module",
   "scripts": {
     "dev": "node esbuild.config.mjs watch",

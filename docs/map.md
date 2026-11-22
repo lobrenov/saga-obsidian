@@ -12,11 +12,11 @@ A Bases view (`saga-map`) that draws the pins of the base's notes on the image o
 - `obsidianUi.ts`, `modals.ts`: the `HostUi` for Obsidian.
 - `pinWrites.ts`: `entryMatcher`, `locateEntry`.
 - `MapRoot.tsx`: header (map name, Pins · n), loads the image to get its pixel size, shows the stage or the empty message. Gives each view its own SVG sprite id prefix.
-- `MapStage.tsx`, `MapCanvas.tsx`, `PinLayer.tsx`, `PinPopover.tsx`, `LayersPanel.tsx`, `PinList.tsx`, `Controls.tsx`, `PinSprite.tsx`/`pinIcons.ts`/`pinStyles.ts`, `viewportStore.ts`, `trackpad.ts`, `geometry.ts`, `excerpt.ts`: the stage, ported from Saga's `renderer/maps` (single image only). `shared/maps/viewport.ts` holds the viewport maths.
+- `MapStage.tsx`, `MapCanvas.tsx`, `PinLayer.tsx`, `PinPopover.tsx`, `LayersPanel.tsx`, `PinList.tsx`, `Controls.tsx`, `PinSprite.tsx`/`pinIcons.ts`/`pinStyles.ts`, `viewportStore.ts`, `trackpad.ts`, `geometry.ts`, `excerpt.ts`: the stage (single image only). `shared/maps/viewport.ts` holds the viewport maths.
 
 ## Pins
 - `collectPins(app, config, files, map)`: for each markdown file of the base (not the map note) read `frontmatterOf`, parse `map-pins` with `parseMapPins`, and keep the entries whose `map` link resolves, from the note holding it, to the map note. Title is the file's basename; renderer comes from `config.rendererOf`; an unknown style becomes `auto` with an issue; invalid entries are skipped. Notes outside the base's filter show no pins.
-- A pin is coloured by its note's renderer, always, with `--saga-character`, `--saga-location`, `--saga-faction`, `--saga-item`, `--saga-map` or `--saga-document` (defined in `src/styles.css`, light and dark). The style shows only through its glyph in the head (dot, ring, triangle, diamond, star, square). The marker is Saga's: a 32 × 44 teardrop with a light (`#fbf8f2`) outline and glyph, its tip (16, 43) on the pin's image point; a selected pin looks like any other. Names read "Title — Renderer[, style]".
+- A pin is coloured by its note's renderer, always, with `--saga-character`, `--saga-location`, `--saga-faction`, `--saga-item`, `--saga-map` or `--saga-document` (defined in `src/styles.css`, light and dark). The style shows only through its glyph in the head (dot, ring, triangle, diamond, star, square). The marker is a 32 × 44 teardrop with a light (`#fbf8f2`) outline and glyph, its tip (16, 43) on the pin's image point; a selected pin looks like any other. Names read "Title — Renderer[, style]".
 - New pins write `mapLinkFrom`: `[[linktext]]` from `fileToLinktext(map, notePath, true)`.
 
 ## Writes

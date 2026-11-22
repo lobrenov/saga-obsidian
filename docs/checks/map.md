@@ -100,7 +100,7 @@ Each write must show in `git diff` as a change of the `map-pins` value only: no 
 
 ### Labels and pin look
 
-1. Pin markers match Saga's: 32 × 44 teardrop, light outline, light glyph; the tip sits on the image point (zoom in on a pin and compare with the readout). A selected pin is not larger or darker.
+1. Pin markers: 32 × 44 teardrop, light outline, light glyph; the tip sits on the image point (zoom in on a pin and compare with the readout). A selected pin is not larger or darker.
 2. Pins close together (zoom out on a crowded area): labels go right, else left, else below, and never cover a pin or another label. A pin with no free slot has no label until hover or focus, when it appears on top.
 3. Labels stay unclipped at the view's edge after panning settles. Pins draw above labels.
 4. Light and dark themes: outlines, labels, clusters and focus rings (Tab to a pin and a cluster) read clearly.
