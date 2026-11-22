@@ -53,7 +53,7 @@ export function LayersPanel({ pins, layers, onChange }: { pins: readonly PlacedP
           ))}
         </div>
       ) : null}
-      {icons.length > 1 ? (
+      {icons.length > 1 || icons.some((icon) => layers.hiddenIcons.has(icon)) ? (
         <div role="group" aria-label="By icon" className="saga-map-layer-group">
           <div className="saga-map-layer-rule" aria-hidden="true" />
           {icons.map((icon) => (

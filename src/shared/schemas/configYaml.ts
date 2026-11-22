@@ -73,6 +73,8 @@ export function applyConfigToYaml(existing: string | null, config: Config, base?
       }
     }
     if (mapAt(doc, [...path, 'pin'])?.items.length === 0) doc.deleteIn([...path, 'pin'])
+    const pinOnly = old.types.length === 0 && Object.keys(old.keys).length === 0 && old.templates.length === 0
+    if (pinOnly && mapAt(doc, path)?.items.length === 0) doc.deleteIn(path)
   }
   const after = doc.toString(options)
   return ok(existing !== null && after === before ? existing : after)

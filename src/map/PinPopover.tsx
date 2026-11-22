@@ -108,13 +108,13 @@ export function PinPopover({ store, host, pin, onClose, onLook, busy }: PinPopov
       </h2>
       {excerpt ? <p className="saga-map-popover-excerpt">{excerpt}</p> : null}
       <div className="saga-map-popover-look">
-        <LookRow id={ids.shape} label="Shape" renderer={def.label} overridden={pin.look.shape !== pin.defaults.shape} onReset={() => onLook(pin, { shape: null })}>
+        <LookRow id={ids.shape} label="Shape" renderer={def.label} busy={busy} overridden={pin.look.shape !== pin.defaults.shape} onReset={() => onLook(pin, { shape: null })}>
           <MenuSelect id={ids.shape} value={pin.look.shape} options={SHAPES.map((shape) => ({ value: shape.id, label: shape.label }))} disabled={busy} showMenu={host.showMenu} onChange={(shape) => onLook(pin, { shape: shape === pin.defaults.shape ? null : (shape as PinLook['shape']) })} />
         </LookRow>
-        <LookRow id={ids.color} label="Colour" renderer={def.label} overridden={pin.look.color !== pin.defaults.color} onReset={() => onLook(pin, { color: null })}>
+        <LookRow id={ids.color} label="Colour" renderer={def.label} busy={busy} overridden={pin.look.color !== pin.defaults.color} onReset={() => onLook(pin, { color: null })}>
           <MenuSelect id={ids.color} value={pin.look.color} options={PIN_COLORS.map((color) => ({ value: color.id, label: color.name }))} disabled={busy} showMenu={host.showMenu} onChange={(color) => onLook(pin, { color: color === pin.defaults.color ? null : (color as PinLook['color']) })} />
         </LookRow>
-        <LookRow id={ids.icon} label="Icon" renderer={def.label} overridden={pin.look.icon !== pin.defaults.icon} onReset={() => onLook(pin, { icon: null })}>
+        <LookRow id={ids.icon} label="Icon" renderer={def.label} busy={busy} overridden={pin.look.icon !== pin.defaults.icon} onReset={() => onLook(pin, { icon: null })}>
           <button
             type="button"
             id={ids.icon}
@@ -145,13 +145,13 @@ export function PinPopover({ store, host, pin, onClose, onLook, busy }: PinPopov
 }
 
 /** A labelled card row with "Use <Renderer> default" while the pin overrides it. */
-function LookRow({ id, label, renderer, overridden, onReset, children }: { id: string; label: string; renderer: string; overridden: boolean; onReset: () => void; children: ReactNode }) {
+function LookRow({ id, label, renderer, overridden, busy, onReset, children }: { id: string; label: string; renderer: string; overridden: boolean; busy: boolean; onReset: () => void; children: ReactNode }) {
   return (
     <>
       <label htmlFor={id}>{label}</label>
       {children}
       {overridden ? (
-        <button type="button" className="saga-map-popover-reset" onClick={onReset}>
+        <button type="button" className="saga-map-popover-reset" disabled={busy} onClick={onReset}>
           Use {renderer} default
         </button>
       ) : null}

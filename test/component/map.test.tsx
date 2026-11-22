@@ -1,6 +1,10 @@
 import { expect, test, vi } from 'vitest'
+import { render } from 'vitest-browser-react'
+import { LayersPanel } from '../../src/map/LayersPanel'
+import type { PlacedPin } from '../../src/map/types'
 import { CONFIG_PATH } from '../../src/obsidian/vault'
 import { SHAPES } from '../../src/shared/pins/look'
+import type { RendererId } from '../../src/shared/renderers/ids'
 import { unknownIcons } from '../fakes/obsidian'
 import { CONFIG_YAML, GULL, MAP, type MapFake } from '../fakes/map'
 import { clickMapAt, clusters, color, glyphOf, imageBox, marker, markers, renderMap, shapeOf, stage, tipOf } from './mapSupport'
@@ -278,4 +282,14 @@ test('a map note without an image says so', async () => {
     fake.options['map'] = 'Maps/Blank.md'
   }, false)
   await expect.element(screen.getByText(/Blank has no image/)).toBeVisible()
+})
+
+test('the By icon group stays while an icon layer is hidden, even when one icon is in use', async () => {
+  const pin = (icon: string) => ({ renderer: 'location', defaults: { color: 'teal' }, look: { icon } }) as unknown as PlacedPin
+  const layers = { hiddenRenderers: new Set<RendererId>(), hiddenIcons: new Set(['castle']) }
+  await render(<LayersPanel pins={[pin('castle')]} layers={layers} onChange={() => {}} />)
+  expect(document.querySelector('[aria-label="By icon"] input[type="checkbox"]')).not.toBeNull()
+  document.body.replaceChildren()
+  await render(<LayersPanel pins={[pin('castle')]} layers={{ ...layers, hiddenIcons: new Set() }} onChange={() => {}} />)
+  expect(document.querySelector('[aria-label="By icon"]')).toBeNull()
 })

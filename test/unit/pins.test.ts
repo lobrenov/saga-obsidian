@@ -47,6 +47,7 @@ describe('applyPinOp', () => {
     for (const [style, icon] of Object.entries(STYLE_ICONS)) expect(move({ style })).toEqual({ map: '[[Coast]]', x: 3, y: 4, icon, note: 'n' })
     expect(move({ style: 'danger', icon: 'key' })).toEqual({ map: '[[Coast]]', x: 3, y: 4, icon: 'key', note: 'n' })
     expect(move({ icon: 'key', style: 'danger' })).toEqual({ map: '[[Coast]]', x: 3, y: 4, icon: 'key', note: 'n' })
+    expect(move({ style: 'danger', icon: 'bogus' })).toEqual({ map: '[[Coast]]', x: 3, y: 4, icon: 'skull', note: 'n' })
     expect(move({ style: 'auto' })).toEqual({ map: '[[Coast]]', x: 3, y: 4, note: 'n' })
     expect(move({ style: 'sparkly' })).toEqual({ map: '[[Coast]]', x: 3, y: 4, note: 'n' })
   })

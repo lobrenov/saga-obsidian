@@ -25,6 +25,15 @@ describe('applyConfigToYaml', () => {
     expect(apply(original, parsed)).toBe(original)
   })
 
+  it('drops a renderer entry left empty once its pin default is reset, but keeps one that had other content', () => {
+    const pin = { shape: 'herald', color: 'rust', icon: 'flag' } as const
+    const created = apply(null, config({ faction: entry({ pin }) }))
+    expect(parse(created)).toEqual({ renderers: { faction: { pin } } })
+    expect(parse(apply(created, config({ faction: entry() })))).toEqual({ renderers: {} })
+    const withTypes = apply(null, config({ faction: entry({ types: ['guild'], pin }) }))
+    expect(parse(apply(withTypes, config({ faction: entry({ types: ['guild'] }) })))).toEqual({ renderers: { faction: { types: ['guild'] } } })
+  })
+
   it('keeps unknown top-level keys, unknown renderers, comments and key order when values change', () => {
     const original = [
       '# Saga renderers',

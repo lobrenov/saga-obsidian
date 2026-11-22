@@ -2,7 +2,7 @@
 
 Obsidian `>= 1.10.2` on `test/vault` (Settings → Community plugins → Saga enabled; `npm run dev` running). Keep `test/vault` under git so each write shows in `git diff`. Developer console open (⌘⌥I); there should be no errors from `saga` throughout.
 
-Vault facts used below: `Maps/The Shattered Coast.md` (`type: map`, `image: "[[coast.jpg]]"`), `Maps/Empty Map.md` (`type: map`, no image), `Places/Waterdeep.md` (type `Location`; pins at 952,720 `rumour` and 10,20 `sparkly`, plus three broken or foreign entries), `Items/Moonblade.md` (type `artifact`; pin at 300.5,410 `treasure`), `Characters/Ada Lovelace.md` and `Characters/Bob.md` (type `character`, `NPC`; no pins).
+Vault facts used below: `Maps/The Shattered Coast.md` (`type: map`, `image: "[[coast.jpg]]"`), `Maps/Empty Map.md` (`type: map`, no image), `Places/Waterdeep.md` (type `Location`; pins at 952,720 `rumour` and 10,20 `sparkly`, plus three broken or foreign entries), `Items/Moonblade.md` (type `artifact`; pin at 300.5,410 `treasure`), `Factions/Harbor Guild.md` (type `guild`; pin at 640,500 `shape: herald`), `Places/Docks/Harbor Master.md` (type `location`; pin at 820,600 `shape: circle`, `color: sea`, `icon: anchor`), `Characters/Ada Lovelace.md` and `Characters/Bob.md` (type `character`, `NPC`; no pins).
 
 ## Setup
 
@@ -24,7 +24,7 @@ Vault facts used below: `Maps/The Shattered Coast.md` (`type: map`, `image: "[[c
 
 ### Stage
 
-1. The coast image fills the pane, fitted. Two pins stand on it with labels beside them: Waterdeep (the Location colour, the message-circle glyph its legacy `rumour` style reads as) and Moonblade (the Item colour, the coins glyph for `treasure`). A pin without its own `shape`, `color` or `icon` takes its renderer's. Waterdeep's second pin at 10,20 (`sparkly`) is at the top left with the Location default icon (castle). The broken Waterdeep entries (`x: wrong`, no `y`, `[[Nowhere Map]]`) draw nothing.
+1. The coast image fills the pane, fitted. Four pins stand on it with labels beside them: Waterdeep (the Location colour, the message-circle glyph its legacy `rumour` style reads as), Moonblade (the Item colour, the coins glyph for `treasure`), Harbor Guild (a herald in the Faction colour with the flag glyph) and Harbor Master (a sea-coloured circle with the anchor glyph, centred on 820,600). A pin without its own `shape`, `color` or `icon` takes its renderer's. Waterdeep's second pin at 10,20 (`sparkly`) is at the top left with the Location default icon (castle). The broken Waterdeep entries (`x: wrong`, no `y`, `[[Nowhere Map]]`) draw nothing.
 2. Hover a pin's pixel position against the readout at the bottom left: it shows `x · y` in image pixels and a zoom level; the Moonblade tip reads about 300 / 410.
 3. Two-finger scroll pans; pinch (or ⌘-scroll) zooms around the pointer; drag pans; double-click, the `+` and `-` buttons and the `+`/`-` keys zoom one level; arrow keys pan when the map has focus; Fit map refits. Panning stops with a quarter of the image (or the whole image if smaller) still in view.
 4. Zoom out as far as it goes: the longest image side is about 64 px. Zoom in as far as it goes: 8x native.
@@ -39,9 +39,9 @@ Vault facts used below: `Maps/The Shattered Coast.md` (`type: map`, `image: "[[c
 
 ### Filtering and colour
 
-1. Edit `Maps/Pins.base` filters to `type == "location"` (UI: Filter → add `type` `is` `location`): only Waterdeep's pins remain (Moonblade's `artifact` type does not match). Change to `type == "artifact"`: only Moonblade.
+1. Edit `Maps/Pins.base` filters to `type == "location"` (UI: Filter → add `type` `is` `location`): only Waterdeep's and Harbor Master's pins remain (Moonblade's `artifact` type does not match). Change to `type == "artifact"`: only Moonblade.
 2. Add a pin to a character first (see Step 4, "Add pin"; pick `Ada Lovelace`). With the filter `type == "character"` only the Ada pin shows, in the Character pin colour; `NPC` notes count as characters through `.saga/renderers.yaml`, so a pin on `Bob` shows too with the same colour. Restore the filter to `file.ext == "md"`.
-3. Layers panel: it lists Characters, Locations, Items with a dot in each renderer's pin colour and, when the pins use more than one icon, a "By icon" group with each icon's glyph in a neutral colour. Unticking Locations hides the Waterdeep pins; unticking Coin hides Moonblade. Setting the view option "Layers panel" off hides the panel and shows every pin again. Switching the Saga setting "Pin labels" to on hover removes every label until a pin is hovered or focused; the open map updates at once.
+3. Layers panel: it lists the renderers on the map (Characters, Locations, Factions, Items) with a dot in each renderer's pin colour and, when the pins use more than one icon, a "By icon" group with each icon's glyph in a neutral colour. Unticking Locations hides the Waterdeep pins; unticking Coin hides Moonblade. Setting the view option "Layers panel" off hides the panel and shows every pin again. Switching the Saga setting "Pin labels" to on hover removes every label until a pin is hovered or focused; the open map updates at once.
 4. In `.saga/renderers.yaml` change the `location` types to `[place]` and save: within a moment the Waterdeep pins take the Document pin colour and icon and the Layers panel counts them under Documents, with no reload. Revert it.
 
 ### Live updates

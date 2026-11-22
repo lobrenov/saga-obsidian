@@ -1,7 +1,7 @@
-import { getIcon, Notice, PluginSettingTab, setIcon, Setting, type App, type Plugin } from 'obsidian'
+import { Notice, PluginSettingTab, setIcon, Setting, type App, type Plugin } from 'obsidian'
 import type { PinLabels, PrefsStore } from '../obsidian/prefs'
 import type { ConfigStore } from '../obsidian/vault'
-import { FALLBACK_ICON, PIN_COLORS, PIN_DEFAULTS, SHAPES, type ColorId, type PinLook, type ShapeId } from '../shared/pins/look'
+import { PIN_COLORS, PIN_DEFAULTS, SHAPES, type ColorId, type PinLook, type ShapeId } from '../shared/pins/look'
 import { rendererDefs } from '../shared/renderers/definitions'
 import type { Fields } from '../shared/renderers/fields'
 import type { Issue } from '../shared/result'
@@ -9,20 +9,8 @@ import type { Config } from '../shared/schemas/config'
 import { RENDERER_IDS, type RendererId } from '../shared/renderers/ids'
 import { IconPicker } from '../ui/iconPicker'
 import { draftIssues, draftOf, EDITABLE_IDS, isDirty, rebase, saveText, type Draft } from './draft'
+import { drawPinPreview } from './pinPreview'
 import './settings.css'
-
-/** Draws a pin of `look` into `el`: its shape filled with the colour's variable and the icon in the shape's icon box. */
-function drawPinPreview(el: HTMLElement, look: PinLook): void {
-  el.empty()
-  const shape = SHAPES.find((candidate) => candidate.id === look.shape) ?? SHAPES[0]!
-  const svg = el.createSvg('svg', { attr: { viewBox: `0 0 ${shape.w} ${shape.h}` } })
-  svg.createSvg('path', { attr: { d: shape.d, fill: `var(--saga-pin-${look.color})` } })
-  const icon = getIcon(look.icon) ?? getIcon(FALLBACK_ICON)
-  if (!icon) return
-  icon.classList.add('saga-pin-preview-icon')
-  for (const [name, value] of Object.entries({ x: shape.ix, y: shape.iy, width: shape.is, height: shape.is })) icon.setAttribute(name, String(value))
-  svg.appendChild(icon)
-}
 
 class SettingsTab extends PluginSettingTab {
   private draft: Draft
@@ -215,7 +203,7 @@ class SettingsTab extends PluginSettingTab {
       })
       .addExtraButton((button) => {
         reset = button.extraSettingsEl
-        button.setIcon('rotate-ccw').setTooltip('Reset to default').onClick(() => {
+        button.setIcon('rotate-ccw').setTooltip('Reset to default').setDisabled(readOnly).onClick(() => {
           this.draft.pin[id] = { ...PIN_DEFAULTS[id] }
           shape?.setValue(PIN_DEFAULTS[id].shape)
           color?.setValue(PIN_DEFAULTS[id].color)

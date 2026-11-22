@@ -2,6 +2,7 @@ import { Document } from 'yaml'
 import { parseFrontmatter, setFrontmatterKey } from '../frontmatter'
 import { err, ok, type Result } from '../result'
 import type { MapPin, PinOp } from '../schemas/pins'
+import { pinIconSchema } from '../schemas/pins'
 import { STYLE_ICONS } from './look'
 
 /** Pin coordinates are written with one decimal. */
@@ -16,12 +17,17 @@ export function pinEntry(pin: MapPin): Record<string, unknown> {
   return { map: pin.map, x: roundCoord(pin.x), y: roundCoord(pin.y), ...(shape && { shape }), ...(color && { color }), ...(icon && { icon }) }
 }
 
-/** The entry with `style` replaced in place by the icon it reads as; an existing `icon` is kept, `auto` and unknown styles just drop. */
+/** The entry with `style` replaced in place by the icon it reads as; a valid `icon` is kept, an invalid one counts as absent, `auto` and unknown styles just drop. */
 function withoutStyle(entry: Record<string, unknown>): Record<string, unknown> {
   if (!('style' in entry)) return entry
   const style = entry.style
-  const icon = typeof style === 'string' && Object.hasOwn(STYLE_ICONS, style) && entry.icon === undefined ? STYLE_ICONS[style as keyof typeof STYLE_ICONS] : undefined
-  return Object.fromEntries(Object.entries(entry).flatMap(([key, value]) => (key !== 'style' ? [[key, value]] : icon ? [['icon', icon]] : [])))
+  const icon = typeof style === 'string' && Object.hasOwn(STYLE_ICONS, style) && !pinIconSchema.safeParse(entry.icon).success ? STYLE_ICONS[style as keyof typeof STYLE_ICONS] : undefined
+  return Object.fromEntries(
+    Object.entries(entry).flatMap(([key, value]) => {
+      if (key === 'style') return icon && !('icon' in entry) ? [['icon', icon]] : []
+      return key === 'icon' && icon ? [['icon', icon]] : [[key, value]]
+    })
+  )
 }
 
 /** The YAML a new pin adds to its note, for the preview. */

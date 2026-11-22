@@ -43,20 +43,22 @@
   height: var(--size-4-8);
 }
 
-.saga-pin-preview svg {
+.saga-pin-preview > svg {
   height: 100%;
   width: auto;
 }
 
-.saga-pin-preview-icon {
-  color: #fff;
+.saga-pin-preview > svg > svg {
+  color: #fbf8f2;
   fill: none;
   stroke: currentColor;
-  stroke-width: 2;
+  stroke-width: 2.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-.theme-dark .saga-pin-preview-icon {
-  color: var(--background-primary);
+.theme-dark .saga-pin-preview > svg > svg {
+  color: #1e1a16;
 }
 
 .saga-pin-reset-hidden {
