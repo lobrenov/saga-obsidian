@@ -11,3 +11,7 @@ Open `test/vault` in Obsidian with the plugin enabled; Settings → Saga → Fil
 - **Create, rename, move.** Create `Notes/New.md` with `type: faction`: it gets the faction icon. Rename it and move it to `Characters`: the icon stays.
 - **Remap.** In Settings, add `note` to Faction's types and give `Notes/Lists.md` `type: note`: Lists gets the faction icon.
 - **Disable the plugin.** All icons go.
+
+## Mobile (iPhone, iPad)
+
+1. On iPhone and iPad, the file explorer (left drawer) shows the folder, note and untyped-file icons.

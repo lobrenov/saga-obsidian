@@ -15,3 +15,7 @@ Open `test/vault` in Obsidian with the plugin enabled; Settings → Saga.
 - **Pin default change.** With a map open, set Faction's Shape to Herald, Colour to Violet and pick another icon. The preview updates at once; after the pause `.saga/renderers.yaml` has `pin: { shape: herald, color: violet, icon: … }` under `faction` and the open map redraws Faction pins without reload.
 - **Default not written.** Set a Colour back to the renderer's built-in (e.g. Faction Indigo): that key leaves `pin`; when all three match, the `pin` entry is removed. Reset does the same for all three and hides itself.
 - **Pin defaults survive.** Edit a type list on a renderer that has `pin` in the file: `pin` is unchanged. Edit `pin` in the file with the tab open and no unsaved input: the row follows. Change an icon in the tab and the same renderer's colour in the file within half a second: both are kept.
+
+## Mobile (iPhone, iPad)
+
+1. On iPhone and iPad, Settings → Saga opens; a change saves to `.saga/renderers.yaml` and an open note or map follows it.

@@ -1,6 +1,6 @@
 # Saga for Obsidian
 
-An Obsidian plugin (id `saga`, desktop, Obsidian 1.10.2+) for world-building: a **Saga map** Bases view that draws the base's notes' `map-pins` on a map note's image, a **note header** that replaces the inline title and properties of notes whose `type` maps to a renderer, optional icons and character titles on wikilinks, and optional file explorer icons. Plans are in `docs/plans/`.
+An Obsidian plugin (id `saga`, desktop and mobile, Obsidian 1.10.2+) for world-building: a **Saga map** Bases view that draws the base's notes' `map-pins` on a map note's image, a **note header** that replaces the inline title and properties of notes whose `type` maps to a renderer, optional icons and character titles on wikilinks, and optional file explorer icons. Plans are in `docs/plans/`.
 
 ## Scripts
 - `npm run dev` esbuild watch; writes `main.js`, `styles.css`, `manifest.json` into `test/vault/.obsidian/plugins/saga/`

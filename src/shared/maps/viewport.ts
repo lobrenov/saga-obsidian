@@ -59,6 +59,24 @@ export function zoomAt(v: Viewport, view: Size, sx: number, sy: number, dz: numb
   }
 }
 
+type Point = { x: number; y: number }
+
+/**
+ * Two fingers moved from `from` to `to` (screen points): the zoom changes by log2 of the change in their distance (within
+ * `limits`) and the image point under their starting midpoint moves to their midpoint.
+ */
+export function pinch(v: Viewport, view: Size, from: readonly [Point, Point], to: readonly [Point, Point], limits: ZoomLimits): Viewport {
+  const mid = ([a, b]: readonly [Point, Point]): Point => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 })
+  const spread = ([a, b]: readonly [Point, Point]): number => Math.hypot(a.x - b.x, a.y - b.y)
+  const start = mid(from)
+  const end = mid(to)
+  const dz = spread(from) > 0 ? Math.log2(spread(to) / spread(from)) : 0
+  const p = toImage(v, view, start.x, start.y)
+  const zoom = Math.min(limits.max, Math.max(limits.min, v.zoom + dz))
+  const s = scale(zoom)
+  return { zoom, cx: p.x - (end.x - view.width / 2) / s, cy: p.y - (end.y - view.height / 2) / s }
+}
+
 /** Move the image by `dx`, `dy` screen pixels (the view centre moves the opposite way in the image). */
 export function panBy(v: Viewport, dx: number, dy: number): Viewport {
   const s = scale(v.zoom)

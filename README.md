@@ -9,7 +9,7 @@ Renderer settings (type key, types per renderer, field key renames) are in Setti
 
 ## Install
 
-Requires Obsidian 1.10.2 or later, desktop.
+Requires Obsidian 1.10.2 or later, desktop or mobile.
 
 With BRAT: Add beta plugin, `lobrenov/saga-obsidian` (private: add a GitHub token with read access to its contents in BRAT). Or build it:
 

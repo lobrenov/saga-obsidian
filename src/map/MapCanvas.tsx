@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, type FocusEvent, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode, type UIEvent } from 'react'
 import { toScreen } from '../shared/maps/viewport'
+import { attachTouch } from './touch'
 import { attachTrackpad } from './trackpad'
 import type { ViewportStore } from './viewportStore'
 
@@ -28,7 +29,7 @@ interface MapCanvasProps {
 
 /**
  * The map surface: a container (`data-map-stage`) with one 0×0 layer that the viewport moves with `translate3d` and `scale`
- * (written straight to the style, no re-render), holding the image in image pixels. Wheel, pinch, drag, double-click
+ * (written straight to the style, no re-render), holding the image in image pixels. Wheel, pinch, drag, touch, double-click
  * and keys move the viewport.
  */
 export function MapCanvas({ store, imageUrl, title, onMapClick, onMapMenu, stageRef, children }: MapCanvasProps) {
@@ -53,9 +54,11 @@ export function MapCanvas({ store, imageUrl, title, onMapClick, onMapMenu, stage
     const unsubscribe = store.subscribe(place)
     const observer = new ResizeObserver(resize)
     observer.observe(stage)
+    const detachTouch = attachTouch(stage, store)
     const detach = attachTrackpad(stage, store)
     return () => {
       detach()
+      detachTouch()
       observer.disconnect()
       unsubscribe()
       store.stop()

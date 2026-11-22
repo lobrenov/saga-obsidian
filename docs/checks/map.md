@@ -113,3 +113,14 @@ Each write changes only the keys of that entry's `map-pins` item (`shape`, `colo
    Pin names: a screen reader (or the accessibility tree) reads each pin as "Title — Renderer, Icon label".
 5. Pin labels on hover (Saga settings): no labels at rest; hover one pin and only its label shows; Tab to a pin and its label shows.
 6. The view fills the pane's height with one background; no band of another colour under the map, in either theme.
+
+## Mobile (iPhone, iPad)
+
+Saga installed through BRAT on the device; open the base with the Saga map view.
+
+1. One finger on the map pans it; one finger on a pin drags it and writes once on release, as with a mouse.
+2. Two fingers pinch: the map zooms around the fingers and follows them as they move. No page zoom, no jump at the end of the pinch.
+3. A second finger while dragging a pin: the pin returns to its place and nothing is written; the two fingers pinch.
+4. Press and hold the map (about half a second, without moving): the menu opens at the finger with "Add pin here"; lifting the finger leaves the menu open. Press and hold a pin: "Remove pin", and the pin's card does not open. No text selection or iOS callout appears.
+5. A finger that moves before the hold time pans and opens no menu.
+6. Tap a pin: its card opens; tap the title to open the note. Tap the map: the card closes. Double-tap the map: it zooms one level.

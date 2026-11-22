@@ -5,6 +5,7 @@ import {
   fit,
   imageZoomLimits,
   panBy,
+  pinch,
   toImage,
   toScreen,
   visibleRect,
@@ -134,5 +135,44 @@ describe('clamp', () => {
         expect(shownY).toBeGreaterThanOrEqual(Math.min(view.height / 4, height * s) - 1e-6)
       })
     )
+  })
+})
+
+describe('pinch', () => {
+  const v = { zoom: 0, cx: 500, cy: 400 }
+
+  it('zooms one level when the fingers spread to twice their distance, keeping the image point under their midpoint', () => {
+    const after = pinch(v, view, [{ x: 350, y: 300 }, { x: 450, y: 300 }], [{ x: 300, y: 300 }, { x: 500, y: 300 }], wide)
+    expect(after.zoom).toBeCloseTo(1)
+    expect(toImage(after, view, 400, 300).x).toBeCloseTo(toImage(v, view, 400, 300).x)
+    expect(toImage(after, view, 400, 300).y).toBeCloseTo(toImage(v, view, 400, 300).y)
+  })
+
+  it('pans with the midpoint when the spread is unchanged', () => {
+    const after = pinch(v, view, [{ x: 100, y: 100 }, { x: 200, y: 100 }], [{ x: 130, y: 110 }, { x: 230, y: 110 }], wide)
+    expect(after).toEqual(panBy(v, 30, 10))
+  })
+
+  it('keeps the image point under the starting midpoint under the moved midpoint', () => {
+    fc.assert(
+      fc.property(viewport, num(0, 800), num(0, 600), num(0, 800), num(0, 600), num(1, 400), num(1, 400), (start, ax, ay, bx, by, d0, d1) => {
+        const after = pinch(start, view, [{ x: ax - d0, y: ay }, { x: ax + d0, y: ay }], [{ x: bx, y: by - d1 }, { x: bx, y: by + d1 }], wide)
+        const before = toImage(start, view, ax, ay)
+        const moved = toImage(after, view, bx, by)
+        const tol = 1e-6 * Math.max(1, Math.abs(before.x), Math.abs(before.y))
+        expect(after.zoom).toBeCloseTo(start.zoom + Math.log2(d1 / d0))
+        expect(Math.abs(moved.x - before.x)).toBeLessThan(tol)
+        expect(Math.abs(moved.y - before.y)).toBeLessThan(tol)
+      })
+    )
+  })
+
+  it('stays within the zoom limits', () => {
+    const after = pinch(v, view, [{ x: 399, y: 300 }, { x: 401, y: 300 }], [{ x: 0, y: 300 }, { x: 800, y: 300 }], { min: -2, max: 3 })
+    expect(after.zoom).toBe(3)
+  })
+
+  it('does not zoom when the fingers start at one point', () => {
+    expect(pinch(v, view, [{ x: 400, y: 300 }, { x: 400, y: 300 }], [{ x: 300, y: 300 }, { x: 500, y: 300 }], wide).zoom).toBe(0)
   })
 })

@@ -12,3 +12,7 @@ Open `test/vault` in Obsidian with the plugin enabled and `Notes/Links.md` open;
 - **Map look.** Icon look lists Renderer, Empty Map and The Shattered Coast. Set it to The Shattered Coast: Harbor Master shows a sea-coloured anchor, Moonblade the coins icon and the city the message-circle icon (their legacy styles) in the Item and Location pin colours; Ada (no pins) keeps the Character icon and colour. Set it to Empty Map: every link shows its renderer icon. Back to Renderer: the renderer icons return.
 - **Map rename.** With Icon look The Shattered Coast, rename the map, then move its folder: the icons stay and Settings still shows the map selected. Delete a map selected in Icon look: icons fall back to the renderer's and the dropdown shows Renderer.
 - **Titles.** Turn Render character titles with wikilinks? on: Ada reads "Ada Lovelace, Mathematician" and the heading's Bob "Bob, Fixer", in Live Preview and Reading view; the code span and embed do not. Clear Bob's `title`: the title goes. Off: the titles go, without reopening.
+
+## Mobile (iPhone, iPad)
+
+1. On iPhone and iPad, wikilinks show their icons and character titles in Live Preview and Reading view.

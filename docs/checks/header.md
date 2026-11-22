@@ -45,3 +45,7 @@ Run on `test/vault` in Obsidian (`npm run dev`, reload the plugin). Notes: `Char
 - [ ] Type in the body while a header edit lands (type continuously, blur a text field in the header mid-typing): no characters lost, cursor stays in the body.
 - [ ] Type in the body, then within about a second edit a header field: both changes are in the file.
 - [ ] Hotkeys (Cmd/Ctrl-P, Cmd/Ctrl-O) work while a header input has focus; clicking inside the header does not move the editor cursor or focus the editor.
+
+## Mobile (iPhone, iPad)
+
+1. A typed note on iPhone and iPad shows the header in place of the inline title and properties in Live Preview and Reading view; tapping a field edits it and the edit lands in the file as one key.
