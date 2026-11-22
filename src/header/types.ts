@@ -20,4 +20,6 @@ export type HeaderRendererId = 'character' | 'location' | 'faction' | 'item' | '
 
 export interface RegisteredRenderer {
   Layout: ComponentType<LayoutInput>
+  /** The same layout with read-only fields, for PDF export. */
+  PrintLayout: ComponentType<LayoutInput>
 }

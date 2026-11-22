@@ -18,6 +18,7 @@ An Obsidian plugin (id `saga`, desktop and mobile, Obsidian 1.10.2+) for world-b
 - `src/banner` note banners (`docs/banner.md`); every banner DOM selector is in `src/banner/dom.ts`
 - `src/links` icons and character titles on wikilinks in note text (`docs/links.md`)
 - `src/explorer` icons in the file explorer (`docs/explorer.md`); every explorer DOM selector is in `src/explorer/dom.ts`
+- `src/print` the banner and header card in Export to PDF (`docs/print.md`); every print DOM selector is in `src/print/dom.ts`
 - `src/settings` the renderer settings tab (`docs/settings.md`)
 - `src/ui` Obsidian menus (`showMenu`) and `MenuSelect`, the dropdown button the map and header use in place of `<select>`
 - `test/unit`, `test/component`, `test/fakes`; `test/vault` is the manual-check vault

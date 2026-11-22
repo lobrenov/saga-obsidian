@@ -61,6 +61,20 @@ export class Component {
   }
 }
 
+/** A child of a rendered section; `unload` runs `onunload`, as Obsidian's does. */
+export class MarkdownRenderChild extends Component {
+  constructor(public containerEl: HTMLElement) {
+    super()
+  }
+
+  onunload(): void {}
+
+  override unload(): void {
+    super.unload()
+    this.onunload()
+  }
+}
+
 export class Plugin extends Component {
   constructor(
     public app: App,

@@ -1,0 +1,70 @@
+/* The banner and header card of a PDF export. Sizes come from the content width the page gives the print root, through container queries. */
+.saga-print {
+  container-type: inline-size;
+  print-color-adjust: exact;
+}
+
+/* The banner's height follows the width; it fades into the page rather than into a view background, with no scrim. */
+.saga-print .saga-banner {
+  height: auto;
+  aspect-ratio: 3 / 1;
+}
+.saga-print[data-banner-tall] .saga-banner {
+  aspect-ratio: 2 / 1;
+}
+.saga-print .saga-banner-image {
+  background: none;
+  mask-image: none;
+}
+.saga-print .saga-banner-image::after {
+  inset: 0;
+  height: auto;
+  background: linear-gradient(to bottom, transparent 40%, var(--background-primary, #fff));
+}
+
+/* The card starts where the banner's fade ends. */
+.saga-print .saga-banner:not([hidden]) + .saga-header {
+  margin-top: 0;
+}
+.saga-print .saga-header {
+  break-inside: avoid;
+}
+
+/* Shadows print as grey blocks; this outranks the header's more specific shadow rules. */
+.saga-print,
+.saga-print * {
+  box-shadow: none !important;
+}
+
+/* Chips take the padding and icon colour the header gives its chip buttons. */
+.saga-print .saga-header-chip {
+  gap: var(--size-2-2);
+  padding: 0 10px;
+  white-space: nowrap;
+}
+.saga-print .saga-header-chip .saga-header-icon {
+  color: var(--saga-chip-accent);
+}
+
+.saga-print [data-kind='choice'] .saga-header-control {
+  text-transform: capitalize;
+}
+
+/* Under 500px (A5): the portrait or emblem sits above the name, and the facts are one column. */
+@container (max-width: 499px) {
+  .saga-print .saga-header-split {
+    flex-direction: column;
+  }
+  .saga-print .saga-header-split .saga-header-identity {
+    flex: none;
+    width: 100%;
+  }
+  .saga-print .saga-header-facts {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Core's file-name title gives way to the card, which shows the name. */
+.print .markdown-preview-view:has(.saga-print > .saga-header) > h1:not([class]) {
+  display: none;
+}

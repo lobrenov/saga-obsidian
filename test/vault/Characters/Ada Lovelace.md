@@ -4,6 +4,7 @@ aliases: [Countess, Ada]
 avatar: "[[portrait.png]]"
 title: Mathematician
 location: "[[Waterdeep]]"
+banner: "[[banner.jpg]]"
 ---
 # Ada Lovelace
 
