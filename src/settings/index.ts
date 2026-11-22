@@ -91,17 +91,8 @@ class SettingsTab extends PluginSettingTab {
           .onChange((value) => void this.prefs.set({ pinLabels: value as PinLabels }))
       )
 
-    new Setting(containerEl).setName('Markdown rendering').setHeading()
+    new Setting(containerEl).setName('Icons').setHeading()
     new Setting(containerEl)
-      .setName('Render icons with wikilinks?')
-      .setDesc('Wikilinks in note text show an icon for the linked note.')
-      .addToggle((toggle) =>
-        toggle.setValue(this.prefs.get().linkIcons).onChange((value) => {
-          iconLook.settingEl.toggle(value || this.prefs.get().fileIcons)
-          void this.prefs.set({ linkIcons: value })
-        })
-      )
-    const iconLook = new Setting(containerEl)
       .setName('Icon look')
       .setDesc('For wikilink and file icons: always the renderer’s icon and colour, or the icon and colour of the note’s pin on a map, falling back to the renderer’s.')
       .addDropdown((dropdown) => {
@@ -115,7 +106,12 @@ class SettingsTab extends PluginSettingTab {
           .setValue(maps.some((map) => map.path === look) ? look : 'renderer')
           .onChange((value) => void this.prefs.set({ linkIconLook: value }))
       })
-    iconLook.settingEl.toggle(this.prefs.get().linkIcons || this.prefs.get().fileIcons)
+
+    new Setting(containerEl).setName('File rendering').setHeading()
+    new Setting(containerEl)
+      .setName('Render icons with wikilinks?')
+      .setDesc('Wikilinks in note text show an icon for the linked note.')
+      .addToggle((toggle) => toggle.setValue(this.prefs.get().linkIcons).onChange((value) => void this.prefs.set({ linkIcons: value })))
     new Setting(containerEl)
       .setName('Render character titles with wikilinks?')
       .setDesc('Wikilinks to characters read “Name, Title” when the character has a title.')
@@ -131,7 +127,6 @@ class SettingsTab extends PluginSettingTab {
       .setDesc('The file explorer shows an icon before each folder and typed note, in the Icon look.')
       .addToggle((toggle) =>
         toggle.setValue(this.prefs.get().fileIcons).onChange((value) => {
-          iconLook.settingEl.toggle(value || this.prefs.get().linkIcons)
           untyped.setDisabled(!value)
           void this.prefs.set({ fileIcons: value })
         })
@@ -155,14 +150,16 @@ class SettingsTab extends PluginSettingTab {
 
     for (const id of EDITABLE_IDS) {
       const def = rendererDefs[id]
-      const section = containerEl.createEl('details', { cls: 'saga-settings-renderer' })
+      const section = rendererCard(containerEl).createEl('details', { cls: 'setting-items' })
       section.open = this.expanded.has(id)
       section.addEventListener('toggle', () => (section.open ? this.expanded.add(id) : this.expanded.delete(id)))
-      const summary = section.createEl('summary')
-      summary.createSpan({ cls: 'saga-settings-renderer-name', text: def.label })
-      const typesEl = summary.createSpan({ cls: 'saga-settings-renderer-types', text: this.draft.types[id] || id })
+      const summary = section.createEl('summary', { cls: 'setting-item' })
+      const info = summary.createDiv({ cls: 'setting-item-info' })
+      info.createDiv({ cls: 'setting-item-name', text: def.label })
+      const typesEl = info.createDiv({ cls: 'setting-item-description', text: this.draft.types[id] || id })
+      setIcon(summary.createDiv({ cls: 'setting-item-control saga-settings-chevron' }), 'chevron-right')
       const readOnly = state.invalid.includes(id)
-      if (readOnly) section.createDiv({ cls: 'saga-settings-issue', text: 'This entry in renderers.yaml could not be read; fix it in the file.' })
+      if (readOnly) section.createDiv({ cls: 'setting-item saga-settings-issue', text: 'This entry in renderers.yaml could not be read; fix it in the file.' })
       new Setting(section)
         .setName('Types')
         .setDesc('Comma-separated values of the type key.')
@@ -177,34 +174,29 @@ class SettingsTab extends PluginSettingTab {
             })
         )
       for (const [field, fieldDef] of Object.entries(def.fields as Fields)) {
-        new Setting(section)
-          .setName(fieldDef.label)
-          .setDesc(`Key in your notes (default ${fieldDef.key})`)
-          .addText((text) =>
-            text
-              .setPlaceholder(fieldDef.key)
-              .setValue(this.draft.keys[id]?.[field] ?? '')
-              .setDisabled(readOnly)
-              .onChange((value) => {
-                const keys = (this.draft.keys[id] ??= {})
-                keys[field] = value
-                this.changed()
-              })
-          )
+        new Setting(section).setName(fieldDef.label).addText((text) =>
+          text
+            .setPlaceholder(fieldDef.key)
+            .setValue(this.draft.keys[id]?.[field] ?? '')
+            .setDisabled(readOnly)
+            .onChange((value) => {
+              const keys = (this.draft.keys[id] ??= {})
+              keys[field] = value
+              this.changed()
+            })
+        )
       }
     }
-    const fallback = containerEl.createDiv({ cls: 'saga-settings-renderer saga-settings-fallback' })
-    fallback.createSpan({ cls: 'saga-settings-renderer-name', text: rendererDefs.document.label })
-    fallback.createSpan({ cls: 'saga-settings-renderer-types', text: 'any other type' })
+    new Setting(rendererCard(containerEl).createDiv({ cls: 'setting-items' })).setName(rendererDefs.document.label).setDesc('any other type')
 
     new Setting(containerEl).setName('Pin defaults').setDesc('The shape, colour and icon of a renderer’s map pins. A pin’s own settings win.').setHeading()
-    for (const id of RENDERER_IDS) this.renderPinRow(id, state.invalid.includes(id))
+    const pinRows = containerEl.createDiv({ cls: 'saga-pin-rows' })
+    for (const id of RENDERER_IDS) this.renderPinRow(pinRows, id, state.invalid.includes(id))
   }
-
   /** One renderer's pin defaults: preview, Shape, Colour, Icon and Reset; edits update the row in place. */
-  private renderPinRow(id: RendererId, readOnly: boolean): void {
+  private renderPinRow(parentEl: HTMLElement, id: RendererId, readOnly: boolean): void {
     const look = (): PinLook => (this.draft.pin[id] ??= { ...PIN_DEFAULTS[id] })
-    const setting = new Setting(this.containerEl).setName(rendererDefs[id].label)
+    const setting = new Setting(parentEl).setName(rendererDefs[id].label)
     const preview = createDiv({ cls: 'saga-pin-preview' })
     setting.controlEl.prepend(preview)
     let reset: HTMLElement | undefined
@@ -283,6 +275,11 @@ class SettingsTab extends PluginSettingTab {
       this.render()
     }
   }
+}
+
+/** A renderer's card: a setting group with no heading, styled by Obsidian's grouped settings. */
+function rendererCard(containerEl: HTMLElement): HTMLElement {
+  return containerEl.createDiv({ cls: 'setting-group saga-settings-renderer' })
 }
 
 /** Adds the settings tab, editing `.saga/renderers.yaml` through `config`. */

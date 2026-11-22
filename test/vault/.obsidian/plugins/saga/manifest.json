@@ -1,7 +1,7 @@
 {
   "id": "saga",
   "name": "Saga",
-  "version": "0.10.1",
+  "version": "0.10.2",
   "minAppVersion": "1.10.2",
   "description": "A map Bases view and note renderers for TTRPG world-building vaults.",
   "author": "Leon Obrenov",

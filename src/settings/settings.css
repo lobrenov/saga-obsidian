@@ -1,45 +1,77 @@
 .saga-settings-renderer + .saga-settings-renderer {
-  border-top: 1px solid var(--background-modifier-border);
+  margin-top: var(--size-4-2);
 }
 
-.saga-settings-renderer > summary,
-.saga-settings-fallback {
-  display: flex;
-  align-items: baseline;
-  gap: var(--size-4-3);
-  padding: var(--size-4-3) 0;
-  font-weight: var(--font-semibold);
-  color: var(--text-normal);
+.saga-settings-renderer .setting-item {
+  align-items: center;
 }
 
-.saga-settings-renderer-types {
-  overflow: hidden;
-  font-weight: var(--font-normal);
-  font-size: var(--font-ui-small);
-  color: var(--text-muted);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.saga-settings-renderer .setting-item-info {
+  align-self: center;
 }
 
-.saga-settings-renderer[open] > summary {
-  padding-bottom: var(--size-4-1);
-}
-
-.saga-settings-renderer > .setting-item {
-  padding-inline-start: var(--size-4-5);
-}
-
-.saga-settings-renderer > summary {
+.saga-settings-renderer summary {
   cursor: var(--cursor);
+}
+
+.saga-settings-chevron {
+  flex: 0 0 auto;
+  color: var(--icon-color);
+  transition: transform 0.15s ease-in-out;
+}
+
+.saga-settings-renderer details[open] .saga-settings-chevron {
+  transform: rotate(90deg);
 }
 
 .saga-settings-issue {
   color: var(--text-error);
 }
 
+.saga-pin-rows {
+  container-type: inline-size;
+  display: grid;
+  grid-template-columns: 1fr repeat(5, auto);
+}
+
+.saga-pin-rows > .setting-item {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
+  column-gap: var(--size-4-3);
+}
+
+.saga-pin-rows .setting-item-info {
+  align-self: center;
+}
+
+.saga-pin-rows .setting-item-control {
+  display: contents;
+}
+
+.saga-pin-rows select.dropdown {
+  width: 100%;
+}
+
+@container (max-width: 30rem) {
+  .saga-pin-rows {
+    grid-template-columns: repeat(5, auto) 1fr;
+  }
+
+  .saga-pin-rows > .setting-item {
+    column-gap: var(--size-4-2);
+  }
+
+  .saga-pin-rows .setting-item-info {
+    grid-column: 1 / -1;
+  }
+}
+
 .saga-pin-preview {
   display: flex;
   align-items: center;
+  justify-content: center;
   height: var(--size-4-8);
 }
 

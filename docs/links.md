@@ -1,6 +1,6 @@
 # Link icons and titles (as built)
 
-Settings → Saga → Markdown rendering, in `data.json` (all default off or `renderer`):
+Settings → Saga → Icons and File rendering, in `data.json` (all default off or `renderer`):
 - `linkIcons` (Render icons with wikilinks?): wikilinks in note text show an icon before the link text. `linkIconLook` (Icon look) picks it: `renderer`, the renderer's icon coloured by its `--saga-<renderer>` token; or a map note's path (one option per `map` note, by name), the note's pin look on that map (its first `map-pins` entry whose `map` resolves there, its own icon and colour over the renderer's pin look; `resolveLook`) coloured by `--saga-pin-<colour>`, else the renderer's icon. A saved path follows a rename of the map or a folder holding it (`obsidian/prefs.ts`); a path that is no longer a map reads as `renderer`.
 - `linkTitles` (Render character titles with wikilinks?): wikilinks to characters with a title field (the character `title` key, remappable) are followed by `, <title>`.
 
