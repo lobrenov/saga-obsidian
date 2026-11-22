@@ -24,7 +24,7 @@ Vault facts used below: `Maps/The Shattered Coast.md` (`type: map`, `image: "[[c
 
 ### Stage
 
-1. The coast image fills the pane, fitted. Four pins stand on it with labels beside them: Waterdeep (the Location colour, the message-circle glyph its legacy `rumour` style reads as), Moonblade (the Item colour, the coins glyph for `treasure`), Harbor Guild (a herald in the Faction colour with the flag glyph) and Harbor Master (a sea-coloured circle with the anchor glyph, centred on 820,600). A pin without its own `shape`, `color` or `icon` takes its renderer's. Waterdeep's second pin at 10,20 (`sparkly`) is at the top left with the Location default icon (castle). The broken Waterdeep entries (`x: wrong`, no `y`, `[[Nowhere Map]]`) draw nothing.
+1. The coast image fills the pane, fitted. Four pins stand on it with labels beside them: Waterdeep (the Location colour, the message-circle glyph its legacy `rumour` style reads as), Moonblade (the Item colour, the coins glyph for `treasure`), Harbor Guild (a herald in the Faction colour with the flag glyph) and Harbor Master (a sea-coloured circle with the anchor glyph, its bottom on 820,600). A pin without its own `shape`, `color` or `icon` takes its renderer's. Waterdeep's second pin at 10,20 (`sparkly`) is at the top left with the Location default icon (castle). The broken Waterdeep entries (`x: wrong`, no `y`, `[[Nowhere Map]]`) draw nothing.
 2. Hover a pin's pixel position against the readout at the bottom left: it shows `x · y` in image pixels and a zoom level; the Moonblade tip reads about 300 / 410.
 3. Two-finger scroll pans; pinch (or ⌘-scroll) zooms around the pointer; drag pans; double-click, the `+` and `-` buttons and the `+`/`-` keys zoom one level; arrow keys pan when the map has focus; Fit map refits. Panning stops with a quarter of the image (or the whole image if smaller) still in view.
 4. Zoom out as far as it goes: the longest image side is about 64 px. Zoom in as far as it goes: 8x native.
@@ -85,13 +85,13 @@ Each write must show in `git diff` as a change of the `map-pins` value only: no 
 
 Each write changes only the keys of that entry's `map-pins` item (`shape`, `color`, `icon`); a legacy `style` of the entry is replaced by its icon.
 
-1. Select Moonblade and click Shape: an Obsidian menu opens below it with Pin, Circle, Flag, Bookmark and Herald, the current one checked. Choose Flag: `shape: flag` is added to that entry and the pin redraws as a flag at once, standing on the same image point (its pole's foot).
-2. Click Shape again and choose Pin (the renderer's default): the `shape` line is removed. Repeat with Circle, Bookmark and Herald: each stands on its image point (the circle by its centre, the bookmark and herald by their tip) at the fit zoom and zoomed in.
+1. Select Moonblade and click Shape: an Obsidian menu opens below it with Pin, Circle, Flag, Bookmark and Herald, the current one checked. Choose Flag: `shape: flag` is added to that entry and the pin redraws as a flag at once, standing on the same image point (the bottom centre of its outline, as for every shape).
+2. Click Shape again and choose Pin (the renderer's default): the `shape` line is removed. Repeat with Circle, Bookmark and Herald: each stands on the same image point (the bottom centre of its outline) at the fit zoom and zoomed in.
 3. Click Colour: a menu of the 12 colour names, the current one checked. Choose Rust: `color: rust`; the pin and the card's renderer line take it. Choose the Item's own colour (Ochre): the `color` line is removed.
 4. Click Icon: Obsidian's icon picker opens with each icon drawn beside its label; typing filters on label and id. Choose Skull: `icon: skull` and the pin's glyph changes; the Icon button shows Skull. Pick Gem (the Item default): the `icon` line is removed. Esc in the picker writes nothing.
-5. With Moonblade overridden (its `treasure` style reads as Coin), the Icon row shows "Use Item default"; Shape and Colour show none until changed. Click it: `style` or `icon` is removed from that entry and the pin takes the Item icon.
+5. With Moonblade overridden (its `treasure` style reads as Coin), the Icon row has a reset button (tooltip "Use Item default") to the right of its dropdown, which narrows to fit it; Shape and Colour have none until changed. Click it: `style` or `icon` is removed from that entry and the pin takes the Item icon.
 6. Select Waterdeep's 10,20 pin (unknown `sparkly` style): choose Skull; `icon: skull` replaces `style: sparkly` and the issue on the card disappears.
-7. Add `pin: { shape: flag, color: sea, icon: tower-control }` to `renderers.location` in `.saga/renderers.yaml`: the Waterdeep pin keys it does not set redraw at once as sea-coloured flags; the Layers dot for Locations is sea; the card's "Use Location default" returns an overridden pin to them.
+7. Add `pin: { shape: flag, color: sea, icon: tower-control }` to `renderers.location` in `.saga/renderers.yaml`: the Waterdeep pin keys it does not set redraw at once as sea-coloured flags; the Layers dot for Locations is sea; the card's reset button ("Use Location default") returns an overridden pin to them.
 
 ### Remove
 
@@ -106,7 +106,7 @@ Each write changes only the keys of that entry's `map-pins` item (`shape`, `colo
 
 ### Labels and pin look
 
-1. Pin markers: the shape in its colour with a light outline and the icon inside it, light on a light theme and dark ink on a dark one; each shape stands on its anchor (zoom in on a pin and compare with the readout). A selected pin is not larger or darker.
+1. Pin markers: the shape in its colour with a light outline and the icon inside it, light on a light theme and dark ink on a dark one; each shape stands on the bottom centre of its outline (zoom in on a pin and compare with the readout). A selected pin is not larger or darker.
 2. Pins close together (zoom out on a crowded area): labels go right, else left, else below (level with the icon, clear of the shape, for every shape), and never cover a pin or another label. A pin with no free slot has no label until hover or focus, when it appears on top.
 3. Labels stay unclipped at the view's edge after panning settles. Pins draw above labels.
 4. Light and dark themes: outlines, glyphs, labels, clusters and focus rings (Tab to a pin and a cluster) read clearly.

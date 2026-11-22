@@ -311,25 +311,24 @@
   color: var(--text-muted);
 }
 
-.saga-map-popover-look .dropdown {
+.saga-map-popover-control {
   display: flex;
   align-items: center;
   gap: var(--size-4-1);
-  width: 100%;
+  min-width: 0;
+}
+
+.saga-map-popover-look .dropdown {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--size-4-1);
+  min-width: 0;
 }
 
 .saga-map button.saga-map-popover-reset {
-  grid-column: 2;
-  justify-self: start;
-  height: auto;
-  padding: 0;
-  border: 0;
-  background: none;
-  box-shadow: none;
-  color: var(--text-muted);
-  font-size: var(--font-ui-smaller);
-  text-decoration: underline;
-  cursor: pointer;
+  flex: none;
+  padding: var(--size-2-2);
 }
 
 .saga-map-popover-issues {

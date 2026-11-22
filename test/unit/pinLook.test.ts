@@ -26,6 +26,11 @@ describe('resolveLook', () => {
 })
 
 describe('the pin design data', () => {
+  it.each(SHAPES)('anchors the $id at the bottom centre of its outline', (shape) => {
+    expect(shape.ax).toBe(shape.w / 2)
+    expect(shape.ay).toBe({ pin: 43, circle: 30, flag: 30, bookmark: 38, herald: 38 }[shape.id])
+  })
+
   it('has the built-in defaults', () => {
     expect(PIN_DEFAULTS).toEqual({
       character: { shape: 'pin', color: 'crimson', icon: 'user' },

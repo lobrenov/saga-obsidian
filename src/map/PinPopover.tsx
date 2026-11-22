@@ -1,4 +1,5 @@
 import { useContext, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { setIcon } from 'obsidian'
 import { toScreen } from '../shared/maps/viewport'
 import { rendererDefs } from '../shared/renderers/definitions'
 import { PIN_COLORS, SHAPES, type PinLook } from '../shared/pins/look'
@@ -144,17 +145,27 @@ export function PinPopover({ store, host, pin, onClose, onLook, busy }: PinPopov
   )
 }
 
-/** A labelled card row with "Use <Renderer> default" while the pin overrides it. */
+/** A labelled card row with a reset button ("Use <Renderer> default") beside its control while the pin overrides it. */
 function LookRow({ id, label, renderer, overridden, busy, onReset, children }: { id: string; label: string; renderer: string; overridden: boolean; busy: boolean; onReset: () => void; children: ReactNode }) {
   return (
     <>
       <label htmlFor={id}>{label}</label>
-      {children}
-      {overridden ? (
-        <button type="button" className="saga-map-popover-reset" disabled={busy} onClick={onReset}>
-          Use {renderer} default
-        </button>
-      ) : null}
+      <div className="saga-map-popover-control">
+        {children}
+        {overridden ? (
+          <button
+            type="button"
+            className="clickable-icon saga-map-popover-reset"
+            aria-label={`Use ${renderer} default`}
+            title={`Use ${renderer} default`}
+            disabled={busy}
+            onClick={onReset}
+            ref={(el) => {
+              if (el) setIcon(el, 'rotate-ccw')
+            }}
+          />
+        ) : null}
+      </div>
     </>
   )
 }

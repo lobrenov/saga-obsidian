@@ -19,8 +19,8 @@ export interface PinShape {
 
 export const SHAPES: readonly PinShape[] = [
   { id: 'pin', label: 'Pin', w: 32, h: 44, d: 'M16 43c-1.5-4-14-15-14-27a14 14 0 0 1 28 0c0 12-12.5 23-14 27z', ix: 8.5, iy: 8.5, is: 15, ax: 16, ay: 43 },
-  { id: 'circle', label: 'Circle', w: 32, h: 32, d: 'M16 2a14 14 0 1 0 0 28a14 14 0 1 0 0-28z', ix: 8.5, iy: 8.5, is: 15, ax: 16, ay: 16 },
-  { id: 'flag', label: 'Flag', w: 32, h: 31, d: 'M3 3h3v27h-3z M6 4c4-2 8-2 12 0s8 2 12 0v21c-4 2-8 2-12 0s-8-2-12 0z', ix: 11, iy: 7.5, is: 14, ax: 4.5, ay: 30 },
+  { id: 'circle', label: 'Circle', w: 32, h: 32, d: 'M16 2a14 14 0 1 0 0 28a14 14 0 1 0 0-28z', ix: 8.5, iy: 8.5, is: 15, ax: 16, ay: 30 },
+  { id: 'flag', label: 'Flag', w: 32, h: 31, d: 'M3 3h3v27h-3z M6 4c4-2 8-2 12 0s8 2 12 0v21c-4 2-8 2-12 0s-8-2-12 0z', ix: 11, iy: 7.5, is: 14, ax: 16, ay: 30 },
   { id: 'bookmark', label: 'Bookmark', w: 30, h: 40, d: 'M5 2h20a2 2 0 0 1 2 2v34l-12-7.5L3 38V4a2 2 0 0 1 2-2z', ix: 7.5, iy: 6.5, is: 15, ax: 15, ay: 38 },
   { id: 'herald', label: 'Herald', w: 30, h: 40, d: 'M5 2h20a2 2 0 0 1 2 2v20.5L15 38 3 24.5V4a2 2 0 0 1 2-2z', ix: 7.5, iy: 7, is: 15, ax: 15, ay: 38 }
 ]
