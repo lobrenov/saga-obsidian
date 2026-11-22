@@ -67,6 +67,12 @@ describe('createLinkRenderers', () => {
     expect(renderers.of('Nowhere', 'Notes/Plain.md')).toBeNull()
   })
 
+  it('gives a file’s target, documents included', async () => {
+    const { app, ada, renderers } = await setup()
+    expect(renderers.ofFile(ada)).toEqual(renderers.of('Ada', 'Notes/Plain.md'))
+    expect(renderers.ofFile(app.asApp().vault.getFileByPath('Notes/Plain.md')!)).toEqual({ renderer: 'document', look: { shape: 'pin', color: 'umber', icon: 'file-text' }, title: null })
+  })
+
   it('takes the look from the note’s first pin over the renderer’s', async () => {
     const { renderers } = await setup()
     expect(renderers.of('Docks', 'Notes/Plain.md')?.look).toEqual({ shape: 'pin', color: 'plum', icon: 'anchor' })
@@ -99,7 +105,7 @@ describe('createLinkRenderers', () => {
 
 describe('linkMarks', () => {
   const target: LinkTarget = { renderer: 'character', look: { shape: 'pin', color: 'plum', icon: 'anchor' }, title: 'Mathematician' }
-  const prefs: Prefs = { pinLabels: 'always', linkIcons: true, linkIconLook: 'renderer', linkTitles: true }
+  const prefs: Prefs = { pinLabels: 'always', linkIcons: true, linkIconLook: 'renderer', linkTitles: true, fileIcons: false, fileIconsUntyped: true }
 
   it('gives the renderer’s icon, or the pin look’s icon and colour', () => {
     expect(linkMarks(target, prefs)).toEqual({ icon: { renderer: 'character', icon: 'user', color: null }, title: 'Mathematician' })
@@ -116,8 +122,9 @@ describe('linkMarks', () => {
 describe('createPrefsStore', () => {
   const store = (saved: unknown) => createPrefsStore({ loadData: () => Promise.resolve(saved), saveData: () => Promise.resolve() } as unknown as Plugin)
 
-  it('defaults the link prefs and keeps a saved linkIcons', async () => {
-    expect((await store(null)).get()).toEqual({ pinLabels: 'always', linkIcons: false, linkIconLook: 'renderer', linkTitles: false })
+  it('defaults the link and file icon prefs and keeps saved ones', async () => {
+    expect((await store(null)).get()).toEqual({ pinLabels: 'always', linkIcons: false, linkIconLook: 'renderer', linkTitles: false, fileIcons: false, fileIconsUntyped: true })
+    expect((await store({ fileIcons: true, fileIconsUntyped: false })).get()).toMatchObject({ fileIcons: true, fileIconsUntyped: false })
     expect((await store({ linkIcons: true })).get()).toMatchObject({ linkIcons: true, linkIconLook: 'renderer', linkTitles: false })
     expect((await store({ linkIconLook: 'pin', linkTitles: true })).get()).toMatchObject({ linkIconLook: 'pin', linkTitles: true })
   })

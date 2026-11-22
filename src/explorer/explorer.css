@@ -1,0 +1,9 @@
+.saga-file-icon {
+  flex-shrink: 0;
+  margin-inline-end: 0.35em;
+}
+
+.saga-file-icon .svg-icon {
+  width: var(--icon-s);
+  height: var(--icon-s);
+}

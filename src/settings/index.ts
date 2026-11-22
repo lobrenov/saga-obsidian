@@ -97,24 +97,41 @@ class SettingsTab extends PluginSettingTab {
       .setDesc('Wikilinks in note text show an icon for the linked note.')
       .addToggle((toggle) =>
         toggle.setValue(this.prefs.get().linkIcons).onChange((value) => {
-          iconLook.settingEl.toggle(value)
+          iconLook.settingEl.toggle(value || this.prefs.get().fileIcons)
           void this.prefs.set({ linkIcons: value })
         })
       )
     const iconLook = new Setting(containerEl)
       .setName('Icon look')
-      .setDesc('The renderer’s icon and colour, or the icon and colour of the linked note’s first map pin.')
+      .setDesc('For wikilink and file icons: the renderer’s icon and colour, or the icon and colour of the note’s first map pin.')
       .addDropdown((dropdown) =>
         dropdown
           .addOptions({ renderer: 'Renderer', pin: 'Pin' })
           .setValue(this.prefs.get().linkIconLook)
           .onChange((value) => void this.prefs.set({ linkIconLook: value as LinkIconLook }))
       )
-    iconLook.settingEl.toggle(this.prefs.get().linkIcons)
+    iconLook.settingEl.toggle(this.prefs.get().linkIcons || this.prefs.get().fileIcons)
     new Setting(containerEl)
       .setName('Render character titles with wikilinks?')
       .setDesc('Wikilinks to characters read “Name, Title” when the character has a title.')
       .addToggle((toggle) => toggle.setValue(this.prefs.get().linkTitles).onChange((value) => void this.prefs.set({ linkTitles: value })))
+
+    new Setting(containerEl).setName('File explorer').setHeading()
+    new Setting(containerEl)
+      .setName('Render file icons?')
+      .setDesc('The file explorer shows an icon before each folder and typed note, in the Icon look.')
+      .addToggle((toggle) =>
+        toggle.setValue(this.prefs.get().fileIcons).onChange((value) => {
+          iconLook.settingEl.toggle(value || this.prefs.get().linkIcons)
+          untyped.setDisabled(!value)
+          void this.prefs.set({ fileIcons: value })
+        })
+      )
+    const untyped = new Setting(containerEl)
+      .setName('Render icons for untyped files?')
+      .setDesc('Notes with no renderer type show the Document icon.')
+      .addToggle((toggle) => toggle.setValue(this.prefs.get().fileIconsUntyped).onChange((value) => void this.prefs.set({ fileIconsUntyped: value })))
+      .setDisabled(!this.prefs.get().fileIcons)
 
     new Setting(containerEl).setName('Renderers').setHeading()
     new Setting(containerEl)

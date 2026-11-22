@@ -98,6 +98,10 @@ function resolvePath(files: Iterable<TFile>, linkpath: string): TFile | null {
   return all.find((file) => file.path === withExt) ?? all.find((file) => file.path.endsWith(`/${withExt}`) || file.name === withExt) ?? null
 }
 
+/** Stand-ins for Obsidian's editor state fields, for modules that import them. */
+export const editorInfoField = {}
+export const editorLivePreviewField = {}
+
 /** Icon ids `getIcon` does not know, as Obsidian answers for an id missing from its Lucide. */
 export const unknownIcons = new Set<string>()
 
@@ -191,6 +195,7 @@ export class FakeApp {
 
   readonly workspace = Object.assign(new Events(), {
     getLeavesOfType: (): unknown[] => [],
+    onLayoutReady: (callback: () => void): void => callback(),
     openLinkText: (linktext: string, sourcePath: string, newLeaf?: unknown): Promise<void> => {
       this.opened.push({ linktext, sourcePath, newLeaf })
       return Promise.resolve()

@@ -12,6 +12,10 @@ export interface Prefs {
   linkIconLook: LinkIconLook
   /** Wikilinks to characters show the character's title after the link. */
   linkTitles: boolean
+  /** The file explorer shows an icon before each folder and typed note, in the `linkIconLook`. */
+  fileIcons: boolean
+  /** With `fileIcons`, notes with no renderer type show the `document` icon. */
+  fileIconsUntyped: boolean
 }
 
 export interface PrefsStore {
@@ -27,7 +31,9 @@ export async function createPrefsStore(plugin: Plugin): Promise<PrefsStore> {
     pinLabels: saved?.pinLabels === 'hover' ? 'hover' : 'always',
     linkIcons: saved?.linkIcons === true,
     linkIconLook: saved?.linkIconLook === 'pin' ? 'pin' : 'renderer',
-    linkTitles: saved?.linkTitles === true
+    linkTitles: saved?.linkTitles === true,
+    fileIcons: saved?.fileIcons === true,
+    fileIconsUntyped: saved?.fileIconsUntyped !== false
   }
   const listeners = new Set<(prefs: Prefs) => void>()
   return {

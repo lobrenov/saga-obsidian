@@ -1,4 +1,5 @@
 import { Plugin } from 'obsidian'
+import { registerFileIcons } from './explorer'
 import { registerHeader } from './header'
 import { registerLinkIcons } from './links'
 import { registerMapView } from './map'
@@ -14,6 +15,7 @@ export default class SagaPlugin extends Plugin {
     registerMapView(this, config, prefs)
     registerHeader(this, config)
     registerLinkIcons(this, config, prefs)
+    registerFileIcons(this, config, prefs)
     registerSettings(this, config, prefs)
   }
 }

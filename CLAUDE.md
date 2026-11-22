@@ -1,6 +1,6 @@
 # Saga for Obsidian
 
-An Obsidian plugin (id `saga`, desktop, Obsidian 1.10.2+) for world-building: a **Saga map** Bases view that draws the base's notes' `map-pins` on a map note's image, a **note header** that replaces the inline title and properties of notes whose `type` maps to a renderer, and optional icons and character titles on wikilinks. Plans are in `docs/plans/`.
+An Obsidian plugin (id `saga`, desktop, Obsidian 1.10.2+) for world-building: a **Saga map** Bases view that draws the base's notes' `map-pins` on a map note's image, a **note header** that replaces the inline title and properties of notes whose `type` maps to a renderer, optional icons and character titles on wikilinks, and optional file explorer icons. Plans are in `docs/plans/`.
 
 ## Scripts
 - `npm run dev` esbuild watch; writes `main.js`, `styles.css`, `manifest.json` into `test/vault/.obsidian/plugins/saga/`
@@ -16,6 +16,7 @@ An Obsidian plugin (id `saga`, desktop, Obsidian 1.10.2+) for world-building: a 
 - `src/map` the Saga map Bases view (`docs/map.md`)
 - `src/header` the note header (`docs/header.md`); every Obsidian DOM selector is in `src/header/dom.ts`
 - `src/links` icons and character titles on wikilinks in note text (`docs/links.md`)
+- `src/explorer` icons in the file explorer (`docs/explorer.md`); every explorer DOM selector is in `src/explorer/dom.ts`
 - `src/settings` the renderer settings tab (`docs/settings.md`)
 - `src/ui` Obsidian menus (`showMenu`) and `MenuSelect`, the dropdown button the map and header use in place of `<select>`
 - `test/unit`, `test/component`, `test/fakes`; `test/vault` is the manual-check vault
