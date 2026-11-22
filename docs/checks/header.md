@@ -3,13 +3,13 @@
 Run on `test/vault` in Obsidian (`npm run dev`, reload the plugin). Notes: `Characters/Ada Lovelace.md` (character), `Places/Waterdeep.md` (location), `Factions/Harbor Guild.md` (faction, type `guild`), `Items/Moonblade.md` (item, type `artifact`), `Maps/The Shattered Coast.md` (map), `Maps/Empty Map.md` (map, no image), `Notes/Type Unknown.md` (document). Check `git diff` in the vault after each edit: only the edited key's text changes.
 
 ## Display
-- [ ] Each renderer note shows its header in Live Preview: Character portrait card, Location/Item/Map image banner, Faction emblem, facts grid, renderer label and icon in the bar.
+- [ ] Each renderer note shows its header in Live Preview: Character portrait card, Faction emblem, facts grid, renderer label and icon in the bar.
 - [ ] The same notes in Reading view show the header above the content; the native title and properties are hidden.
-- [ ] `Notes/Type Unknown.md` and a note with no frontmatter: no header, native title and properties as usual.
+- [ ] `Notes/Type Unknown.md` and a note with no frontmatter, without a banner: no header, native title and properties as usual (banners: `docs/checks/banner.md`).
 - [ ] Source mode: no header, native title and properties visible.
 - [ ] Toggle Live Preview, Reading view and Source mode on one note: the header appears and disappears with the mode, once, never duplicated.
 - [ ] Settings, Appearance, Readable line width on and off, in Live Preview and Reading view: the header's left edge and width match the text column exactly.
-- [ ] Light and dark theme, switched while a header is open: all text, borders, banners and the dashed empty image frame stay legible.
+- [ ] Light and dark theme, switched while a header is open: all text, borders and the dashed empty image frame stay legible.
 - [ ] A custom theme or accent colour: renderer accent stays on the top rule, badge icon and portrait border.
 - [ ] Split pane with the same note twice (one in Live Preview, one in Reading view): each pane has its own header; editing a field in one updates the other.
 - [ ] Open `Maps/Empty Map.md` and a character with only `type`: empty fields show their placeholders.
@@ -29,12 +29,12 @@ Run on `test/vault` in Obsidian (`npm run dev`, reload the plugin). Notes: `Char
 ## Fields (each edit lands in the file as one key)
 - [ ] Text (Title, Kind, Rarity): typing writes once after a pause or on leaving the field, not per keystroke; the cursor stays put when the write lands; Enter leaves the field; Escape restores the saved text; clearing and leaving removes the key.
 - [ ] Choice (Status): its menu has the current value checked and no empty item; choosing another writes the value; Clear (hover) removes the key and the placeholder returns.
-- [ ] Image fields without a value show a small tinted frame in the image's place (beside the title for portrait and emblem, a slim strip for banners) with the renderer icon; hover shows "Add …", click opens the image suggester in place, Esc cancels.
+- [ ] Image fields without a value show a small tinted frame in the image's place (beside the title for portrait and emblem) with the renderer icon; hover shows "Add …", click opens the image suggester in place, Esc cancels.
 - [ ] Link chips and Add pills have equal left and right padding, and no text clips, with the Saga theme (IBM Plex Sans) and without it.
 - [ ] Link (Location, Region, Leader, Base, Holder, Owner, Origin): the value shows as a chip with the linked note's renderer icon; click opens the note, Cmd/Ctrl-click opens a new tab, hovering with the modifier shows the page preview; the pencil (on hover) edits in place, Esc cancels, the x clears; the suggester lists notes; picking writes `[[Name]]`; clearing and Enter removes the key; an unresolved name is styled as an unresolved link.
 - [ ] Press Enter on a highlighted suggestion in a Link or Links input: the picked note is written, not the half-typed text.
 - [ ] Links (Allies, Rivals): chips open notes like links; the input adds from the suggester or typed text, a duplicate is ignored; the x removes a chip.
-- [ ] Image (Portrait, Emblem, Image): the preview shows the vault image; hovering the frame reveals the input (always shown when empty); the suggester lists only images; picking writes `[[file.png]]`; the trash button removes the key; a name that is not in the vault shows "was not found in the vault".
+- [ ] Image (Portrait, Emblem): the preview shows the vault image; hovering the frame reveals the input (always shown when empty); the suggester lists only images; picking writes `[[file.png]]`; the trash button removes the key; a name that is not in the vault shows "was not found in the vault".
 - [ ] A value that fails the schema (`location: Waterdeep` unquoted): the raw value, the issue and a Convert button show; Convert writes `"[[Waterdeep]]"`.
 - [ ] Title: click the name, type, Enter renames the note and links to it update; Escape cancels; `/` or an existing name is refused with a message.
 - [ ] Renamed keys (`keys: { portrait: avatar }`): the Portrait field reads and writes `avatar`.

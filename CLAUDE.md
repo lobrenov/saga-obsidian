@@ -1,6 +1,6 @@
 # Saga for Obsidian
 
-An Obsidian plugin (id `saga`, desktop and mobile, Obsidian 1.10.2+) for world-building: a **Saga map** Bases view that draws the base's notes' `map-pins` on a map note's image, a **note header** that replaces the inline title and properties of notes whose `type` maps to a renderer, optional icons and character titles on wikilinks, and optional file explorer icons. Plans are in `docs/plans/`.
+An Obsidian plugin (id `saga`, desktop and mobile, Obsidian 1.10.2+) for world-building: a **Saga map** Bases view that draws the base's notes' `map-pins` on a map note's image, a **note header** that replaces the inline title and properties of notes whose `type` maps to a renderer, **banners** across the top of any note, optional icons and character titles on wikilinks, and optional file explorer icons. Plans are in `docs/plans/`.
 
 ## Scripts
 - `npm run dev` esbuild watch; writes `main.js`, `styles.css`, `manifest.json` into `test/vault/.obsidian/plugins/saga/`
@@ -15,6 +15,7 @@ An Obsidian plugin (id `saga`, desktop and mobile, Obsidian 1.10.2+) for world-b
 - `src/obsidian/vault.ts` the adapter: frontmatter reads, link resolution, text-preserving writes (`setField`, `updateField`, `updatePins`), the `.saga/renderers.yaml` config store (`docs/adapter.md`)
 - `src/map` the Saga map Bases view (`docs/map.md`)
 - `src/header` the note header (`docs/header.md`); every Obsidian DOM selector is in `src/header/dom.ts`
+- `src/banner` note banners (`docs/banner.md`); every banner DOM selector is in `src/banner/dom.ts`
 - `src/links` icons and character titles on wikilinks in note text (`docs/links.md`)
 - `src/explorer` icons in the file explorer (`docs/explorer.md`); every explorer DOM selector is in `src/explorer/dom.ts`
 - `src/settings` the renderer settings tab (`docs/settings.md`)
