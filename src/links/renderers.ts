@@ -9,8 +9,8 @@ import { parseMapPins } from '../shared/schemas/pins'
 /** What a link shows of the note it resolves to. */
 export interface LinkTarget {
   renderer: RendererId
-  /** The note's pin look: its first pin's own keys over the renderer's. */
-  look: PinLook
+  /** The note's pin look on each map it has a pin on, by map path: its first pin there, its own keys over the renderer's. */
+  pins: Record<string, PinLook>
   /** A character's title field, trimmed; null for other notes or a blank title. */
   title: string | null
 }
@@ -29,9 +29,10 @@ export interface LinkMarks {
 
 export const NO_MARKS: LinkMarks = { icon: null, title: null }
 
-/** The renderer's icon, or the pin look's icon and colour. */
-export function lookIcon({ renderer, look }: LinkTarget, iconLook: LinkIconLook): LinkIcon {
-  return iconLook === 'pin' ? { renderer, icon: look.icon, color: look.color } : { renderer, icon: rendererDefs[renderer].icon, color: null }
+/** The icon and colour of the note's pin on the `iconLook` map, else the renderer's icon. */
+export function lookIcon({ renderer, pins }: LinkTarget, iconLook: LinkIconLook): LinkIcon {
+  const look = iconLook === 'renderer' ? undefined : pins[iconLook]
+  return look ? { renderer, icon: look.icon, color: look.color } : { renderer, icon: rendererDefs[renderer].icon, color: null }
 }
 
 /** The icon and title a link shows under `prefs`. */
@@ -54,11 +55,15 @@ export function createLinkRenderers(app: App, config: ConfigStore): LinkRenderer
   const targetOf = (file: TFile): LinkTarget => {
     const frontmatter = frontmatterOf(app, file)
     const { renderer } = config.rendererOf(frontmatter)
-    const pin = parseMapPins(frontmatter['map-pins']).entries.find((entry) => entry.pin)?.pin
     const defaults = config.pinLookOf(renderer)
+    const pins: Record<string, PinLook> = {}
+    for (const { pin } of parseMapPins(frontmatter['map-pins']).entries) {
+      const map = pin && resolveLink(app, pin.map, file.path)
+      if (map && !(map.path in pins)) pins[map.path] = resolveLook(pin, defaults)
+    }
     const raw = renderer === 'character' ? frontmatter[config.state().config.renderers.character?.keys.title ?? 'title'] : undefined
     const title = typeof raw === 'string' && raw.trim() ? raw.trim() : null
-    return { renderer, look: pin ? resolveLook(pin, defaults) : defaults, title }
+    return { renderer, pins, title }
   }
   return {
     of(target, fromPath) {

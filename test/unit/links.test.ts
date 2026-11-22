@@ -7,7 +7,7 @@ import { wikilinksIn } from '../../src/links/syntax'
 import { createPrefsStore, type Prefs } from '../../src/obsidian/prefs'
 import { CONFIG_PATH, createConfigStore } from '../../src/obsidian/vault'
 import type { Plugin } from 'obsidian'
-import { FakeApp } from '../fakes/obsidian'
+import { FakeApp, Plugin as FakePlugin } from '../fakes/obsidian'
 
 /** Tokens named as Obsidian's Markdown mode names them, for `[[` / `![[`, the inner text, `]]`, and `[^`. */
 const classes = ['formatting', 'formatting-link', 'formatting-link-start', 'formatting-link-end', 'formatting-embed', 'hmd-internal-link']
@@ -54,15 +54,17 @@ describe('createLinkRenderers', () => {
     app.addFile('Places/Docks.md', '---\ntype: place\nmap-pins:\n  - { map: "[[Coast]]", x: 1, y: 2, color: plum, icon: anchor }\n  - { map: "[[Other]]", x: 1, y: 2, color: moss }\n---\n')
     app.addFile('Places/Camp.md', '---\ntype: place\nmap-pins:\n  - { map: "[[Coast]]", x: 1, y: 2, style: camp }\n---\n')
     app.addFile('Notes/Plain.md', 'text')
+    app.addFile('Maps/Coast.md', '---\ntype: map\n---\n')
+    app.addFile('Maps/Other.md', '---\ntype: map\n---\n')
     const config = await createConfigStore(app.asApp(), app.owner())
     return { app, ada, renderers: createLinkRenderers(app.asApp(), config) }
   }
 
   it('gives the linked note’s renderer, look and character title, null for documents and unresolved links', async () => {
     const { renderers } = await setup()
-    expect(renderers.of('Ada', 'Notes/Plain.md')).toEqual({ renderer: 'character', look: { shape: 'pin', color: 'crimson', icon: 'user' }, title: 'Mathematician' })
+    expect(renderers.of('Ada', 'Notes/Plain.md')).toEqual({ renderer: 'character', pins: {}, title: 'Mathematician' })
     expect(renderers.of('Bob', 'Notes/Plain.md')?.title).toBeNull()
-    expect(renderers.of('Waterdeep', 'Notes/Plain.md')).toEqual({ renderer: 'location', look: { shape: 'pin', color: 'sea', icon: 'castle' }, title: null })
+    expect(renderers.of('Waterdeep', 'Notes/Plain.md')).toEqual({ renderer: 'location', pins: {}, title: null })
     expect(renderers.of('Plain', 'Notes/Plain.md')).toBeNull()
     expect(renderers.of('Nowhere', 'Notes/Plain.md')).toBeNull()
   })
@@ -70,13 +72,18 @@ describe('createLinkRenderers', () => {
   it('gives a file’s target, documents included', async () => {
     const { app, ada, renderers } = await setup()
     expect(renderers.ofFile(ada)).toEqual(renderers.of('Ada', 'Notes/Plain.md'))
-    expect(renderers.ofFile(app.asApp().vault.getFileByPath('Notes/Plain.md')!)).toEqual({ renderer: 'document', look: { shape: 'pin', color: 'umber', icon: 'file-text' }, title: null })
+    expect(renderers.ofFile(app.asApp().vault.getFileByPath('Notes/Plain.md')!)).toEqual({ renderer: 'document', pins: {}, title: null })
   })
 
-  it('takes the look from the note’s first pin over the renderer’s', async () => {
-    const { renderers } = await setup()
-    expect(renderers.of('Docks', 'Notes/Plain.md')?.look).toEqual({ shape: 'pin', color: 'plum', icon: 'anchor' })
-    expect(renderers.of('Camp', 'Notes/Plain.md')?.look).toEqual({ shape: 'pin', color: 'sea', icon: 'tent' })
+  it('gives the look of the note’s first pin on each map it resolves to, its own keys over the renderer’s', async () => {
+    const { app, renderers } = await setup()
+    expect(renderers.of('Docks', 'Notes/Plain.md')?.pins).toEqual({
+      'Maps/Coast.md': { shape: 'pin', color: 'plum', icon: 'anchor' },
+      'Maps/Other.md': { shape: 'pin', color: 'moss', icon: 'castle' }
+    })
+    expect(renderers.of('Camp', 'Notes/Plain.md')?.pins).toEqual({ 'Maps/Coast.md': { shape: 'pin', color: 'sea', icon: 'tent' } })
+    app.addFile('Places/Camp.md', '---\ntype: place\nmap-pins:\n  - { map: "[[Nowhere]]", x: 1, y: 2 }\n  - { map: "[[Coast]]", x: 1, y: 2, icon: tent }\n  - { map: "[[Coast]]", x: 3, y: 4, icon: skull }\n---\n')
+    expect(renderers.of('Camp', 'Notes/Plain.md')?.pins).toEqual({ 'Maps/Coast.md': { shape: 'pin', color: 'sea', icon: 'tent' } })
   })
 
   it('reads the title from a remapped key', async () => {
@@ -104,12 +111,13 @@ describe('createLinkRenderers', () => {
 })
 
 describe('linkMarks', () => {
-  const target: LinkTarget = { renderer: 'character', look: { shape: 'pin', color: 'plum', icon: 'anchor' }, title: 'Mathematician' }
+  const target: LinkTarget = { renderer: 'character', pins: { 'Maps/Coast.md': { shape: 'pin', color: 'plum', icon: 'anchor' } }, title: 'Mathematician' }
   const prefs: Prefs = { pinLabels: 'always', linkIcons: true, linkIconLook: 'renderer', linkTitles: true, fileIcons: false, fileIconsUntyped: true }
 
-  it('gives the renderer’s icon, or the pin look’s icon and colour', () => {
+  it('gives the renderer’s icon, or the icon and colour of the note’s pin on the chosen map, else the renderer’s', () => {
     expect(linkMarks(target, prefs)).toEqual({ icon: { renderer: 'character', icon: 'user', color: null }, title: 'Mathematician' })
-    expect(linkMarks(target, { ...prefs, linkIconLook: 'pin' }).icon).toEqual({ renderer: 'character', icon: 'anchor', color: 'plum' })
+    expect(linkMarks(target, { ...prefs, linkIconLook: 'Maps/Coast.md' }).icon).toEqual({ renderer: 'character', icon: 'anchor', color: 'plum' })
+    expect(linkMarks(target, { ...prefs, linkIconLook: 'Maps/Other.md' }).icon).toEqual({ renderer: 'character', icon: 'user', color: null })
   })
 
   it('leaves out what its pref turns off', () => {
@@ -120,12 +128,28 @@ describe('linkMarks', () => {
 })
 
 describe('createPrefsStore', () => {
-  const store = (saved: unknown) => createPrefsStore({ loadData: () => Promise.resolve(saved), saveData: () => Promise.resolve() } as unknown as Plugin)
+  const store = (saved: unknown, app = new FakeApp()) =>
+    createPrefsStore(Object.assign(new FakePlugin(app.asApp(), { id: 'saga' }), { loadData: () => Promise.resolve(saved), saveData: () => Promise.resolve() }) as unknown as Plugin)
 
   it('defaults the link and file icon prefs and keeps saved ones', async () => {
     expect((await store(null)).get()).toEqual({ pinLabels: 'always', linkIcons: false, linkIconLook: 'renderer', linkTitles: false, fileIcons: false, fileIconsUntyped: true })
     expect((await store({ fileIcons: true, fileIconsUntyped: false })).get()).toMatchObject({ fileIcons: true, fileIconsUntyped: false })
     expect((await store({ linkIcons: true })).get()).toMatchObject({ linkIcons: true, linkIconLook: 'renderer', linkTitles: false })
-    expect((await store({ linkIconLook: 'pin', linkTitles: true })).get()).toMatchObject({ linkIconLook: 'pin', linkTitles: true })
+    expect((await store({ linkIconLook: 'Maps/Coast.md', linkTitles: true })).get()).toMatchObject({ linkIconLook: 'Maps/Coast.md', linkTitles: true })
+    expect((await store({ linkIconLook: 'pin' })).get().linkIconLook).toBe('renderer')
+  })
+
+  it('follows a rename of the icon look’s map, or of a folder holding it', async () => {
+    const app = new FakeApp()
+    const prefs = await store({ linkIconLook: 'Maps/Coast.md' }, app)
+    app.vault.trigger('rename', { path: 'Maps/Other.md' }, 'Maps/Elsewhere.md')
+    expect(prefs.get().linkIconLook).toBe('Maps/Coast.md')
+    app.vault.trigger('rename', { path: 'Maps/Shore.md' }, 'Maps/Coast.md')
+    expect(prefs.get().linkIconLook).toBe('Maps/Shore.md')
+    app.vault.trigger('rename', { path: 'Atlas' }, 'Maps')
+    expect(prefs.get().linkIconLook).toBe('Atlas/Shore.md')
+    app.vault.trigger('rename', { path: 'Atlas2/Shore.md' }, 'Atlas/Shore.md')
+    app.vault.trigger('rename', { path: 'Atl' }, 'Atlas2/Shor')
+    expect(prefs.get().linkIconLook).toBe('Atlas2/Shore.md')
   })
 })

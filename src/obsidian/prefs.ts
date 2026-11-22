@@ -1,14 +1,15 @@
 import type { Plugin } from 'obsidian'
 
 export type PinLabels = 'always' | 'hover'
-export type LinkIconLook = 'renderer' | 'pin'
+/** `renderer`, or a map note's path. */
+export type LinkIconLook = 'renderer' | (string & {})
 
 /** Obsidian-only preferences, stored in the plugin's `data.json` (not in `.saga/renderers.yaml`). */
 export interface Prefs {
   pinLabels: PinLabels
   /** Wikilinks in note text show the linked note's renderer icon. */
   linkIcons: boolean
-  /** Link icons show the renderer's icon and colour, or the linked note's pin look. */
+  /** Link icons show the renderer's icon and colour, or the note's pin look on the map at this path (the renderer's when it has no pin there). */
   linkIconLook: LinkIconLook
   /** Wikilinks to characters show the character's title after the link. */
   linkTitles: boolean
@@ -30,19 +31,28 @@ export async function createPrefsStore(plugin: Plugin): Promise<PrefsStore> {
   let prefs: Prefs = {
     pinLabels: saved?.pinLabels === 'hover' ? 'hover' : 'always',
     linkIcons: saved?.linkIcons === true,
-    linkIconLook: saved?.linkIconLook === 'pin' ? 'pin' : 'renderer',
+    linkIconLook: typeof saved?.linkIconLook === 'string' && saved.linkIconLook.endsWith('.md') ? saved.linkIconLook : 'renderer',
     linkTitles: saved?.linkTitles === true,
     fileIcons: saved?.fileIcons === true,
     fileIconsUntyped: saved?.fileIconsUntyped !== false
   }
   const listeners = new Set<(prefs: Prefs) => void>()
+  const set = async (patch: Partial<Prefs>): Promise<void> => {
+    prefs = { ...prefs, ...patch }
+    await plugin.saveData(prefs)
+    listeners.forEach((callback) => callback(prefs))
+  }
+  // The icon look's map follows a rename of the map or a folder holding it.
+  plugin.registerEvent(
+    plugin.app.vault.on('rename', (file, oldPath) => {
+      const look = prefs.linkIconLook
+      if (look === oldPath) void set({ linkIconLook: file.path })
+      else if (look.startsWith(`${oldPath}/`)) void set({ linkIconLook: file.path + look.slice(oldPath.length) })
+    })
+  )
   return {
     get: () => prefs,
-    async set(patch) {
-      prefs = { ...prefs, ...patch }
-      await plugin.saveData(prefs)
-      listeners.forEach((callback) => callback(prefs))
-    },
+    set,
     subscribe(callback) {
       listeners.add(callback)
       return () => listeners.delete(callback)

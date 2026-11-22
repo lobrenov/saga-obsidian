@@ -1,6 +1,6 @@
 import { Notice, PluginSettingTab, setIcon, Setting, type App, type Plugin } from 'obsidian'
-import type { LinkIconLook, PinLabels, PrefsStore } from '../obsidian/prefs'
-import type { ConfigStore } from '../obsidian/vault'
+import type { PinLabels, PrefsStore } from '../obsidian/prefs'
+import { frontmatterOf, type ConfigStore } from '../obsidian/vault'
 import { PIN_COLORS, PIN_DEFAULTS, SHAPES, type ColorId, type PinLook, type ShapeId } from '../shared/pins/look'
 import { rendererDefs } from '../shared/renderers/definitions'
 import type { Fields } from '../shared/renderers/fields'
@@ -103,13 +103,18 @@ class SettingsTab extends PluginSettingTab {
       )
     const iconLook = new Setting(containerEl)
       .setName('Icon look')
-      .setDesc('For wikilink and file icons: the renderer’s icon and colour, or the icon and colour of the note’s first map pin.')
-      .addDropdown((dropdown) =>
+      .setDesc('For wikilink and file icons: always the renderer’s icon and colour, or the icon and colour of the note’s pin on a map, falling back to the renderer’s.')
+      .addDropdown((dropdown) => {
+        const maps = this.app.vault
+          .getMarkdownFiles()
+          .filter((file) => this.config.rendererOf(frontmatterOf(this.app, file)).renderer === 'map')
+          .sort((a, b) => a.basename.localeCompare(b.basename))
+        const look = this.prefs.get().linkIconLook
         dropdown
-          .addOptions({ renderer: 'Renderer', pin: 'Pin' })
-          .setValue(this.prefs.get().linkIconLook)
-          .onChange((value) => void this.prefs.set({ linkIconLook: value as LinkIconLook }))
-      )
+          .addOptions({ renderer: 'Renderer', ...Object.fromEntries(maps.map((map) => [map.path, map.basename])) })
+          .setValue(maps.some((map) => map.path === look) ? look : 'renderer')
+          .onChange((value) => void this.prefs.set({ linkIconLook: value }))
+      })
     iconLook.settingEl.toggle(this.prefs.get().linkIcons || this.prefs.get().fileIcons)
     new Setting(containerEl)
       .setName('Render character titles with wikilinks?')

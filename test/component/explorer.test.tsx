@@ -18,6 +18,7 @@ async function setup(initial: Partial<Prefs> = {}) {
   app.addFile('Places/Docks.md', '---\ntype: place\nmap-pins:\n  - { map: "[[Coast]]", x: 1, y: 2, color: plum, icon: anchor }\n---\n')
   app.addFile('Notes/Plain.md', 'text')
   app.addFile('Attachments/map.png')
+  app.addFile('Maps/Coast.md', '---\ntype: map\n---\n')
   const explorer = document.body.appendChild(document.createElement('div'))
   explorer.innerHTML = folder('Characters', file('Characters/Ada.md')) + folder('Places', file('Places/Docks.md')) + folder('Notes', file('Notes/Plain.md')) + file('Attachments/map.png')
   app.workspace.getLeavesOfType = () => [{ view: { containerEl: explorer } }]
@@ -50,10 +51,11 @@ test('folders get a folder icon, typed notes their renderer icon and untyped not
   expect(iconOf('Attachments/map.png')).toBeNull()
 })
 
-test('the Pin look shows the note’s first pin icon and colour', async () => {
-  const { iconOf } = await setup({ linkIconLook: 'pin' })
+test('a map icon look shows the note’s pin icon and colour on that map, else the renderer’s', async () => {
+  const { iconOf } = await setup({ linkIconLook: 'Maps/Coast.md' })
   expect(iconOf('Places/Docks.md')?.dataset).toMatchObject({ icon: 'anchor', color: 'plum' })
-  expect(iconOf('Characters/Ada.md')?.dataset).toMatchObject({ icon: 'user', color: 'crimson' })
+  expect(iconOf('Characters/Ada.md')?.dataset).toMatchObject({ icon: 'user', renderer: 'character' })
+  expect(iconOf('Characters/Ada.md')?.dataset.color).toBeUndefined()
   expect(iconOf('Characters')?.dataset.icon).toBe('folder')
 })
 
@@ -65,7 +67,7 @@ test('untyped notes get no icon with fileIconsUntyped off', async () => {
 
 test('pref changes redraw without duplicating icons; turning it off removes them', async () => {
   const { explorer, store, iconOf } = await setup()
-  await store.set({ linkIconLook: 'pin' })
+  await store.set({ linkIconLook: 'Maps/Coast.md' })
   expect(iconOf('Places/Docks.md')?.dataset.icon).toBe('anchor')
   await store.set({ fileIconsUntyped: false })
   expect(iconOf('Notes/Plain.md')).toBeNull()
