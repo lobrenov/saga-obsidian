@@ -182,3 +182,36 @@ test('touches on the map do not reach Obsidian: touchstart and touchmove stop at
     document.removeEventListener('touchmove', listen)
   }
 })
+
+/** The lost capture a touch's implicit capture on the element under it reports once the stage or a pin captures the pointer. */
+const loseCapture = (target: Element): void => void target.dispatchEvent(new PointerEvent('lostpointercapture', { bubbles: true, pointerId: 1, pointerType: 'touch' }))
+
+test('one finger keeps panning after the image under it loses its implicit capture', async () => {
+  await renderMap()
+  await vi.waitFor(() => expect(markers()).toHaveLength(3))
+  const image = document.querySelector('img[data-map-image]')!
+  const c = centre(stage()!)
+  const before = imageBox()
+  touch(image, 'pointerdown', 1, c.x, c.y)
+  touch(image, 'pointermove', 1, c.x + 20, c.y)
+  loseCapture(image)
+  touch(stage()!, 'pointermove', 1, c.x + 60, c.y + 30)
+  touch(stage()!, 'pointerup', 1, c.x + 60, c.y + 30)
+  await frame()
+  expect(imageBox().left - before.left).toBeCloseTo(60, 0)
+  expect(imageBox().top - before.top).toBeCloseTo(30, 0)
+})
+
+test('one finger keeps dragging a pin after the shape under it loses its implicit capture', async () => {
+  const { fake } = await renderMap()
+  await vi.waitFor(() => expect(markers()).toHaveLength(3))
+  const pin = marker('The Gull King')
+  const shape = pin.querySelector('svg')!
+  const at = centre(pin)
+  touch(shape, 'pointerdown', 1, at.x, at.y)
+  touch(shape, 'pointermove', 1, at.x + 30, at.y + 20)
+  loseCapture(shape)
+  touch(pin, 'pointermove', 1, at.x + 60, at.y + 40)
+  touch(pin, 'pointerup', 1, at.x + 60, at.y + 40)
+  await vi.waitFor(() => expect(fake.writes).toEqual(['People/The Gull King.md']))
+})

@@ -181,8 +181,9 @@ const PinButton = memo(function PinButton({ store, pin, selected, onSelect, onMo
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={cancel}
-      onLostPointerCapture={() => {
-        if (drag.current?.moved) cancel()
+      onLostPointerCapture={(event) => {
+        // Only the pin's own capture counts: a touch's implicit capture on the shape under it is lost when the pin captures.
+        if (event.target === event.currentTarget && drag.current?.moved) cancel()
       }}
       dangerouslySetInnerHTML={{ __html: html }}
     />

@@ -99,8 +99,9 @@ export function MapCanvas({ store, imageUrl, title, onMapClick, onMapMenu, stage
     if (drag.current.moved && event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
     drag.current = null
   }
+  // Only the stage's own capture counts: a touch's implicit capture on the element under it is lost when the stage captures.
   const onLostPointerCapture = (event: PointerEvent<HTMLDivElement>): void => {
-    if (drag.current?.id === event.pointerId) drag.current = null
+    if (event.target === event.currentTarget && drag.current?.id === event.pointerId) drag.current = null
   }
   // Both containers clip, but focus can still scroll them; the viewport is the only thing that moves the map.
   const unscroll = (event: UIEvent<HTMLDivElement>): void => {
