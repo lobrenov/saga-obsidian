@@ -3,6 +3,7 @@
 export const EXPLORER_VIEW = 'file-explorer'
 const TITLE = '.nav-file-title[data-path], .nav-folder-title[data-path]'
 const CONTENT = ':scope > .tree-item-inner'
+const COLLAPSE = ':scope > .collapse-icon'
 const ICON_CLASS = 'saga-file-icon'
 
 /** The file and folder titles in `root`, `root` included. */
@@ -15,14 +16,16 @@ export const isFolder = (title: Element): boolean => title.classList.contains('n
 
 export const pathOf = (title: Element): string => title.getAttribute('data-path') ?? ''
 
-/** Puts `icon` before the title's name, replacing its icon unless equal; null removes it. */
+/** Puts `icon` in a folder's collapse icon or before a file's name, replacing its icon unless equal; null removes it. */
 export function setTitleIcon(title: HTMLElement, icon: HTMLElement | null): void {
-  const current = title.querySelector(`:scope > .${ICON_CLASS}`)
+  const slot = isFolder(title) ? title.querySelector<HTMLElement>(COLLAPSE) : title
+  if (!slot) return
+  const current = slot.querySelector(`:scope > .${ICON_CLASS}`)
   if (!icon) return current?.remove()
   icon.classList.add(ICON_CLASS)
   if (current?.isEqualNode(icon)) return
   if (current) current.replaceWith(icon)
-  else title.insertBefore(icon, title.querySelector(CONTENT))
+  else slot.insertBefore(icon, slot === title ? title.querySelector(CONTENT) : null)
 }
 
 /** Removes every file icon in `root`. */

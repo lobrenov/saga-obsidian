@@ -6,7 +6,14 @@ import type { ConfigStore } from '../obsidian/vault'
 import { EXPLORER_VIEW, isFolder, pathOf, removeIcons, setTitleIcon, titlesIn } from './dom'
 import './explorer.css'
 
-/** While the `fileIcons` pref is on, the file explorer shows a folder icon before each folder and the note's icon (`linkIconLook`) before each Markdown note; untyped notes show the `document` icon while `fileIconsUntyped` is on. */
+/** The closed and open folder icons; CSS shows the one matching the folder's state. */
+function folderIcon(doc: Document): HTMLElement {
+  const el = doc.createElement('span')
+  for (const icon of ['folder', 'folder-open']) el.appendChild(linkIcon(doc, { renderer: 'document', icon, color: null })).classList.add(`saga-${icon}`)
+  return el
+}
+
+/** While the `fileIcons` pref is on, the file explorer shows a folder icon in place of each folder's arrow and the note's icon (`linkIconLook`) before each Markdown note; untyped notes show the `document` icon while `fileIconsUntyped` is on. */
 export function registerFileIcons(plugin: Plugin, config: ConfigStore, prefs: PrefsStore): void {
   const { app } = plugin
   const renderers = createLinkRenderers(app, config)
@@ -14,7 +21,7 @@ export function registerFileIcons(plugin: Plugin, config: ConfigStore, prefs: Pr
 
   const iconOf = (title: HTMLElement, current: Prefs): HTMLElement | null => {
     const doc = title.ownerDocument
-    if (isFolder(title)) return linkIcon(doc, { renderer: 'document', icon: 'folder', color: null })
+    if (isFolder(title)) return folderIcon(doc)
     const file = app.vault.getFileByPath(pathOf(title))
     if (file?.extension !== 'md') return null
     const target = renderers.ofFile(file)

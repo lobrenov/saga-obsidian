@@ -1,6 +1,6 @@
 {
   "name": "saga",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "private": true,
   "description": "Saga for Obsidian: a map Bases view and note renderers over notes' frontmatter",
   "type": "module",

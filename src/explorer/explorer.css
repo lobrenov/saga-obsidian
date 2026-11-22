@@ -1,9 +1,37 @@
 .saga-file-icon {
+  display: flex;
+  align-items: center;
   flex-shrink: 0;
   margin-inline-end: 0.35em;
+}
+
+.saga-file-icon::before {
+  content: '\200b';
 }
 
 .saga-file-icon .svg-icon {
   width: var(--icon-s);
   height: var(--icon-s);
+}
+
+.collapse-icon:has(> .saga-file-icon) > .svg-icon,
+.collapse-icon.is-collapsed .saga-folder-open,
+.collapse-icon:not(.is-collapsed) .saga-folder {
+  display: none;
+}
+
+.collapse-icon > .saga-file-icon {
+  margin: 0;
+}
+
+.collapse-icon > .saga-file-icon .saga-link-icon {
+  margin: 0;
+}
+
+.collapse-icon .saga-file-icon svg.svg-icon {
+  width: var(--icon-s);
+  height: var(--icon-s);
+  stroke-width: var(--icon-s-stroke-width);
+  color: inherit;
+  transform: none;
 }
