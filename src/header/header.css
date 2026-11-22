@@ -77,8 +77,10 @@
 
 /* Bar: renderer label, banner control, type selector, Properties toggle. */
 .saga-header-bar {
+  position: relative;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--size-4-3);
   padding: var(--size-4-2) var(--saga-header-pad);
   background: var(--saga-header-tint);
@@ -100,23 +102,19 @@
   color: var(--saga-header-accent);
 }
 
-.saga-header-banner-control {
-  position: relative;
-}
-
+/* The picker opens under the bar, inside the card's width; the error is a row of its own at the bar's end. */
 .saga-header-banner-control .saga-banner-popover {
   position: absolute;
   top: 100%;
-  left: 0;
+  left: var(--saga-header-pad);
   z-index: 3;
+  max-width: calc(100% - 2 * var(--saga-header-pad));
   margin-top: var(--size-2-2);
 }
 
-.saga-header-banner-control .saga-banner-error {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  white-space: nowrap;
+.saga-header-bar > .saga-banner-error {
+  order: 1;
+  flex-basis: 100%;
 }
 
 .saga-header-type {

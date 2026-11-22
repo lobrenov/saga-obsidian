@@ -1,14 +1,13 @@
-import { useId, useState } from 'react'
+import { useId } from 'react'
 import type { TFile } from 'obsidian'
-import { BannerPicker } from '../banner/BannerPicker'
-import { removeBanner, useWrite } from '../banner/useWrite'
+import { useBannerPicker } from '../banner/useBannerPicker'
+import { removeBanner } from '../banner/useWrite'
 import { setField } from '../obsidian/vault'
 import { bannerOf, type Banner } from '../shared/renderers/banner'
 import type { RendererDef } from '../shared/renderers/define'
 import { rendererDefs } from '../shared/renderers/definitions'
 import type { RendererResolution } from '../shared/renderers/resolve'
 import { allTypes, typesOf } from '../shared/renderers/resolve'
-import { toNoteValue } from '../shared/renderers/values'
 import type { Config } from '../shared/schemas/config'
 import { MenuSelect } from '../ui/MenuSelect'
 import { HeaderCtx, useHeader, type HeaderEnv } from './env'
@@ -56,45 +55,36 @@ function TypeField({ renderer, current }: { renderer: HeaderRendererId; current:
   )
 }
 
-/** The bar's banner control: Add banner opens the image picker; with a banner it opens a menu to change, reposition or remove it. */
+/** The bar's banner control: Add banner opens the image picker; with a banner it opens a menu to change, reposition or remove it. The write error is a row of its own under the bar's controls. */
 function BannerControl({ banner, label, onReposition }: { banner: Banner; label: string; onReposition: () => void }) {
   const { env } = useHeader()
-  const { write, error } = useWrite()
-  const [picking, setPicking] = useState(false)
+  const { write, picking, open, trigger, popover, alert } = useBannerPicker(banner.key)
   return (
-    <span className="saga-header-banner-control">
-      <button
-        type="button"
-        className="saga-header-banner-button"
-        aria-haspopup={banner.link ? 'menu' : undefined}
-        onClick={(event) => {
-          if (!banner.link) return setPicking(true)
-          const box = event.currentTarget.getBoundingClientRect()
-          env.showMenu({ x: box.left, y: box.bottom }, [
-            { title: 'Change banner…', icon: 'image', onClick: () => setPicking(true) },
-            { title: 'Reposition banner', icon: 'move-vertical', onClick: onReposition },
-            ...(banner.removable ? [{ title: 'Remove banner', icon: 'trash-2', warning: true, onClick: () => void removeBanner(write, banner.key) }] : [])
-          ])
-        }}
-      >
-        <Icon name="image" />
-        {banner.link ? label : 'Add banner'}
-      </button>
-      {picking ? (
-        <BannerPicker
-          onClose={() => setPicking(false)}
-          onPick={(target) => {
-            setPicking(false)
-            void write(banner.key, toNoteValue({ target, embed: false }))
+    <>
+      <span className="saga-header-banner-control">
+        <button
+          ref={trigger}
+          type="button"
+          className="saga-header-banner-button"
+          aria-haspopup={banner.link ? 'menu' : undefined}
+          aria-expanded={picking}
+          onClick={(event) => {
+            if (!banner.link) return open()
+            const box = event.currentTarget.getBoundingClientRect()
+            env.showMenu({ x: box.left, y: box.bottom }, [
+              { title: 'Change banner…', icon: 'image', onClick: open },
+              { title: 'Reposition banner', icon: 'move-vertical', onClick: onReposition },
+              ...(banner.removable ? [{ title: 'Remove banner', icon: 'trash-2', warning: true, onClick: () => void removeBanner(write, banner.key) }] : [])
+            ])
           }}
-        />
-      ) : null}
-      {error ? (
-        <p role="alert" className="saga-banner-error">
-          {error}
-        </p>
-      ) : null}
-    </span>
+        >
+          <Icon name="image" />
+          {banner.link ? label : 'Add banner'}
+        </button>
+        {popover}
+      </span>
+      {alert}
+    </>
   )
 }
 

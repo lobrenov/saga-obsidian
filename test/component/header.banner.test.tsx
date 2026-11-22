@@ -127,3 +127,26 @@ test('a Location with an image has no image frame in its body', async () => {
   await vi.waitFor(() => expect(containerEl.querySelector('.saga-header')).not.toBeNull())
   expect(containerEl.querySelector('.saga-header-body .saga-header-frame, .saga-header-body img')).toBeNull()
 })
+
+test('the bar picker stays inside the card, the error wraps in the bar, and focus returns to the bar button', async () => {
+  const { containerEl, bar, suggesters, app } = await setup(PLAIN)
+  containerEl.style.width = '360px'
+  await vi.waitFor(() => expect(button(bar(), 'Add banner')).not.toBeNull())
+  const trigger = button(bar(), 'Add banner')!
+  trigger.click()
+  await vi.waitFor(() => expect(suggesters).toHaveLength(1))
+  expect(trigger.getAttribute('aria-expanded')).toBe('true')
+  const card = containerEl.querySelector('.saga-header')!.getBoundingClientRect()
+  const popover = containerEl.querySelector('.saga-banner-popover')!
+  expect(popover.getAttribute('role')).toBe('group')
+  const box = popover.getBoundingClientRect()
+  expect(box.left).toBeGreaterThanOrEqual(card.left)
+  expect(box.right).toBeLessThanOrEqual(card.right)
+  app.vault.process = () => Promise.reject(new Error('a long failure message '.repeat(8)))
+  suggesters[0]?.pick('coast.jpg')
+  await vi.waitFor(() => expect(containerEl.querySelector('.saga-header-bar > [role="alert"]')).not.toBeNull())
+  const alert = containerEl.querySelector('.saga-header-bar > [role="alert"]')!.getBoundingClientRect()
+  expect(alert.right).toBeLessThanOrEqual(card.right)
+  expect(alert.top).toBeGreaterThanOrEqual(trigger.getBoundingClientRect().bottom)
+  await vi.waitFor(() => expect(document.activeElement).toBe(trigger))
+})

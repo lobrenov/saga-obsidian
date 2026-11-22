@@ -7,11 +7,9 @@ const SIZER: Record<'live' | 'reading', string> = {
   live: '.cm-scroller > .cm-sizer',
   reading: '.markdown-preview-view > .markdown-preview-sizer'
 }
-const SCROLLER: Record<'live' | 'reading', string> = {
-  live: '.cm-scroller',
-  reading: '.markdown-preview-view'
-}
 const TITLE = '.inline-title'
+const LEAF = '.workspace-leaf-content'
+const VIEW_HEADER = '.view-header'
 
 /** Puts `host` before the view's sizer, in the scroller; false when the sizer is not in the DOM (yet). */
 export function placeBanner(containerEl: HTMLElement, host: HTMLElement, mode: 'live' | 'reading'): boolean {
@@ -35,15 +33,23 @@ export function markBanner(containerEl: HTMLElement, active: boolean): void {
   containerEl.classList.toggle(ACTIVE_CLASS, active)
 }
 
-/** Toggles the scrolled class on the view while its scroller is scrolled past `host`; returns the stop function, which clears the class. */
-export function watchScroll(containerEl: HTMLElement, host: HTMLElement, mode: 'live' | 'reading'): () => void {
+/** The leaf's content element around `el`; `el` itself when it is in none. */
+export function leafOf(el: Element): Element {
+  return el.closest(LEAF) ?? el
+}
+
+/** Toggles the scrolled class on the view while content of the scroller holding `host` would reach the view header (past the banner less its overlap and the header's height); returns the stop function, which clears the class. */
+export function watchScroll(containerEl: HTMLElement, host: HTMLElement): () => void {
   const update = (): void => {
-    const scroller = containerEl.querySelector(SCROLLER[mode])
-    containerEl.classList.toggle(SCROLLED_CLASS, scroller !== null && host.offsetHeight > 0 && scroller.scrollTop >= host.offsetHeight)
+    const scroller = host.parentElement
+    const overlap = Number.parseFloat(getComputedStyle(host).getPropertyValue('--saga-banner-overlap')) || 0
+    const header = containerEl.querySelector<HTMLElement>(VIEW_HEADER)?.offsetHeight ?? 0
+    const reach = Math.max(0, host.offsetHeight - overlap - header)
+    containerEl.classList.toggle(SCROLLED_CLASS, scroller !== null && host.offsetHeight > 0 && scroller.scrollTop >= reach)
   }
-  // Scroll events do not bubble; capturing at the view catches whichever scroller Obsidian currently has.
+  // Scroll events do not bubble; capturing at the view catches the scroller that holds the banner, not one of an embed.
   const onScroll = (event: Event): void => {
-    if (event.target instanceof Element && event.target.matches(SCROLLER[mode])) update()
+    if (event.target === host.parentElement) update()
   }
   containerEl.addEventListener('scroll', onScroll, true)
   update()

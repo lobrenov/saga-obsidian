@@ -23,17 +23,17 @@
   border-bottom-color: var(--background-modifier-border);
 }
 
-/* The banner sits behind the sizer's content; the sizer's padding leaves room for it and lets pointers through to the banner. */
-.saga-banner-active :is(.cm-scroller, .markdown-preview-view) {
+/* The banner sits behind the content of the scroller that holds it (not an embed's); the sizer beside it is padded to leave room and lets pointers through to the banner. */
+.saga-banner-active :is(.cm-scroller, .markdown-preview-view):has(> .saga-banner-host) {
   position: relative;
 }
-.saga-banner-active :is(.cm-scroller > .cm-sizer, .markdown-preview-view > .markdown-preview-sizer) {
+.saga-banner-active .saga-banner-host + :is(.cm-sizer, .markdown-preview-sizer) {
   position: relative;
   z-index: 1;
   padding-top: calc(var(--saga-banner-height) - var(--saga-banner-overlap));
   pointer-events: none;
 }
-.saga-banner-active :is(.cm-scroller > .cm-sizer, .markdown-preview-view > .markdown-preview-sizer) > * {
+.saga-banner-active .saga-banner-host + :is(.cm-sizer, .markdown-preview-sizer) > * {
   pointer-events: auto;
 }
 
@@ -58,7 +58,7 @@
   height: 100%;
 }
 
-/* The image fills the banner and fades into the note background over its lower half. */
+/* The image fills the banner and fades into the note background over its lower half; a scrim at the top keeps the view header readable over any image. */
 .saga-banner-image {
   position: absolute;
   inset: 0;
@@ -66,12 +66,41 @@
   background: var(--background-secondary);
   mask-image: linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%);
 }
+.saga-banner-image::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 56px;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--background-primary) 55%, transparent), transparent);
+  pointer-events: none;
+}
 .saga-banner-image img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
   user-select: none;
+}
+.saga-banner-image img[hidden] {
+  display: none;
+}
+.saga-banner-image:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: -2px;
+}
+
+.saga-banner-missing {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0 var(--size-4-4);
+  color: var(--text-muted);
+  text-align: center;
+  overflow-wrap: anywhere;
+  pointer-events: none;
 }
 
 .saga-banner[data-repositioning] .saga-banner-image {
@@ -86,14 +115,21 @@
   position: absolute;
   right: var(--size-4-4);
   bottom: calc(var(--saga-banner-overlap) + var(--size-4-3));
+  max-width: calc(100% - 2 * var(--size-4-4));
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: var(--size-2-2);
 }
+/* With a readable line length the controls sit at the right edge of the column. */
+.saga-banner-active .is-readable-line-width .saga-banner-actions {
+  right: max(var(--size-4-4), calc((100% - var(--file-line-width)) / 2 + var(--size-4-4)));
+}
 
 .saga-banner-controls {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   align-items: center;
   gap: var(--size-2-1);
   padding: var(--size-2-1);
@@ -101,14 +137,19 @@
   background: color-mix(in srgb, var(--background-primary) 88%, transparent);
   backdrop-filter: blur(6px);
   opacity: 0;
-  transition: opacity 120ms ease;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 120ms ease, visibility 120ms;
 }
 .saga-banner:hover .saga-banner-controls,
 .saga-banner:focus-within .saga-banner-controls,
 .saga-banner[data-tapped] .saga-banner-controls,
 .saga-banner[data-repositioning] .saga-banner-controls,
-.saga-banner[data-picking] .saga-banner-controls {
+.saga-banner[data-picking] .saga-banner-controls,
+.saga-banner[data-missing] .saga-banner-controls {
   opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .saga-banner .saga-banner-control {
@@ -122,6 +163,18 @@
 }
 .saga-banner .saga-banner-control.mod-warning:hover {
   color: var(--text-error);
+}
+.saga-banner .saga-banner-control:focus-visible,
+.saga-banner-add .saga-banner-add-button:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 1px;
+}
+@media (pointer: coarse) {
+  .saga-banner .saga-banner-control,
+  .saga-banner-add .saga-banner-add-button,
+  .saga-header .saga-header-banner-button {
+    min-height: 44px;
+  }
 }
 
 .saga-banner-hint {
@@ -142,6 +195,7 @@
 .saga-banner-error {
   margin: 0;
   color: var(--text-error);
+  overflow-wrap: anywhere;
 }
 
 /* "+ Add banner" under the inline title of a note without a renderer. */

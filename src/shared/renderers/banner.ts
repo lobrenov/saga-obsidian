@@ -14,11 +14,14 @@ export interface Banner {
   removable: boolean
 }
 
+/** A position limited to 0–100 and rounded to a whole percent. */
+export const clamp = (y: number): number => Math.round(Math.min(100, Math.max(0, y)))
+
 /** The note's banner: the renderer's banner image field (renamed by `keys`), else the `banner` key; `banner-y` clamped and rounded, 50 when missing. */
 export function bannerOf(def: RendererDef, keys: Readonly<Record<string, string>>, frontmatter: Readonly<Record<string, unknown>>): Banner {
   const key = def.banner ? (keys[def.banner] ?? def.fields[def.banner]?.key ?? def.banner) : BANNER_KEY
   const parsed = wikiLinkSchema.safeParse(frontmatter[key])
   const rawY = frontmatter[BANNER_Y_KEY]
-  const y = typeof rawY === 'number' && Number.isFinite(rawY) ? Math.round(Math.min(100, Math.max(0, rawY))) : 50
+  const y = typeof rawY === 'number' && Number.isFinite(rawY) ? clamp(rawY) : 50
   return { key, link: parsed.success ? parsed.data : null, y, removable: def.id !== 'map' }
 }

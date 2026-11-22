@@ -96,7 +96,7 @@ export function createBannerController(env: HeaderEnv, config: ConfigStore): Ban
     const mount: Mount = { containerEl, mode, kind, host, root: createRoot(host), stopWatching: () => undefined, stopScroll: () => undefined, repositioning: false, drawn, signature: '' }
     // The view re-creates its sizer on some mode and file changes; the host is placed again when it goes missing.
     mount.stopWatching = watchPlacement(containerEl, mode, () => place(mount))
-    if (kind === 'banner') mount.stopScroll = watchScroll(containerEl, host, mode)
+    if (kind === 'banner') mount.stopScroll = watchScroll(containerEl, host)
     mounts.set(key, mount)
     return mount
   }
