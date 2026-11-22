@@ -50,7 +50,7 @@ function useDraft(text: string) {
 }
 
 /** A text input that offers vault files and reports the picked file's link text. */
-function FileInput({ kind, onPick, ...props }: { kind: 'note' | 'image'; onPick: (target: string) => void } & React.InputHTMLAttributes<HTMLInputElement>) {
+export function FileInput({ kind, onPick, ...props }: { kind: 'note' | 'image'; onPick: (target: string) => void } & React.InputHTMLAttributes<HTMLInputElement>) {
   const { env, file } = useHeader()
   const ref = useRef<HTMLInputElement>(null)
   const pick = useRef(onPick)

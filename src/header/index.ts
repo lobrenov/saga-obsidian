@@ -1,5 +1,7 @@
 import { MarkdownView, type App, type Plugin, type WorkspaceLeaf } from 'obsidian'
 import type { ConfigStore } from '../obsidian/vault'
+import { createBannerController } from '../banner/controller'
+import '../banner/banner.css'
 import { createHeaderController, type LeafView } from './controller'
 import type { ViewMode } from './dom'
 import './header.css'
@@ -15,13 +17,18 @@ function markdownViews(app: App): [WorkspaceLeaf, LeafView][] {
   return views
 }
 
-/** Draws the header of every open note whose `type` maps to a renderer other than `document`, until the plugin unloads. */
+/** Draws the header of every open note whose `type` maps to a renderer other than `document`, and the banners, until the plugin unloads. */
 export function registerHeader(plugin: Plugin, config: ConfigStore): void {
   const { app } = plugin
-  const controller = createHeaderController(createHeaderEnv(app), config)
+  const env = createHeaderEnv(app)
+  const controller = createHeaderController(env, config)
+  const banners = createBannerController(env, config)
   let disposed = false
   const sync = (): void => {
-    if (!disposed) controller.sync(markdownViews(app))
+    if (disposed) return
+    const views = markdownViews(app)
+    controller.sync(views)
+    banners.sync(views)
   }
 
   plugin.registerHoverLinkSource(HOVER_SOURCE, { display: 'Saga header', defaultMod: true })
@@ -36,6 +43,7 @@ export function registerHeader(plugin: Plugin, config: ConfigStore): void {
   plugin.register(() => {
     disposed = true
     controller.dispose()
+    banners.dispose()
   })
   app.workspace.onLayoutReady(sync)
 }

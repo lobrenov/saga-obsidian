@@ -1,0 +1,170 @@
+/* Height from the note's `cssclasses` (Obsidian puts them on the view); the header card starts `--saga-banner-overlap` above the banner's bottom. */
+.saga-banner-active :is(.markdown-source-view, .markdown-preview-view) {
+  --saga-banner-height: 300px;
+  --saga-banner-overlap: 96px;
+}
+.saga-banner-active :is(.markdown-source-view, .markdown-preview-view).banner-tall {
+  --saga-banner-height: 440px;
+}
+
+/* The view header lies over the content, transparent until the note scrolls past the banner. */
+.workspace-leaf-content.saga-banner-active {
+  position: relative;
+}
+.workspace-leaf-content.saga-banner-active > .view-header {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: 2;
+  background: transparent;
+  border-bottom-color: transparent;
+}
+.workspace-leaf-content.saga-banner-active.saga-banner-scrolled > .view-header {
+  background: var(--background-primary);
+  border-bottom-color: var(--background-modifier-border);
+}
+
+/* The banner sits behind the sizer's content; the sizer's padding leaves room for it and lets pointers through to the banner. */
+.saga-banner-active :is(.cm-scroller, .markdown-preview-view) {
+  position: relative;
+}
+.saga-banner-active :is(.cm-scroller > .cm-sizer, .markdown-preview-view > .markdown-preview-sizer) {
+  position: relative;
+  z-index: 1;
+  padding-top: calc(var(--saga-banner-height) - var(--saga-banner-overlap));
+  pointer-events: none;
+}
+.saga-banner-active :is(.cm-scroller > .cm-sizer, .markdown-preview-view > .markdown-preview-sizer) > * {
+  pointer-events: auto;
+}
+
+.saga-banner-host {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 0;
+  height: var(--saga-banner-height);
+  font-family: var(--font-interface);
+  font-size: var(--font-ui-small);
+}
+
+:is(.markdown-embed, .internal-embed, .hover-popover) :is(.saga-banner-host, .saga-banner-add-host) {
+  display: none;
+}
+
+.saga-banner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* The image fills the banner and fades into the note background over its lower half. */
+.saga-banner-image {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--background-secondary);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%);
+}
+.saga-banner-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+}
+
+.saga-banner[data-repositioning] .saga-banner-image {
+  outline: 2px dashed var(--interactive-accent);
+  outline-offset: -2px;
+  cursor: ns-resize;
+  touch-action: none;
+}
+
+/* Controls sit at the right, just above where the header card starts. */
+.saga-banner-actions {
+  position: absolute;
+  right: var(--size-4-4);
+  bottom: calc(var(--saga-banner-overlap) + var(--size-4-3));
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--size-2-2);
+}
+
+.saga-banner-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--size-2-1);
+  padding: var(--size-2-1);
+  border-radius: var(--radius-m);
+  background: color-mix(in srgb, var(--background-primary) 88%, transparent);
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.saga-banner:hover .saga-banner-controls,
+.saga-banner:focus-within .saga-banner-controls,
+.saga-banner[data-tapped] .saga-banner-controls,
+.saga-banner[data-repositioning] .saga-banner-controls,
+.saga-banner[data-picking] .saga-banner-controls {
+  opacity: 1;
+}
+
+.saga-banner .saga-banner-control {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--size-2-2);
+  height: var(--input-height);
+  padding: 0 var(--size-4-2);
+  box-shadow: none;
+  font-size: var(--font-ui-small);
+}
+.saga-banner .saga-banner-control.mod-warning:hover {
+  color: var(--text-error);
+}
+
+.saga-banner-hint {
+  padding: 0 var(--size-4-2);
+  color: var(--text-muted);
+}
+
+.saga-banner-popover {
+  width: min(320px, 70vw);
+}
+.saga-banner-popover .saga-header-input {
+  width: 100%;
+  height: var(--input-height);
+  box-sizing: border-box;
+  font-size: var(--font-ui-small);
+}
+
+.saga-banner-error {
+  margin: 0;
+  color: var(--text-error);
+}
+
+/* "+ Add banner" under the inline title of a note without a renderer. */
+.saga-banner-add-host {
+  position: relative;
+  margin-block: var(--size-2-2);
+  font-family: var(--font-interface);
+  font-size: var(--font-ui-small);
+}
+.saga-banner-add .saga-banner-add-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--size-2-2);
+  height: var(--input-height);
+  padding: 0 var(--size-4-2);
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-muted);
+}
+.saga-banner-add .saga-banner-add-button:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+.saga-banner-add .saga-banner-popover {
+  margin-top: var(--size-2-2);
+}
