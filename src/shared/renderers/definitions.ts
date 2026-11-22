@@ -6,7 +6,6 @@ export const character = defineRenderer({
   label: 'Character',
   icon: 'user',
   color: 'character',
-  pinStyle: 'auto',
   fields: {
     portrait: { kind: 'image', key: 'portrait', label: 'Portrait' },
     title: { kind: 'text', key: 'title', label: 'Title' },
@@ -21,7 +20,6 @@ export const location = defineRenderer({
   label: 'Location',
   icon: 'map-pin',
   color: 'location',
-  pinStyle: 'auto',
   fields: {
     image: { kind: 'image', key: 'image', label: 'Image' },
     kind: { kind: 'text', key: 'kind', label: 'Kind' },
@@ -34,7 +32,6 @@ export const faction = defineRenderer({
   label: 'Faction',
   icon: 'flag',
   color: 'faction',
-  pinStyle: 'auto',
   fields: {
     emblem: { kind: 'image', key: 'emblem', label: 'Emblem' },
     kind: { kind: 'text', key: 'kind', label: 'Kind' },
@@ -50,7 +47,6 @@ export const item = defineRenderer({
   label: 'Item',
   icon: 'gem',
   color: 'item',
-  pinStyle: 'treasure',
   fields: {
     image: { kind: 'image', key: 'image', label: 'Image' },
     kind: { kind: 'text', key: 'kind', label: 'Kind' },
@@ -67,7 +63,6 @@ export const map = defineRenderer({
   label: 'Map',
   icon: 'map',
   color: 'map',
-  pinStyle: 'auto',
   fields: {
     image: { kind: 'image', key: 'image', label: 'Image' }
   }
@@ -79,7 +74,6 @@ export const document = defineRenderer({
   label: 'Document',
   icon: 'file-text',
   color: 'document',
-  pinStyle: 'auto',
   fields: {}
 })
 

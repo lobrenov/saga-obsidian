@@ -5,7 +5,6 @@ import { parseWikiLink } from '../wikilink'
 import { zodIssues } from './issues'
 
 export const PIN_STYLES = ['auto', 'rumour', 'danger', 'treasure', 'quest', 'camp'] as const
-export type PinStyle = (typeof PIN_STYLES)[number]
 export const pinStyleSchema = z.enum(PIN_STYLES)
 
 export const pinShapeSchema = z.enum(SHAPE_IDS)

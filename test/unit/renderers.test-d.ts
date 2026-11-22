@@ -9,7 +9,6 @@ const sample = defineRenderer({
   label: 'Sample',
   icon: 'x',
   color: 'item',
-  pinStyle: 'auto',
   fields: {
     title: { kind: 'text', key: 'title', label: 'Title' },
     tags: { kind: 'list', key: 'tags', label: 'Tags' },
@@ -55,5 +54,5 @@ test('FieldEditors requires every field kind', () => {
 
 test('defineRenderer rejects an unknown renderer id', () => {
   // @ts-expect-error not a renderer id
-  defineRenderer({ id: 'monster', label: '', icon: '', color: '', pinStyle: 'auto', fields: {} })
+  defineRenderer({ id: 'monster', label: '', icon: '', color: '', fields: {} })
 })

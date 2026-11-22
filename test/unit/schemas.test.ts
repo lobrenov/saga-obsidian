@@ -144,7 +144,7 @@ describe('readFrontmatter layers', () => {
   })
   it('validates choice options', () => {
     const r = defineRenderer({
-      id: 'item', label: '', icon: '', color: '', pinStyle: 'auto',
+      id: 'item', label: '', icon: '', color: '',
       fields: { rarity: { kind: 'choice', key: 'rarity', label: 'R', options: ['common', 'rare'] } }
     })
     expect(readFrontmatter(r, { rarity: 'rare' }).fields.rarity.value).toBe('rare')

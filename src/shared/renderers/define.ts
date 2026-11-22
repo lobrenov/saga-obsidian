@@ -1,4 +1,3 @@
-import type { PinStyle } from '../schemas/pins'
 import type { FieldDef, FieldKind, FieldValue, Fields } from './fields'
 import type { RendererId } from './ids'
 
@@ -11,7 +10,6 @@ export interface RendererDef<Id extends RendererId = RendererId, F extends Field
   icon: string
   /** Colour token name, without the `--saga-` prefix. */
   color: string
-  pinStyle: PinStyle
 }
 
 export function defineRenderer<const Id extends RendererId, const F extends Fields>(def: RendererDef<Id, F>): RendererDef<Id, F> {
