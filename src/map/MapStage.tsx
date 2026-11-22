@@ -1,9 +1,9 @@
 import { useCallback, useContext, useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react'
 import type { TFile } from 'obsidian'
 import { imageZoomLimits } from '../shared/maps/viewport'
-import { STYLE_ICONS } from '../shared/pins/look'
+import { FALLBACK_ICON } from '../shared/pins/look'
 import { roundCoord } from '../shared/pins/ops'
-import type { PinOp, PinStyle } from '../shared/schemas/pins'
+import type { PinOp } from '../shared/schemas/pins'
 import { ZoomControls, Readout } from './Controls'
 import { clampToImage } from './geometry'
 import type { PinLabels } from '../obsidian/prefs'
@@ -12,7 +12,7 @@ import { MapCanvas } from './MapCanvas'
 import { LayersPanel, NO_LAYERS, isVisible, type Layers } from './LayersPanel'
 import { FixedGhost, PinLayer } from './PinLayer'
 import { PinList } from './PinList'
-import { PinPopover } from './PinPopover'
+import { PinPopover, type LookChange } from './PinPopover'
 import { PinSprite, SpriteContext } from './PinSprite'
 import type { PinOpBuilder } from '../obsidian/vault'
 import { entryMatcher, locateEntry } from './pinWrites'
@@ -52,6 +52,7 @@ export function MapStage({ host, title, imageUrl, size, pins, listOpen, labels, 
 
   const { width, height } = size
   const store = useMemo(() => new ViewportStore({ width, height }, imageZoomLimits({ width, height })), [imageUrl, width, height])
+  const icons = useMemo(() => [...new Set([FALLBACK_ICON, ...pins.map((pin) => pin.look.icon)])].sort(), [pins])
   const activeLayers = layersOpen ? layers : NO_LAYERS
 
   const placed = useMemo(
@@ -161,8 +162,8 @@ export function MapStage({ host, title, imageUrl, size, pins, listOpen, labels, 
     return () => document.removeEventListener('keydown', onKey)
   }, [selectedKey])
 
-  const restyle = async (pin: PlacedPin, style: PinStyle): Promise<void> => {
-    await write(pin.file, locate(pin, (index) => ({ kind: 'look', index, icon: style === 'auto' ? null : STYLE_ICONS[style] })))
+  const relook = async (pin: PlacedPin, change: LookChange): Promise<void> => {
+    await write(pin.file, locate(pin, (index) => ({ kind: 'look', index, ...change })))
   }
   const remove = async (pin: PlacedPin): Promise<void> => {
     if (!(await host.confirmRemove(pin))) return
@@ -185,7 +186,7 @@ export function MapStage({ host, title, imageUrl, size, pins, listOpen, labels, 
 
   return (
     <div ref={root} className="saga-map-stage-row">
-      <PinSprite id={sprite} />
+      <PinSprite id={sprite} icons={icons} />
       <div className="saga-map-canvas-wrap">
         <div className="saga-map-canvas">
           <MapCanvas store={store} imageUrl={imageUrl} title={title} onMapClick={onMapClick} onMapMenu={onMapMenu} stageRef={setStage}>
@@ -197,7 +198,7 @@ export function MapStage({ host, title, imageUrl, size, pins, listOpen, labels, 
         {layersOpen ? <LayersPanel pins={placed} layers={layers} onChange={setLayers} /> : null}
         <ZoomControls store={store} onFit={fitMap} />
         <Readout store={store} stage={stage} />
-        {selected ? <PinPopover store={store} host={host} pin={selected} busy={busy} onClose={closeCard} onStyle={(pin, style) => void restyle(pin, style)} /> : null}
+        {selected ? <PinPopover store={store} host={host} pin={selected} busy={busy} onClose={closeCard} onLook={(pin, change) => void relook(pin, change)} /> : null}
       </div>
       {listOpen ? <PinList pins={visible} selectedKey={selectedKey} onSelect={(pin) => select(pin, true)} /> : null}
     </div>

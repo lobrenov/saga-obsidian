@@ -1,4 +1,5 @@
 import { FuzzySuggestModal, Modal, type App, type FuzzyMatch, type TFile } from 'obsidian'
+import { IconPicker } from '../ui/iconPicker'
 
 /** A note to pin, or a new note to create (named after the typed text, if any). */
 export type NoteChoice = { kind: 'file'; file: TFile } | { kind: 'create'; name: string | undefined }
@@ -44,6 +45,24 @@ class NotePickerModal extends FuzzySuggestModal<NoteChoice> {
 
 /** Asks which note a pin belongs to; null when dismissed. */
 export const chooseNote = (app: App, files: readonly TFile[]): Promise<NoteChoice | null> => new Promise((resolve) => new NotePickerModal(app, files, resolve).open())
+
+class IconChoiceModal extends IconPicker {
+  constructor(
+    app: App,
+    private readonly done: (id: string | null) => void
+  ) {
+    super(app, done)
+  }
+
+  override onClose(): void {
+    super.onClose()
+    // The choice is made after the modal closes; a close without one resolves with none.
+    window.setTimeout(() => this.done(null), 0)
+  }
+}
+
+/** Asks which icon a pin shows; null when dismissed. */
+export const chooseIcon = (app: App): Promise<string | null> => new Promise((resolve) => new IconChoiceModal(app, resolve).open())
 
 class ConfirmModal extends Modal {
   constructor(

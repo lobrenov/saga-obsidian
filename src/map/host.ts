@@ -18,6 +18,8 @@ export interface MapHost {
   excerpt(file: TFile): Promise<string>
   /** Asks which note a new pin belongs to; null when cancelled. */
   pickNote(): Promise<TFile | null>
+  /** Asks which icon a pin shows; null when cancelled. */
+  pickIcon(): Promise<string | null>
   /** Asks before a pin is removed. */
   confirmRemove(pin: { title: string; file: TFile }): Promise<boolean>
   notify(message: string): void
@@ -25,7 +27,7 @@ export interface MapHost {
   showMenu: ShowMenu
 }
 
-export type HostUi = Pick<MapHost, 'pickNote' | 'confirmRemove' | 'notify' | 'hoverNote' | 'showMenu'>
+export type HostUi = Pick<MapHost, 'pickNote' | 'pickIcon' | 'confirmRemove' | 'notify' | 'hoverNote' | 'showMenu'>
 
 /** The host of one map over the vault; `ui` supplies the parts that open Obsidian UI. */
 export function createHost(app: App, map: TFile, ui: HostUi): MapHost {

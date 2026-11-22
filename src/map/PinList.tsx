@@ -1,6 +1,5 @@
 import { useMemo } from 'react'
-import { rendererDefs } from '../shared/renderers/definitions'
-import { STYLE_LABELS, pinColor } from './pinStyles'
+import { iconLabel, pinColor } from './pinStyles'
 import { pinKey, type PlacedPin } from './types'
 
 const collator = new Intl.Collator(undefined, { sensitivity: 'base', numeric: true })
@@ -28,9 +27,9 @@ export function PinList({ pins, selectedKey, onSelect }: PinListProps) {
             return (
               <li key={key} className="saga-map-pin-row">
                 <button type="button" className="saga-map-pin-row-main" aria-current={key === selectedKey || undefined} onClick={() => onSelect(pin)}>
-                  <span aria-hidden="true" className="saga-map-dot" style={{ background: pinColor(pin.renderer) }} />
+                  <span aria-hidden="true" className="saga-map-dot" style={{ background: pinColor(pin.look.color) }} />
                   <span className="saga-map-pin-row-title">{pin.title}</span>
-                  <span className="saga-map-pin-row-meta">{pin.style === 'auto' ? rendererDefs[pin.renderer].label : STYLE_LABELS[pin.style]}</span>
+                  <span className="saga-map-pin-row-meta">{iconLabel(pin.look.icon)}</span>
                 </button>
               </li>
             )

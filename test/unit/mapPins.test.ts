@@ -15,17 +15,27 @@ const files = () => fake.base.map((path) => fake.file(path))
 describe('collectPins', () => {
   it('lists the entries whose map link resolves to the map, with the renderer of their note', () => {
     const pins = collectPins(fake.app, fake.settings, files(), fake.file(MAP))
-    expect(pins.map((pin) => [pin.file.path, pin.index, pin.renderer, pin.style, pin.x, pin.y])).toEqual([
-      ['Places/Saltmere.md', 0, 'location', 'auto', 790, 500],
-      ['People/The Gull King.md', 0, 'character', 'danger', 300, 590],
-      ['Places/The Brine Vaults.md', 0, 'location', 'auto', 846, 556]
+    expect(pins.map((pin) => [pin.file.path, pin.index, pin.renderer, pin.look, pin.x, pin.y])).toEqual([
+      ['Places/Saltmere.md', 0, 'location', { shape: 'pin', color: 'teal', icon: 'castle' }, 790, 500],
+      ['People/The Gull King.md', 0, 'character', { shape: 'pin', color: 'crimson', icon: 'skull' }, 300, 590],
+      ['Places/The Brine Vaults.md', 0, 'location', { shape: 'pin', color: 'teal', icon: 'castle' }, 846, 556]
     ])
   })
 
-  it('reports an unknown style as an issue and falls back to auto', () => {
+  it('reports an unknown style as an issue and takes the renderer look', () => {
     const [brine] = collectPins(fake.app, fake.settings, [fake.file('Places/The Brine Vaults.md')], fake.file(MAP))
-    expect(brine?.style).toBe('auto')
+    expect(brine?.look.icon).toBe('castle')
     expect(brine?.issues).toEqual(['Unknown pin style "sparkly"; using auto'])
+  })
+
+  it('resolves the look over the pin defaults of the config and keeps those defaults on the pin', async () => {
+    fake.fake.setRaw(CONFIG_PATH, 'typeKey: type\nrenderers:\n  location:\n    types: [settlement]\n    pin: { shape: flag, color: sea }\n')
+    await fake.settings.reload()
+    fake.addNote('Places/Own.md', '---\ntype: settlement\nmap-pins:\n  - map: "[[The Shattered Coast]]"\n    x: 1\n    y: 2\n    color: rust\n---\n')
+    const [saltmere, own] = collectPins(fake.app, fake.settings, [fake.file('Places/Saltmere.md'), fake.file('Places/Own.md')], fake.file(MAP))
+    expect(saltmere?.look).toEqual({ shape: 'flag', color: 'sea', icon: 'castle' })
+    expect(own?.look).toEqual({ shape: 'flag', color: 'rust', icon: 'castle' })
+    expect(own?.defaults).toEqual({ shape: 'flag', color: 'sea', icon: 'castle' })
   })
 
   it('skips notes outside the given files, other maps, invalid entries and the map note itself', () => {
@@ -99,7 +109,7 @@ describe('mapStateOf', () => {
   })
 
   it('shows only the pins of the notes the base lists', () => {
-    const state = mapStateOf(fake.app, fake.settings, { option: (key) => fake.options[key], pinLabels: 'always', files: () => [fake.file('Places/Saltmere.md')], host: (map) => createHost(fake.app, map, { pickNote: () => Promise.resolve(null), confirmRemove: () => Promise.resolve(true), notify: () => {}, hoverNote: () => {}, showMenu: () => {} }) })
+    const state = mapStateOf(fake.app, fake.settings, { option: (key) => fake.options[key], pinLabels: 'always', files: () => [fake.file('Places/Saltmere.md')], host: (map) => createHost(fake.app, map, { pickNote: () => Promise.resolve(null), pickIcon: () => Promise.resolve(null), confirmRemove: () => Promise.resolve(true), notify: () => {}, hoverNote: () => {}, showMenu: () => {} }) })
     expect(state.kind === 'map' && state.pins.map((pin) => pin.title)).toEqual(['Saltmere'])
   })
 })

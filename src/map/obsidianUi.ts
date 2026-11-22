@@ -1,7 +1,7 @@
 import { Notice, type App, type BasesView, type HoverParent, type TFile } from 'obsidian'
 import { showMenu } from '../ui/menu'
 import type { HostUi } from './host'
-import { chooseNote, confirm } from './modals'
+import { chooseIcon, chooseNote, confirm } from './modals'
 
 export const HOVER_SOURCE = 'saga'
 
@@ -14,7 +14,7 @@ async function createNote(view: BasesView, name: string | undefined): Promise<TF
   return made.file
 }
 
-/** The Obsidian UI of a map view: the note picker over the base's notes, the removal prompt, notices and hover previews. */
+/** The Obsidian UI of a map view: the note picker over the base's notes, the icon picker, the removal prompt, notices and hover previews. */
 export function createUi(app: App, view: BasesView & HoverParent, mapPath: string, files: () => TFile[]): HostUi {
   return {
     async pickNote() {
@@ -25,6 +25,7 @@ export function createUi(app: App, view: BasesView & HoverParent, mapPath: strin
       if (!created) new Notice('The note was not created; no pin was added.')
       return created
     },
+    pickIcon: () => chooseIcon(app),
     confirmRemove: (pin) => confirm(app, 'Remove pin', `Remove this pin from ${pin.file.name}?`, 'Remove pin'),
     notify: (message) => void new Notice(message),
     showMenu,

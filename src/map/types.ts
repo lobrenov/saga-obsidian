@@ -2,7 +2,7 @@ import type { TFile } from 'obsidian'
 import type { PinLabels } from '../obsidian/prefs'
 import type { MapHost } from './host'
 import type { RendererId } from '../shared/renderers/ids'
-import type { PinStyle } from '../shared/schemas/pins'
+import type { PinLook } from '../shared/pins/look'
 
 /** A pin of the chosen map: where one `map-pins` entry of a note sits. */
 export interface PlacedPin {
@@ -12,7 +12,10 @@ export interface PlacedPin {
   renderer: RendererId
   x: number
   y: number
-  style: PinStyle
+  /** What the pin shows: its own keys over the renderer's. */
+  look: PinLook
+  /** The renderer's pin look: what a key removed from the entry falls back to. */
+  defaults: PinLook
   /** Position of the entry in the note's `map-pins` list when the base was read. */
   index: number
   issues: string[]

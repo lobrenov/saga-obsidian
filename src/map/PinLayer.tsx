@@ -3,15 +3,16 @@ import { toScreen } from '../shared/maps/viewport'
 import { rendererDefs } from '../shared/renderers/definitions'
 import { clusterItems } from '../shared/pins/cluster'
 import type { PinLabels } from '../obsidian/prefs'
+import { FALLBACK_ICON, type PinLook } from '../shared/pins/look'
 import { clusterHtml, ghostHtml, pinClass, pinHtml } from './pinIcons'
-import { placeLabels, type LabelSlot } from './labels'
+import { labelOffset, placeLabels, type LabelSlot } from './labels'
 import { SpriteContext } from './PinSprite'
-import { STYLE_LABELS } from './pinStyles'
+import { anchoredBox, iconLabel, shapeDef } from './pinStyles'
 import { pinKey, type PlacedPin } from './types'
 import type { ViewportStore } from './viewportStore'
 
-/** What a screen reader hears after a pin's title: its renderer and, when overridden, its style. */
-export const pinDescription = (pin: PlacedPin): string => `${rendererDefs[pin.renderer].label}${pin.style === 'auto' ? '' : `, ${STYLE_LABELS[pin.style].toLowerCase()}`}`
+/** What a screen reader hears after a pin's title: its renderer and icon. */
+export const pinDescription = (pin: PlacedPin): string => `${rendererDefs[pin.renderer].label}, ${iconLabel(pin.look.icon)}`
 
 /** Pins and clusters more than this far (screen px) outside the view are culled: not repositioned, drawn invisible (but still focusable). */
 const CULL_PX = 150
@@ -81,7 +82,7 @@ const PinButton = memo(function PinButton({ store, pin, selected, onSelect, onMo
   const held = useRef(false)
   const sprite = useContext(SpriteContext)
   const [ref, place] = usePlacement<HTMLButtonElement>(store, pin.x, pin.y, held)
-  const html = useMemo(() => pinHtml({ sprite, title: pin.title, description: pinDescription(pin), renderer: pin.renderer, style: pin.style }), [sprite, pin])
+  const html = useMemo(() => pinHtml({ sprite, title: pin.title, description: pinDescription(pin), look: pin.look }), [sprite, pin])
   const drag = useRef<Drag | null>(null)
   const dragged = useRef(false)
 
@@ -150,7 +151,7 @@ const PinButton = memo(function PinButton({ store, pin, selected, onSelect, onMo
       type="button"
       data-pin={pinKey(pin)}
       className={pinClass}
-      style={selected ? { zIndex: 1 } : undefined}
+      style={selected ? { ...anchoredBox(shapeDef(pin.look.shape)), zIndex: 1 } : anchoredBox(shapeDef(pin.look.shape))}
       onClick={(event) => {
         // The click that ends a drag is ignored; a keyboard or assistive click (detail 0) always selects.
         const afterDrag = dragged.current
@@ -258,7 +259,8 @@ export function PinLayer({ store, pins, selectedKey, labels, onSelect, onMoved, 
       const view = store.view()
       const targets = current.map((group) => {
         const at = toScreen(store.get(), view, group.x, group.y)
-        return { key: group.key, title: group.pins.length === 1 ? (group.pins[0]?.title ?? null) : null, px: at.x, py: at.y }
+        const only = group.pins.length === 1 ? group.pins[0] : undefined
+        return { key: group.key, title: only?.title ?? null, shape: only?.look.shape, px: at.x, py: at.y }
       })
       setSlots(placeLabels(targets, view))
     }
@@ -333,17 +335,19 @@ const PinLabel = memo(function PinLabel({ store, pin, slot, top }: { store: View
   const [ref] = usePlacement<HTMLDivElement>(store, pin.x, pin.y)
   return (
     <div ref={ref} className={`saga-map-label-anchor${top ? ' saga-map-label-top' : ''}`}>
-      <span className={`saga-map-label saga-map-label-${slot}`} aria-hidden="true">
+      <span className={`saga-map-label saga-map-label-${slot}`} style={labelOffset(shapeDef(pin.look.shape), slot)} aria-hidden="true">
         {pin.title}
       </span>
     </div>
   )
 })
 
+const GHOST_LOOK: PinLook = { shape: 'pin', color: 'slate', icon: FALLBACK_ICON }
+
 /** A pin at a fixed place that is not saved yet (the new pin while its note is picked and written). */
 export function FixedGhost({ store, x, y }: { store: ViewportStore; x: number; y: number }) {
   const [ref] = usePlacement<HTMLDivElement>(store, x, y)
   const sprite = useContext(SpriteContext)
-  const html = useMemo(() => ghostHtml(sprite, 'character', 'auto'), [sprite])
-  return <div ref={ref} data-map-ghost="" className="saga-map-placed saga-map-pin-ghost" dangerouslySetInnerHTML={{ __html: html }} />
+  const html = useMemo(() => ghostHtml(sprite, GHOST_LOOK), [sprite])
+  return <div ref={ref} data-map-ghost="" className="saga-map-placed saga-map-pin-ghost" style={anchoredBox(shapeDef(GHOST_LOOK.shape))} dangerouslySetInnerHTML={{ __html: html }} />
 }

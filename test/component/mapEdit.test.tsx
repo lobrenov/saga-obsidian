@@ -1,6 +1,6 @@
 import { expect, test, vi } from 'vitest'
-import { GULL } from '../fakes/map'
-import { dragMarker, ghosts, imageBox, marker, markers, renderMap, stage, tipOf } from './mapSupport'
+import { GULL, SALTMERE } from '../fakes/map'
+import { color, dragMarker, ghosts, glyphOf, imageBox, marker, markers, renderMap, shapeOf, stage, tipOf } from './mapSupport'
 
 /** Right-clicks the map at a point of the stage, in stage pixels from its top left. */
 const rightClickMapAt = (x: number, y: number): void => {
@@ -193,26 +193,70 @@ test('a stale index writes the entry that matches the pin, not the one at that p
   expect(after).toContain('icon: skull\n    note: keep')
 })
 
-test('the card changes a pin\'s style, written as its icon', async () => {
+test('the card changes a pin\'s shape, written as a look and drawn at once; a legacy style becomes its icon', async () => {
   const { screen, fake } = await renderMap()
   await vi.waitFor(() => expect(markers()).toHaveLength(3))
-  await screen.getByRole('button', { name: 'The Gull King — Character, danger' }).click()
+  await screen.getByRole('button', { name: 'The Gull King — Character, Danger' }).click()
   const card = screen.getByRole('dialog', { name: 'The Gull King' })
-  const style = card.getByRole('button', { name: 'Style' })
-  await expect.element(style).toHaveTextContent('Danger')
-  await style.click()
-  expect(fake.menus.at(-1)?.items.map((item) => [item.title, item.checked])).toEqual([
-    ['Auto (Character)', false],
-    ['Rumour', false],
-    ['Danger', true],
-    ['Treasure', false],
-    ['Quest', false],
-    ['Camp', false]
-  ])
-  fake.choose('Quest')
-  await vi.waitFor(() => expect(fake.text('People/The Gull King.md')).toContain('icon: scroll-text\n    note: keep'))
+  const shape = card.getByRole('button', { name: 'Shape' })
+  await expect.element(shape).toHaveTextContent('Pin')
+  await shape.click()
+  expect(fake.menus.at(-1)?.items.map((item) => [item.title, item.checked])).toEqual([['Pin', true], ['Circle', false], ['Flag', false], ['Bookmark', false], ['Herald', false]])
+  fake.choose('Flag')
+  await vi.waitFor(() => expect(fake.text('People/The Gull King.md')).toContain('    icon: skull\n    note: keep\n    shape: flag\n'))
   expect(fake.text('People/The Gull King.md')).not.toContain('style:')
   expect(fake.text('People/The Gull King.md')).toContain('[[Elsewhere]]')
   expect(fake.writes).toHaveLength(1)
+  await vi.waitFor(() => expect(shapeOf(marker('The Gull King'))).toBe('flag'))
 })
 
+test('the card changes a pin\'s colour; the renderer colour is not written', async () => {
+  const { screen, fake } = await renderMap()
+  await vi.waitFor(() => expect(markers()).toHaveLength(3))
+  await screen.getByRole('button', { name: 'Saltmere — Location, Castle' }).click()
+  const card = screen.getByRole('dialog', { name: 'Saltmere' })
+  const colour = card.getByRole('button', { name: 'Colour' })
+  await expect.element(colour).toHaveTextContent('Teal')
+  await colour.click()
+  expect(fake.menus.at(-1)?.items.map((item) => item.title)).toEqual(['Crimson', 'Rust', 'Ochre', 'Olive', 'Moss', 'Teal', 'Sea', 'Indigo', 'Violet', 'Plum', 'Slate', 'Umber'])
+  fake.choose('Rust')
+  await vi.waitFor(() => expect(fake.text('Places/Saltmere.md')).toContain('    y: 500\n    color: rust\n'))
+  await vi.waitFor(() => expect(color(marker('Saltmere'))).toBe('--saga-map-pin:var(--saga-pin-rust)'))
+  await colour.click()
+  fake.choose('Teal')
+  await vi.waitFor(() => expect(fake.text('Places/Saltmere.md')).toBe(SALTMERE))
+})
+
+test('the card\'s Icon button opens the icon picker and writes the chosen icon; the renderer icon is not written', async () => {
+  const { screen, fake } = await renderMap()
+  await vi.waitFor(() => expect(markers()).toHaveLength(3))
+  await screen.getByRole('button', { name: 'Saltmere — Location, Castle' }).click()
+  const card = screen.getByRole('dialog', { name: 'Saltmere' })
+  const icon = card.getByRole('button', { name: 'Icon' })
+  await expect.element(icon).toHaveTextContent('Castle')
+  fake.icon = () => Promise.resolve('skull')
+  await icon.click()
+  await vi.waitFor(() => expect(fake.text('Places/Saltmere.md')).toContain('    y: 500\n    icon: skull\n'))
+  await vi.waitFor(() => expect(glyphOf(marker('Saltmere'))).toBe('skull'))
+  await expect.element(icon).toHaveTextContent('Danger')
+  fake.icon = () => Promise.resolve('castle')
+  await icon.click()
+  await vi.waitFor(() => expect(fake.text('Places/Saltmere.md')).toBe(SALTMERE))
+  fake.icon = () => Promise.resolve(null)
+  await icon.click()
+  expect(fake.writes).toHaveLength(2)
+})
+
+test('an overridden row offers "Use <Renderer> default", which removes its keys', async () => {
+  const { screen, fake } = await renderMap()
+  await vi.waitFor(() => expect(markers()).toHaveLength(3))
+  await screen.getByRole('button', { name: 'Saltmere — Location, Castle' }).click()
+  expect(screen.getByRole('button', { name: /^Use .* default$/ }).elements()).toHaveLength(0)
+  await screen.getByRole('button', { name: 'The Gull King — Character, Danger' }).click()
+  const card = screen.getByRole('dialog', { name: 'The Gull King' })
+  expect(card.getByRole('button', { name: /^Use .* default$/ }).elements()).toHaveLength(1)
+  await card.getByRole('button', { name: 'Use Character default' }).click()
+  await vi.waitFor(() => expect(fake.text('People/The Gull King.md')).toBe(GULL.replace('    style: danger\n', '')))
+  await vi.waitFor(() => expect(glyphOf(marker('The Gull King'))).toBe('user'))
+  expect(card.getByRole('button', { name: /^Use .* default$/ }).elements()).toHaveLength(0)
+})

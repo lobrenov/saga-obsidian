@@ -1,11 +1,13 @@
-import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { toScreen } from '../shared/maps/viewport'
 import { rendererDefs } from '../shared/renderers/definitions'
-import { PIN_STYLES, type PinStyle } from '../shared/schemas/pins'
+import { PIN_COLORS, SHAPES, type PinLook } from '../shared/pins/look'
+import type { PinOp } from '../shared/schemas/pins'
 import { toExcerpt } from './excerpt'
 import type { MapHost } from './host'
 import { MenuSelect } from '../ui/MenuSelect'
-import { STYLE_LABELS, pinColor } from './pinStyles'
+import { SpriteContext } from './PinSprite'
+import { iconLabel, pinColor, pinGlyphId } from './pinStyles'
 import type { PlacedPin } from './types'
 import type { ViewportStore } from './viewportStore'
 
@@ -25,18 +27,22 @@ function cardPlace(store: ViewportStore, x: number, y: number): { left: number; 
   return { left: Math.min(Math.max(8, left), Math.max(8, width - WIDTH - 8)), top: Math.min(Math.max(8, at.y - 64), Math.max(8, height - MIN_VISIBLE)), side }
 }
 
+/** The keys of a look to set; `null` removes one (back to the renderer's). */
+export type LookChange = Omit<Extract<PinOp, { kind: 'look' }>, 'kind' | 'index'>
+
 interface PinPopoverProps {
   store: ViewportStore
   host: MapHost
   pin: PlacedPin
   onClose: () => void
-  onStyle: (pin: PlacedPin, style: PinStyle) => void
+  onLook: (pin: PlacedPin, change: LookChange) => void
   busy: boolean
 }
 
-/** The card for a selected pin: the note (its title opens it), an excerpt and its style. */
-export function PinPopover({ store, host, pin, onClose, onStyle, busy }: PinPopoverProps) {
-  const ids = { title: useId(), style: useId() }
+/** The card for a selected pin: the note (its title opens it), an excerpt and its shape, colour and icon. */
+export function PinPopover({ store, host, pin, onClose, onLook, busy }: PinPopoverProps) {
+  const ids = { title: useId(), shape: useId(), color: useId(), icon: useId() }
+  const sprite = useContext(SpriteContext)
   const root = useRef<HTMLElement>(null)
   const [excerpt, setExcerpt] = useState('')
   const def = rendererDefs[pin.renderer]
@@ -83,7 +89,7 @@ export function PinPopover({ store, host, pin, onClose, onStyle, busy }: PinPopo
           <path d="m18 6-12 12" />
         </svg>
       </button>
-      <p className="saga-map-popover-kind" style={{ color: pinColor(pin.renderer) }}>
+      <p className="saga-map-popover-kind" style={{ color: pinColor(pin.look.color) }}>
         {def.label}
       </p>
       <h2 id={ids.title} className="saga-map-popover-title">
@@ -101,16 +107,31 @@ export function PinPopover({ store, host, pin, onClose, onStyle, busy }: PinPopo
         </a>
       </h2>
       {excerpt ? <p className="saga-map-popover-excerpt">{excerpt}</p> : null}
-      <div className="saga-map-popover-style">
-        <label htmlFor={ids.style}>Style</label>
-        <MenuSelect
-          id={ids.style}
-          value={pin.style}
-          options={PIN_STYLES.map((style) => ({ value: style, label: style === 'auto' ? `Auto (${def.label})` : STYLE_LABELS[style] }))}
-          disabled={busy}
-          showMenu={host.showMenu}
-          onChange={(style) => onStyle(pin, style as PinStyle)}
-        />
+      <div className="saga-map-popover-look">
+        <LookRow id={ids.shape} label="Shape" renderer={def.label} overridden={pin.look.shape !== pin.defaults.shape} onReset={() => onLook(pin, { shape: null })}>
+          <MenuSelect id={ids.shape} value={pin.look.shape} options={SHAPES.map((shape) => ({ value: shape.id, label: shape.label }))} disabled={busy} showMenu={host.showMenu} onChange={(shape) => onLook(pin, { shape: shape === pin.defaults.shape ? null : (shape as PinLook['shape']) })} />
+        </LookRow>
+        <LookRow id={ids.color} label="Colour" renderer={def.label} overridden={pin.look.color !== pin.defaults.color} onReset={() => onLook(pin, { color: null })}>
+          <MenuSelect id={ids.color} value={pin.look.color} options={PIN_COLORS.map((color) => ({ value: color.id, label: color.name }))} disabled={busy} showMenu={host.showMenu} onChange={(color) => onLook(pin, { color: color === pin.defaults.color ? null : (color as PinLook['color']) })} />
+        </LookRow>
+        <LookRow id={ids.icon} label="Icon" renderer={def.label} overridden={pin.look.icon !== pin.defaults.icon} onReset={() => onLook(pin, { icon: null })}>
+          <button
+            type="button"
+            id={ids.icon}
+            className="dropdown saga-menu-select"
+            disabled={busy}
+            onClick={() =>
+              void host.pickIcon().then((icon) => {
+                if (icon !== null && icon !== pin.look.icon) onLook(pin, { icon: icon === pin.defaults.icon ? null : icon })
+              })
+            }
+          >
+            <svg aria-hidden="true" className="saga-map-glyph" width="14" height="14" viewBox="0 0 24 24">
+              <use href={`#${pinGlyphId(sprite, pin.look.icon)}`} />
+            </svg>
+            {iconLabel(pin.look.icon)}
+          </button>
+        </LookRow>
       </div>
       {pin.issues.length > 0 ? (
         <ul className="saga-map-popover-issues" aria-label="Problems with this pin">
@@ -120,5 +141,20 @@ export function PinPopover({ store, host, pin, onClose, onStyle, busy }: PinPopo
         </ul>
       ) : null}
     </section>
+  )
+}
+
+/** A labelled card row with "Use <Renderer> default" while the pin overrides it. */
+function LookRow({ id, label, renderer, overridden, onReset, children }: { id: string; label: string; renderer: string; overridden: boolean; onReset: () => void; children: ReactNode }) {
+  return (
+    <>
+      <label htmlFor={id}>{label}</label>
+      {children}
+      {overridden ? (
+        <button type="button" className="saga-map-popover-reset" onClick={onReset}>
+          Use {renderer} default
+        </button>
+      ) : null}
+    </>
   )
 }

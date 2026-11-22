@@ -101,11 +101,14 @@ function resolvePath(files: Iterable<TFile>, linkpath: string): TFile | null {
 /** Icon ids `getIcon` does not know, as Obsidian answers for an id missing from its Lucide. */
 export const unknownIcons = new Set<string>()
 
-/** An `<svg data-icon>` for the id (browser tests only); null for an id in `unknownIcons`. */
+/** An `<svg data-icon>` holding a `<path data-icon>` for the id (browser tests only); null for an id in `unknownIcons`. */
 export function getIcon(id: string): SVGSVGElement | null {
   if (unknownIcons.has(id)) return null
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
   svg.dataset.icon = id
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+  path.dataset.icon = id
+  svg.append(path)
   return svg
 }
 

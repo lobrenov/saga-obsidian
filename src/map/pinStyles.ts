@@ -1,33 +1,20 @@
-import type { RendererId } from '../shared/renderers/ids'
-import type { PinStyle } from '../shared/schemas/pins'
+import type { CSSProperties } from 'react'
+import { PIN_ICONS, SHAPES, type ColorId, type PinShape, type ShapeId } from '../shared/pins/look'
 
-/** The light colour of a pin's outline and glyph. */
+/** The light colour of a pin's outline. */
 export const PIN_LIGHT = '#fbf8f2'
 
-export const STYLE_LABELS: Record<PinStyle, string> = {
-  auto: 'Auto',
-  rumour: 'Rumour',
-  danger: 'Danger',
-  treasure: 'Treasure',
-  quest: 'Quest',
-  camp: 'Camp'
-}
+/** Colour of a pin: the CSS variable of its colour name. */
+export const pinColor = (color: ColorId): string => `var(--saga-pin-${color})`
 
-/** Pin outline on a 32x44 grid. */
-export const PIN_PATH = 'M16 43c-1.5-4-14-15-14-27a14 14 0 0 1 28 0c0 12-12.5 23-14 27z'
+const SHAPE_BY_ID = Object.fromEntries(SHAPES.map((shape) => [shape.id, shape])) as Record<ShapeId, PinShape>
+export const shapeDef = (id: ShapeId): PinShape => SHAPE_BY_ID[id]
 
-/** Inner shape of a pin's head on the 32x44 grid, centred on (16, 16); the plain dot is the default. Fill comes from the symbol's `fill`. */
-export const STYLE_GLYPHS: Record<PinStyle, string> = {
-  auto: '<circle cx="16" cy="16" r="5"/>',
-  rumour: `<circle cx="16" cy="16" r="5.5" fill="none" stroke="${PIN_LIGHT}" stroke-width="2.5"/>`,
-  danger: '<path d="M16 10.5 22 21H10z"/>',
-  treasure: '<path d="M16 9.5 22.5 16 16 22.5 9.5 16z"/>',
-  quest: '<path d="m16 9.5 1.9 4.1 4.4.5-3.3 3 .9 4.4-3.9-2.2-3.9 2.2.9-4.4-3.3-3 4.4-.5z"/>',
-  camp: '<rect x="11" y="11" width="10" height="10" rx="1.5"/>'
-}
+/** The catalogue label of an icon id (the id itself when it is not in the catalogue). */
+export const iconLabel = (id: string): string => PIN_ICONS.find((icon) => icon.id === id)?.label ?? id
 
-/** Colour of a pin: always its note's renderer (the style shows through the glyph only). */
-export const pinColor = (renderer: RendererId): string => `var(--saga-${renderer})`
+export const pinShapeId = (sprite: string, shape: ShapeId): string => `${sprite}-shape-${shape}`
+export const pinGlyphId = (sprite: string, icon: string): string => `${sprite}-glyph-${icon}`
 
-export const pinShapeId = (sprite: string): string => `${sprite}-shape`
-export const pinGlyphId = (sprite: string, style: PinStyle): string => `${sprite}-glyph-${style}`
+/** The box of a shape on its anchor: the element's origin is the pin's screen point. */
+export const anchoredBox = (shape: PinShape): CSSProperties => ({ left: -shape.ax, top: -shape.ay, width: shape.w, height: shape.h })

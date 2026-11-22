@@ -168,7 +168,7 @@ export type PinLookOverrides = { [K in keyof PinLook]?: PinLook[K] | undefined }
 export const rendererLook = (renderer: RendererId, configured?: PinLookOverrides): PinLook => ({ ...PIN_DEFAULTS[renderer], ...definedOnly(configured) })
 
 /** A pin's look: its own keys, else the icon its legacy `style` reads as, else the renderer's look. */
-export function resolveLook(entry: PinLookOverrides & { style?: string }, defaults: PinLook): PinLook {
+export function resolveLook(entry: PinLookOverrides & { style?: string | undefined }, defaults: PinLook): PinLook {
   const styleIcon = entry.style !== undefined && Object.hasOwn(STYLE_ICONS, entry.style) ? STYLE_ICONS[entry.style as keyof typeof STYLE_ICONS] : undefined
   return { ...defaults, ...definedOnly({ shape: entry.shape, color: entry.color, icon: entry.icon ?? styleIcon }) }
 }

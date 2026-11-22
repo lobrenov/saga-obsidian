@@ -3,6 +3,7 @@ import { expect, vi } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { render } from 'vitest-browser-react'
 import { MapRoot } from '../../src/map/MapRoot'
+import { SHAPES, type ShapeId } from '../../src/shared/pins/look'
 import '../../src/map/map.css'
 import './mapVars.css'
 import { MapFake } from '../fakes/map'
@@ -37,7 +38,11 @@ export const marker = (name: string): HTMLElement => {
   if (!found) throw new Error(`no marker ${name}`)
   return found
 }
-export const color = (el: HTMLElement): string | undefined => el.querySelector('svg')?.getAttribute('style') ?? undefined
+/** The `--saga-map-pin` declaration of a pin's svg. */
+export const color = (el: HTMLElement): string | undefined => /--saga-map-pin:[^;]*/.exec(el.querySelector('svg')?.getAttribute('style') ?? '')?.[0]
+/** The shape and the icon a pin draws, read from the sprite symbols it uses. */
+export const shapeOf = (el: HTMLElement): string | undefined => el.querySelector('use')?.getAttribute('href')?.split('-shape-')[1]
+export const glyphOf = (el: HTMLElement): string | undefined => el.querySelectorAll('use')[1]?.getAttribute('href')?.split('-glyph-')[1]
 
 /** The image's box on screen and its scale (screen px per image px). */
 export function imageBox() {
@@ -45,10 +50,11 @@ export function imageBox() {
   return { left: box.left, top: box.top, scale: box.width / 1400 }
 }
 
-/** The screen point of a pin's tip (the outline ends 1 px above the button's bottom edge). */
-export const tipOf = (el: HTMLElement): { x: number; y: number } => {
+/** The screen point of a pin's anchor: the shape's anchor point on the button's box. */
+export const tipOf = (el: HTMLElement, shape: ShapeId = 'pin'): { x: number; y: number } => {
   const box = el.getBoundingClientRect()
-  return { x: box.left + box.width / 2, y: box.bottom - 1 }
+  const { ax, ay } = SHAPES.find((candidate) => candidate.id === shape)!
+  return { x: box.left + ax, y: box.top + ay }
 }
 
 /** Dispatches a pointer event (mouse pointer 1) on `target` at client coordinates; `buttons` is 1 while the button is down. */

@@ -16,6 +16,11 @@ describe('placeLabels', () => {
     expect([...three.values()].sort()).toEqual(['below', 'left', 'right'])
   })
 
+  it('places by the pin shape: three circles on one point still fit right, left and below', () => {
+    const circles = ['a', 'b', 'c'].map((key): LabelTarget => ({ key, title: key, px: 100, py: 100, shape: 'circle' }))
+    expect([...placeLabels(circles).values()].sort()).toEqual(['below', 'left', 'right'])
+  })
+
   it('hides the label of a pin with no free slot', () => {
     const slots = placeLabels(['a', 'b', 'c', 'd'].map((key) => pin(key, 100, 100)))
     expect([...slots.values()].filter((slot) => slot === null)).toHaveLength(1)
@@ -28,7 +33,7 @@ describe('placeLabels', () => {
       const slot = slots.get(t.key)
       if (!slot) return []
       const w = labelWidth(t.key)
-      const top = slot === 'below' ? t.py + 4 : t.py - 36
+      const top = slot === 'below' ? t.py + 5 : t.py - 37
       const left = slot === 'right' ? t.px + 20 : slot === 'left' ? t.px - 20 - w : t.px - w / 2
       return [{ left, top, right: left + w, bottom: top + 20 }]
     })

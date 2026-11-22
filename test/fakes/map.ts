@@ -45,6 +45,8 @@ export class MapFake {
   pickCalls = 0
   /** Answers the note picker; null cancels. */
   pick: () => Promise<TFile | null> = () => Promise.resolve(null)
+  /** Answers the icon picker; null cancels. */
+  icon: () => Promise<string | null> = () => Promise.resolve(null)
   confirm = true
   /** While true the view keeps showing the data it last had, as when the base has not re-queried yet. */
   frozen = false
@@ -111,6 +113,7 @@ export class MapFake {
           this.pickCalls++
           return this.pick()
         },
+        pickIcon: () => this.icon(),
         confirmRemove: (pin) => {
           this.prompts.push(`Remove this pin from ${pin.file.name}?`)
           return Promise.resolve(this.confirm)

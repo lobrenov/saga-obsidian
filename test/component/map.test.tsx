@@ -1,6 +1,9 @@
 import { expect, test, vi } from 'vitest'
-import { GULL, MAP, type MapFake } from '../fakes/map'
-import { clickMapAt, clusters, color, imageBox, marker, markers, renderMap, stage, tipOf } from './mapSupport'
+import { CONFIG_PATH } from '../../src/obsidian/vault'
+import { SHAPES } from '../../src/shared/pins/look'
+import { unknownIcons } from '../fakes/obsidian'
+import { CONFIG_YAML, GULL, MAP, type MapFake } from '../fakes/map'
+import { clickMapAt, clusters, color, glyphOf, imageBox, marker, markers, renderMap, shapeOf, stage, tipOf } from './mapSupport'
 
 const pinsOnEveryNote = (count: number) => (fake: MapFake) => {
   for (let i = 0; i < count; i++) {
@@ -14,8 +17,8 @@ test('the map image is drawn and a pin stands at its image point for every liste
   const { screen } = await renderMap()
   await vi.waitFor(() => expect(markers()).toHaveLength(3))
   expect(document.querySelector('img[data-map-image]')?.getAttribute('src')).toMatch(/^data:image\/svg/)
-  await expect.element(screen.getByRole('button', { name: 'Saltmere — Location' })).toBeVisible()
-  await expect.element(screen.getByRole('button', { name: 'The Gull King — Character, danger' })).toBeVisible()
+  await expect.element(screen.getByRole('button', { name: 'Saltmere — Location, Castle' })).toBeVisible()
+  await expect.element(screen.getByRole('button', { name: 'The Gull King — Character, Danger' })).toBeVisible()
   await vi.waitFor(() => {
     const image = imageBox()
     const tip = tipOf(marker('Saltmere'))
@@ -32,20 +35,78 @@ test('a pin of a note the base does not list is not shown', async () => {
   expect(markers().some((el) => el.textContent?.startsWith('Hidden'))).toBe(false)
 })
 
-test('pins are coloured by their note renderer whatever their style, which shows only as a glyph; an unknown style is an issue on the card', async () => {
-  const { screen } = await renderMap()
-  await vi.waitFor(() => expect(markers()).toHaveLength(3))
-  expect(color(marker('Saltmere'))).toContain('--saga-map-pin:var(--saga-location)')
-  expect(color(marker('The Gull King'))).toContain('--saga-map-pin:var(--saga-character)')
-  expect(color(marker('The Brine Vaults'))).toContain('--saga-map-pin:var(--saga-location)')
-  expect(marker('The Gull King').innerHTML).toMatch(/#saga-map-sprite-\d+-glyph-danger/)
-  expect(marker('Saltmere').innerHTML).toMatch(/#saga-map-sprite-\d+-glyph-auto/)
+test('a pin takes its look from its entry, else its renderer defaults; a style reads as its icon; an unknown style is an issue on the card', async () => {
+  const { screen } = await renderMap((fake) => {
+    fake.addNote('Places/Ember.md', '---\ntype: settlement\nmap-pins:\n  - map: "[[The Shattered Coast]]"\n    x: 50\n    y: 60\n    shape: herald\n    color: rust\n    icon: flame\n---\n')
+  })
+  await vi.waitFor(() => expect(markers()).toHaveLength(4))
+  expect([shapeOf(marker('Saltmere')), glyphOf(marker('Saltmere')), color(marker('Saltmere'))]).toEqual(['pin', 'castle', '--saga-map-pin:var(--saga-pin-teal)'])
+  expect([shapeOf(marker('The Gull King')), glyphOf(marker('The Gull King')), color(marker('The Gull King'))]).toEqual(['pin', 'skull', '--saga-map-pin:var(--saga-pin-crimson)'])
+  expect([shapeOf(marker('Ember')), glyphOf(marker('Ember')), color(marker('Ember'))]).toEqual(['herald', 'flame', '--saga-map-pin:var(--saga-pin-rust)'])
+  expect(glyphOf(marker('The Brine Vaults'))).toBe('castle')
 
-  await screen.getByRole('button', { name: 'The Brine Vaults — Location' }).click()
+  await screen.getByRole('button', { name: 'The Brine Vaults — Location, Castle' }).click()
   const card = screen.getByRole('dialog', { name: 'The Brine Vaults' })
   await expect.element(card).toBeVisible()
   expect(card.getByRole('list', { name: 'Problems with this pin' }).element().textContent).toContain('Unknown pin style "sparkly"; using auto')
-  await expect.element(card.getByRole('button', { name: 'Style' })).toHaveTextContent('Auto (Location)')
+  await expect.element(card.getByRole('button', { name: 'Icon' })).toHaveTextContent('Castle')
+})
+
+test('the renderer pin defaults of the config colour its pins and its Layers dot', async () => {
+  await renderMap(async (fake) => {
+    fake.fake.setRaw(CONFIG_PATH, CONFIG_YAML.replace('    types: [location, settlement]\n', '    types: [location, settlement]\n    pin: { shape: flag, color: sea, icon: tower-control }\n'))
+    await fake.settings.reload()
+  })
+  await vi.waitFor(() => expect(markers()).toHaveLength(3))
+  expect([shapeOf(marker('Saltmere')), glyphOf(marker('Saltmere')), color(marker('Saltmere'))]).toEqual(['flag', 'tower-control', '--saga-map-pin:var(--saga-pin-sea)'])
+  expect(glyphOf(marker('The Gull King'))).toBe('skull')
+  expect([...document.querySelectorAll<HTMLElement>('.saga-map-layers .saga-map-dot')].map((dot) => dot.style.background)).toEqual(['var(--saga-pin-crimson)', 'var(--saga-pin-sea)'])
+})
+
+test('the sprite has one shape symbol per shape and one glyph symbol per icon in use; an icon Obsidian does not know draws the dot', async () => {
+  unknownIcons.add('castle')
+  try {
+    await renderMap()
+    await vi.waitFor(() => expect(markers()).toHaveLength(3))
+    const ids = (kind: string): string[] => [...document.querySelectorAll('symbol')].map((symbol) => symbol.id).filter((id) => id.includes(`-${kind}-`)).map((id) => id.split(`-${kind}-`)[1] ?? '')
+    expect(ids('shape')).toEqual(SHAPES.map((shape) => shape.id))
+    expect(ids('glyph').sort()).toEqual(['castle', 'circle-small', 'skull'])
+    expect(document.querySelector('symbol[id$="-glyph-castle"] [data-icon]')?.getAttribute('data-icon')).toBe('circle-small')
+    expect(document.querySelector('symbol[id$="-glyph-skull"] [data-icon]')?.getAttribute('data-icon')).toBe('skull')
+  } finally {
+    unknownIcons.clear()
+  }
+})
+
+test.each(SHAPES)('a $id pin stands on its shape anchor at every zoom level', async ({ id }) => {
+  await renderMap((fake) => {
+    fake.addNote('Places/Mark.md', `---\ntype: location\nmap-pins:\n  - map: "[[The Shattered Coast]]"\n    x: 400\n    y: 300\n    shape: ${id}\n---\n`)
+  })
+  await vi.waitFor(() => expect(markers()).toHaveLength(4))
+  const stood = (): void => {
+    const image = imageBox()
+    const tip = tipOf(marker('Mark'), id)
+    expect(tip.x).toBeCloseTo(image.left + 400 * image.scale, 0)
+    expect(tip.y).toBeCloseTo(image.top + 300 * image.scale, 0)
+  }
+  await vi.waitFor(stood)
+  const at = tipOf(marker('Mark'), id)
+  stage()!.dispatchEvent(new WheelEvent('wheel', { deltaY: -250, ctrlKey: true, clientX: at.x, clientY: at.y, bubbles: true, cancelable: true }))
+  const scale = imageBox().scale
+  await vi.waitFor(() => expect(imageBox().scale).toBeGreaterThan(scale * 1.2))
+  await vi.waitFor(stood)
+})
+
+test('layer toggles hide pins by renderer and by icon', async () => {
+  const { screen } = await renderMap()
+  await vi.waitFor(() => expect(markers()).toHaveLength(3))
+  await expect.element(screen.getByRole('checkbox', { name: /Locations/ })).toBeChecked()
+  await screen.getByRole('checkbox', { name: /Locations/ }).click()
+  await vi.waitFor(() => expect(markers().map((m) => m.dataset['pin'])).toEqual(['People/The Gull King.md#0']))
+  await screen.getByRole('checkbox', { name: /Locations/ }).click()
+  await vi.waitFor(() => expect(markers()).toHaveLength(3))
+  await screen.getByRole('checkbox', { name: /^Danger/ }).click()
+  await vi.waitFor(() => expect(markers()).toHaveLength(2))
 })
 
 test('two map views in one window draw from their own sprites', async () => {
@@ -56,18 +117,6 @@ test('two map views in one window draw from their own sprites', async () => {
   const second = screen.container.querySelector('[data-pin] use')?.getAttribute('href')
   expect(second).not.toBe(first)
   expect(document.querySelectorAll(`[id="${second?.slice(1)}"]`)).toHaveLength(1)
-})
-
-test('layer toggles hide pins by renderer and by style', async () => {
-  const { screen } = await renderMap()
-  await vi.waitFor(() => expect(markers()).toHaveLength(3))
-  await expect.element(screen.getByRole('checkbox', { name: /Locations/ })).toBeChecked()
-  await screen.getByRole('checkbox', { name: /Locations/ }).click()
-  await vi.waitFor(() => expect(markers().map((m) => m.dataset['pin'])).toEqual(['People/The Gull King.md#0']))
-  await screen.getByRole('checkbox', { name: /Locations/ }).click()
-  await vi.waitFor(() => expect(markers()).toHaveLength(3))
-  await screen.getByRole('checkbox', { name: /^Danger/ }).click()
-  await vi.waitFor(() => expect(markers()).toHaveLength(2))
 })
 
 test('the layers option hides the panel', async () => {
@@ -109,11 +158,14 @@ test('labels sit beside their pins, and one with no free slot shows on hover, on
   expect(document.querySelector('.saga-map-label-top')?.textContent).toBe('D')
 })
 
-test('a style shows as the pin glyph and in the Layers panel as the same glyph in a neutral colour', async () => {
+test('the Layers panel lists the icons in use with their glyphs and the renderers with a dot in their pin colour', async () => {
   await renderMap()
   await vi.waitFor(() => expect(markers()).toHaveLength(3))
-  expect(document.querySelectorAll('.saga-map-glyph').length).toBeGreaterThan(0)
-  expect(document.querySelector('.saga-map-layers .saga-map-dot')).not.toBeNull()
+  const group = document.querySelector('[aria-label="By icon"]')!
+  expect([...group.querySelectorAll('.saga-map-layer-name')].map((el) => el.textContent)).toEqual(['Castle', 'Danger'])
+  expect(group.querySelectorAll('svg.saga-map-glyph use[href*="-glyph-"]')).toHaveLength(2)
+  expect(document.querySelector('[aria-label="By style"]')).toBeNull()
+  expect([...document.querySelectorAll<HTMLElement>('.saga-map-layers .saga-map-dot')].map((dot) => dot.style.background)).toEqual(['var(--saga-pin-crimson)', 'var(--saga-pin-teal)'])
 })
 
 test('above the threshold pins merge into clusters that zoom in when activated', async () => {
@@ -144,16 +196,16 @@ test('pins far outside the view are culled but stay focusable', async () => {
 test('a click on a pin selects it and opens its card; a click on the map or Escape closes it', async () => {
   const { screen } = await renderMap()
   await vi.waitFor(() => expect(markers()).toHaveLength(3))
-  await screen.getByRole('button', { name: 'Saltmere — Location' }).click()
+  await screen.getByRole('button', { name: 'Saltmere — Location, Castle' }).click()
   const card = screen.getByRole('dialog', { name: 'Saltmere' })
   await expect.element(card).toBeVisible()
-  await screen.getByRole('button', { name: 'The Gull King — Character, danger' }).click()
+  await screen.getByRole('button', { name: 'The Gull King — Character, Danger' }).click()
   await expect.element(screen.getByRole('dialog', { name: 'The Gull King' })).toBeVisible()
   expect(screen.getByRole('dialog', { name: 'Saltmere' }).elements()).toHaveLength(0)
   clickMapAt(50, 700)
   await vi.waitFor(() => expect(screen.getByRole('dialog').elements()).toHaveLength(0))
 
-  await screen.getByRole('button', { name: 'Saltmere — Location' }).click()
+  await screen.getByRole('button', { name: 'Saltmere — Location, Castle' }).click()
   await expect.element(screen.getByRole('dialog', { name: 'Saltmere' })).toBeVisible()
   stage()!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
   await vi.waitFor(() => expect(screen.getByRole('dialog').elements()).toHaveLength(0))
@@ -162,11 +214,11 @@ test('a click on a pin selects it and opens its card; a click on the map or Esca
 test('the card shows an excerpt; its title opens the note, in a new tab with ⌘ or Ctrl, and shows the hover preview', async () => {
   const { screen, fake } = await renderMap()
   await vi.waitFor(() => expect(markers()).toHaveLength(3))
-  await screen.getByRole('button', { name: 'Saltmere — Location' }).click()
+  await screen.getByRole('button', { name: 'Saltmere — Location, Castle' }).click()
   const card = screen.getByRole('dialog', { name: 'Saltmere' })
   await vi.waitFor(() => expect(card.element().textContent).toContain('A harbour town that taxes the tide.'))
   expect(card.element().textContent).not.toContain('map-pins')
-  expect(card.getByRole('button').elements().map((el) => el.getAttribute('aria-label') ?? el.textContent)).toEqual(['Close', 'Auto (Location)'])
+  expect(card.getByRole('button').elements().map((el) => el.getAttribute('aria-label') ?? el.textContent)).toEqual(['Close', 'Pin', 'Teal', 'Castle'])
   const title = card.getByRole('link', { name: 'Saltmere' })
   await title.click()
   expect(fake.opened).toEqual([{ linktext: 'Places/Saltmere.md', sourcePath: MAP, newLeaf: false }])

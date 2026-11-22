@@ -1,5 +1,6 @@
 import type { App, TFile } from 'obsidian'
 import { frontmatterOf, resolveLink, type ConfigStore } from '../obsidian/vault'
+import { resolveLook } from '../shared/pins/look'
 import { parseMapPins } from '../shared/schemas/pins'
 import type { PlacedPin } from './types'
 
@@ -10,9 +11,10 @@ export function collectPins(app: App, config: ConfigStore, files: readonly TFile
     if (file.extension !== 'md' || file.path === map.path) continue
     const frontmatter = frontmatterOf(app, file)
     const { renderer } = config.rendererOf(frontmatter)
+    const defaults = config.pinLookOf(renderer)
     for (const entry of parseMapPins(frontmatter['map-pins']).entries) {
       if (!entry.pin || resolveLink(app, entry.pin.map, file.path)?.path !== map.path) continue
-      pins.push({ file, title: file.basename, renderer, x: entry.pin.x, y: entry.pin.y, style: entry.pin.style ?? 'auto', index: entry.index, issues: entry.issues.map((issue) => issue.message) })
+      pins.push({ file, title: file.basename, renderer, x: entry.pin.x, y: entry.pin.y, look: resolveLook(entry.pin, defaults), defaults, index: entry.index, issues: entry.issues.map((issue) => issue.message) })
     }
   }
   return pins
