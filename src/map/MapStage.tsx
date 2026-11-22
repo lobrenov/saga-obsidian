@@ -1,6 +1,7 @@
 import { useCallback, useContext, useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react'
 import type { TFile } from 'obsidian'
 import { imageZoomLimits } from '../shared/maps/viewport'
+import { STYLE_ICONS } from '../shared/pins/look'
 import { roundCoord } from '../shared/pins/ops'
 import type { PinOp, PinStyle } from '../shared/schemas/pins'
 import { ZoomControls, Readout } from './Controls'
@@ -161,7 +162,7 @@ export function MapStage({ host, title, imageUrl, size, pins, listOpen, labels, 
   }, [selectedKey])
 
   const restyle = async (pin: PlacedPin, style: PinStyle): Promise<void> => {
-    await write(pin.file, locate(pin, (index) => ({ kind: 'style', index, style: style === 'auto' ? null : style })))
+    await write(pin.file, locate(pin, (index) => ({ kind: 'look', index, icon: style === 'auto' ? null : STYLE_ICONS[style] })))
   }
   const remove = async (pin: PlacedPin): Promise<void> => {
     if (!(await host.confirmRemove(pin))) return

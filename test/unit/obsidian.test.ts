@@ -17,7 +17,7 @@ const note = (eol: string): string =>
   ].join(eol)
 const file = (eol: string): string => `${BOM}---${eol}${note(eol)}---${eol}# Body${eol}`
 
-const pin = { map: '[[Coast]]', x: 10.5, y: 20, style: 'camp' as const }
+const pin = { map: '[[Coast]]', x: 10.5, y: 20, icon: 'tent' }
 
 describe('frontmatterOf, resolveLink, resourceUrl', () => {
   it('reads cached frontmatter without its position', () => {
@@ -116,6 +116,17 @@ describe('config store', () => {
     await store.reload()
     expect(seen).toHaveLength(2)
     expect(store.state().config.typeKey).toBe('kind')
+  })
+
+  it('gives a renderer\'s pin look: its configured pin over the built-ins', async () => {
+    const fake = new FakeApp()
+    fake.setRaw(CONFIG_PATH, 'renderers:\n  faction:\n    pin: { shape: herald, icon: swords }\n')
+    const store = await createConfigStore(fake.asApp(), fake.owner())
+    expect(store.pinLookOf('faction')).toEqual({ shape: 'herald', color: 'indigo', icon: 'swords' })
+    expect(store.pinLookOf('location')).toEqual({ shape: 'pin', color: 'teal', icon: 'castle' })
+    fake.deleteRaw(CONFIG_PATH)
+    await store.reload()
+    expect(store.pinLookOf('faction')).toEqual({ shape: 'pin', color: 'indigo', icon: 'flag' })
   })
 
   it('reports invalid YAML and unknown renderers', async () => {

@@ -71,6 +71,62 @@ describe('applyConfigToYaml', () => {
   })
 })
 
+type YamlConfig = { renderers: Record<string, Record<string, unknown>> }
+
+describe('pin defaults in the config', () => {
+  const original = [
+    '# Saga renderers',
+    'renderers:',
+    '  faction:',
+    '    # who they are',
+    '    types: [faction] # kept',
+    '    pin: { color: indigo, note: kept }',
+    '    extra: 1',
+    '  location:',
+    '    types: [location]',
+    ''
+  ].join('\n')
+
+  it('reads pin values and reports unknown ones as issues, dropping them', () => {
+    const read = parseConfig(parse('renderers:\n  faction:\n    pin: { shape: herald, color: pink, icon: nope }\n  item:\n    pin: oops\n'))
+    expect(read.config.renderers.faction?.pin).toEqual({ shape: 'herald' })
+    expect(read.config.renderers.item?.pin).toBeUndefined()
+    expect(read.issues.map((issue) => issue.path)).toEqual(['renderers.faction.pin.color', 'renderers.faction.pin.icon', 'renderers.item.pin'])
+    expect(read.invalid).toEqual([])
+  })
+
+  it('writes a changed pin key, keeping comments, unknown keys and order', () => {
+    const base = parseConfig(parse(original)).config
+    const edited = config({ ...base.renderers, faction: { ...base.renderers.faction!, pin: { color: 'sea', icon: 'flag' } } })
+    const text = apply(original, edited)
+    expect(text).toContain('# who they are')
+    expect(text).toContain('types: [faction] # kept')
+    expect(text).toContain('extra: 1')
+    expect(text.indexOf('types:')).toBeLessThan(text.indexOf('pin:'))
+    expect(text.indexOf('pin:')).toBeLessThan(text.indexOf('extra:'))
+    expect((parse(text) as YamlConfig).renderers.faction?.pin).toEqual({ color: 'sea', icon: 'flag', note: 'kept' })
+  })
+
+  it('creates pin under a renderer that has none, and drops an emptied pin', () => {
+    const base = parseConfig(parse(original)).config
+    const withPin = config({ ...base.renderers, location: { ...base.renderers.location!, pin: { shape: 'circle' } } })
+    const text = apply(original, withPin)
+    expect((parse(text) as YamlConfig).renderers.location).toEqual({ types: ['location'], pin: { shape: 'circle' } })
+    const cleared = parseConfig(parse(text)).config
+    const back = apply(text, config({ ...cleared.renderers, location: { ...cleared.renderers.location!, pin: undefined } }))
+    expect((parse(back) as YamlConfig).renderers.location).toEqual({ types: ['location'] })
+  })
+
+  it('creates a renderer entry holding only a pin', () => {
+    const text = apply(null, config({ item: entry({ pin: { color: 'moss' } }) }))
+    expect(text).toBe('renderers:\n  item:\n    pin: {color: moss}\n')
+  })
+
+  it('returns an unchanged file verbatim', () => {
+    expect(apply(original, parseConfig(parse(original)).config)).toBe(original)
+  })
+})
+
 describe('config schema', () => {
   it('reports key collisions, duplicate types and empty values as issues', () => {
     const { issues } = parseConfig({

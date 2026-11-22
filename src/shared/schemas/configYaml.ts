@@ -3,7 +3,7 @@ import { rendererDefs } from '../renderers/definitions'
 import { RENDERER_IDS } from '../renderers/ids'
 import type { Fields } from '../renderers/fields'
 import { err, ok, type Result } from '../result'
-import { parseConfig, type Config } from './config'
+import { parseConfig, type Config, type RendererConfig } from './config'
 
 const same = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b)
 
@@ -42,14 +42,15 @@ export function applyConfigToYaml(existing: string | null, config: Config, base?
   for (const id of RENDERER_IDS) {
     const entry = config.renderers[id]
     if (!entry) continue
-    const old = from.renderers[id] ?? { types: [], keys: {}, templates: [] }
+    const old: RendererConfig = from.renderers[id] ?? { types: [], keys: {}, templates: [] }
     const path = ['renderers', id]
     const fields = rendererDefs[id].fields as Fields
     const keyOf = (e: typeof entry, field: string): string => e.keys[field] ?? fields[field]?.key ?? field
     const renamed = Object.keys(fields).filter((field) => keyOf(entry, field) !== keyOf(old, field))
+    const pinKeys = (['shape', 'color', 'icon'] as const).filter((key) => entry.pin?.[key] !== old.pin?.[key])
     const typesChanged = !same(entry.types, old.types)
     const templatesChanged = !same(entry.templates, old.templates)
-    if (!typesChanged && !templatesChanged && renamed.length === 0) continue
+    if (!typesChanged && !templatesChanged && renamed.length === 0 && pinKeys.length === 0) continue
     if (mapAt(doc, path) === null) doc.setIn(path, doc.createNode({}))
 
     if (typesChanged) setFlow(doc, [...path, 'types'], entry.types)
@@ -63,6 +64,15 @@ export function applyConfigToYaml(existing: string | null, config: Config, base?
       }
     }
     if (mapAt(doc, [...path, 'keys'])?.items.length === 0) doc.deleteIn([...path, 'keys'])
+    for (const key of pinKeys) {
+      const value = entry.pin?.[key]
+      if (value === undefined) doc.deleteIn([...path, 'pin', key])
+      else {
+        if (!mapAt(doc, [...path, 'pin'])) setFlow(doc, [...path, 'pin'], {})
+        doc.setIn([...path, 'pin', key], value)
+      }
+    }
+    if (mapAt(doc, [...path, 'pin'])?.items.length === 0) doc.deleteIn([...path, 'pin'])
   }
   const after = doc.toString(options)
   return ok(existing !== null && after === before ? existing : after)

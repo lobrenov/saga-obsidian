@@ -98,6 +98,50 @@ function resolvePath(files: Iterable<TFile>, linkpath: string): TFile | null {
   return all.find((file) => file.path === withExt) ?? all.find((file) => file.path.endsWith(`/${withExt}`) || file.name === withExt) ?? null
 }
 
+/** Icon ids `getIcon` does not know, as Obsidian answers for an id missing from its Lucide. */
+export const unknownIcons = new Set<string>()
+
+/** An `<svg data-icon>` for the id (browser tests only); null for an id in `unknownIcons`. */
+export function getIcon(id: string): SVGSVGElement | null {
+  if (unknownIcons.has(id)) return null
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+  svg.dataset.icon = id
+  return svg
+}
+
+export function setIcon(el: HTMLElement, id: string): void {
+  el.dataset.icon = id
+}
+
+/** A suggestion modal over `getItems()` matching `getItemText` by substring; `open`/`close` track state, `choose` selects as a click does. */
+export abstract class FuzzySuggestModal<T> {
+  isOpen = false
+  placeholder = ''
+  constructor(public app: App) {}
+  abstract getItems(): T[]
+  abstract getItemText(item: T): string
+  abstract onChooseItem(item: T, evt: MouseEvent | KeyboardEvent): void
+  renderSuggestion(match: { item: T }, el: HTMLElement): void {
+    el.textContent = this.getItemText(match.item)
+  }
+  setPlaceholder(text: string): void {
+    this.placeholder = text
+  }
+  suggestions(query = ''): T[] {
+    return this.getItems().filter((item) => this.getItemText(item).toLowerCase().includes(query.toLowerCase()))
+  }
+  choose(item: T): void {
+    this.onChooseItem(item, new MouseEvent('click'))
+    this.close()
+  }
+  open(): void {
+    this.isOpen = true
+  }
+  close(): void {
+    this.isOpen = false
+  }
+}
+
 /** The slice of Obsidian's `App` the plugin uses, over in-memory files; cast with `asApp()`. */
 export class FakeApp {
   private readonly texts = new Map<string, string>()

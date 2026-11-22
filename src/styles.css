@@ -1,4 +1,4 @@
-/* Saga renderer colours, shared by the header and the map. The Saga theme may override them. */
+/* Saga renderer colours, shared by the header and the map, and the pin colours (`--saga-pin-<name>`). The Saga theme may override them. */
 body {
   --saga-character: #9a3324;
   --saga-location: #2f5f5a;
@@ -12,6 +12,18 @@ body {
   --saga-item-tint: #f4e8cf;
   --saga-map-tint: #d9e1da;
   --saga-document-tint: #eee7da;
+  --saga-pin-crimson: #9a3324;
+  --saga-pin-rust: #a4441f;
+  --saga-pin-ochre: #845512;
+  --saga-pin-olive: #4f5b3a;
+  --saga-pin-moss: #3e6a2f;
+  --saga-pin-teal: #2f5f5a;
+  --saga-pin-sea: #2a5f86;
+  --saga-pin-indigo: #3d4a7c;
+  --saga-pin-violet: #5d3f80;
+  --saga-pin-plum: #803356;
+  --saga-pin-slate: #46535f;
+  --saga-pin-umber: #5e564b;
 }
 
 body.theme-dark {
@@ -27,6 +39,18 @@ body.theme-dark {
   --saga-item-tint: #392d1c;
   --saga-map-tint: #2b3122;
   --saga-document-tint: #2f2a24;
+  --saga-pin-crimson: #d9806e;
+  --saga-pin-rust: #e0895f;
+  --saga-pin-ochre: #d4a35a;
+  --saga-pin-olive: #a3b57e;
+  --saga-pin-moss: #8dc07a;
+  --saga-pin-teal: #6fb3a9;
+  --saga-pin-sea: #7db1d9;
+  --saga-pin-indigo: #8f9bd6;
+  --saga-pin-violet: #b39adb;
+  --saga-pin-plum: #d98aae;
+  --saga-pin-slate: #9aa8b5;
+  --saga-pin-umber: #b3a898;
 }
 
 /* Menu selects (`src/ui/MenuSelect.tsx`) keep a select's single line. */
@@ -34,4 +58,14 @@ body.theme-dark {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+/* Icon picker rows (`src/ui/iconPicker.ts`). */
+.saga-icon-choice {
+  display: flex;
+  align-items: center;
+  gap: var(--size-4-2);
+}
+.saga-icon-choice-icon {
+  display: inline-flex;
 }

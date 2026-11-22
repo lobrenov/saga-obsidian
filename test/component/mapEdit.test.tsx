@@ -130,10 +130,10 @@ test('dragging a pin writes once, on release, changing only that entry`s positio
   await new Promise((resolve) => setTimeout(resolve, 100))
   expect(fake.writes).toEqual(['People/The Gull King.md'])
   const after = fake.text('People/The Gull King.md')
-  expect(after).toContain('style: danger\n    note: keep')
+  expect(after).toContain('icon: skull\n    note: keep')
   expect(after).toContain('[[Elsewhere]]')
   expect(after).not.toContain('x: 300\n')
-  expect(after.replace(/x: [\d.]+\n {4}y: [\d.]+/, 'x: 300\n    y: 590')).toBe(GULL)
+  expect(after.replace(/x: [\d.]+\n {4}y: [\d.]+/, 'x: 300\n    y: 590')).toBe(GULL.replace('style: danger', 'icon: skull'))
 })
 
 test('a dragged pin keeps its drop point while the write is pending and after it lands', async () => {
@@ -190,10 +190,10 @@ test('a stale index writes the entry that matches the pin, not the one at that p
   const after = fake.text('People/The Gull King.md')
   expect(after).toContain('x: 5\n    y: 5\n')
   expect(after).not.toContain('x: 300\n')
-  expect(after).toContain('style: danger\n    note: keep')
+  expect(after).toContain('icon: skull\n    note: keep')
 })
 
-test('the card changes a pin\'s style, and Auto removes the override', async () => {
+test('the card changes a pin\'s style, written as its icon', async () => {
   const { screen, fake } = await renderMap()
   await vi.waitFor(() => expect(markers()).toHaveLength(3))
   await screen.getByRole('button', { name: 'The Gull King — Character, danger' }).click()
@@ -210,12 +210,9 @@ test('the card changes a pin\'s style, and Auto removes the override', async () 
     ['Camp', false]
   ])
   fake.choose('Quest')
-  await vi.waitFor(() => expect(fake.text('People/The Gull King.md')).toContain('style: quest\n    note: keep'))
-  await style.click()
-  fake.choose('Auto (Character)')
-  await vi.waitFor(() => expect(fake.text('People/The Gull King.md')).not.toContain('style:'))
-  expect(fake.text('People/The Gull King.md')).toContain('note: keep')
+  await vi.waitFor(() => expect(fake.text('People/The Gull King.md')).toContain('icon: scroll-text\n    note: keep'))
+  expect(fake.text('People/The Gull King.md')).not.toContain('style:')
   expect(fake.text('People/The Gull King.md')).toContain('[[Elsewhere]]')
-  expect(fake.writes).toHaveLength(2)
+  expect(fake.writes).toHaveLength(1)
 })
 

@@ -2,6 +2,7 @@ import { Document } from 'yaml'
 import { parseFrontmatter, setFrontmatterKey } from '../frontmatter'
 import { err, ok, type Result } from '../result'
 import type { MapPin, PinOp } from '../schemas/pins'
+import { STYLE_ICONS } from './look'
 
 /** Pin coordinates are written with one decimal. */
 export const roundCoord = (value: number): number => Math.round(value * 10) / 10
@@ -9,9 +10,18 @@ export const roundCoord = (value: number): number => Math.round(value * 10) / 10
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value)
 const invalid = (message: string): Result<never> => err({ kind: 'validation', message, issues: [{ path: 'map-pins', message }] })
 
-/** The `map-pins` entry written for a new pin; `auto` is the default and is left out. */
+/** The `map-pins` entry written for a new pin: its position and any look keys it carries (no defaults, no legacy style). */
 export function pinEntry(pin: MapPin): Record<string, unknown> {
-  return { map: pin.map, x: roundCoord(pin.x), y: roundCoord(pin.y), ...(pin.style && pin.style !== 'auto' ? { style: pin.style } : {}) }
+  const { shape, color, icon } = pin
+  return { map: pin.map, x: roundCoord(pin.x), y: roundCoord(pin.y), ...(shape && { shape }), ...(color && { color }), ...(icon && { icon }) }
+}
+
+/** The entry with `style` replaced in place by the icon it reads as; an existing `icon` is kept, `auto` and unknown styles just drop. */
+function withoutStyle(entry: Record<string, unknown>): Record<string, unknown> {
+  if (!('style' in entry)) return entry
+  const style = entry.style
+  const icon = typeof style === 'string' && Object.hasOwn(STYLE_ICONS, style) && entry.icon === undefined ? STYLE_ICONS[style as keyof typeof STYLE_ICONS] : undefined
+  return Object.fromEntries(Object.entries(entry).flatMap(([key, value]) => (key !== 'style' ? [[key, value]] : icon ? [['icon', icon]] : [])))
 }
 
 /** The YAML a new pin adds to its note, for the preview. */
@@ -34,12 +44,17 @@ export function applyPinOp(list: unknown, op: PinOp): Result<unknown[]> {
   if (op.kind === 'remove') return op.index < current.length ? ok(current.filter((_, i) => i !== op.index)) : invalid(`The note has no pin ${op.index + 1}`)
   const entry = entryAt(current, op.index)
   if (!entry.ok) return entry
-  const next: Record<string, unknown> = { ...entry.value }
+  const next: Record<string, unknown> = { ...withoutStyle(entry.value) }
   if (op.kind === 'move') {
     next.x = roundCoord(op.x)
     next.y = roundCoord(op.y)
-  } else if (op.style === null || op.style === 'auto') delete next.style
-  else next.style = op.style
+  } else {
+    for (const key of ['shape', 'color', 'icon'] as const) {
+      const value = op[key]
+      if (value === null) delete next[key]
+      else if (value !== undefined) next[key] = value
+    }
+  }
   return ok(current.map((item, i) => (i === op.index ? next : item)))
 }
 

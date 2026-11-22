@@ -47,6 +47,15 @@ describe('settings draft', () => {
     expect(config.renderers.character).toEqual({ types: ['character', 'pc', 'npc'], keys: { title: 'job' }, templates: ['Templates/Character.md'] })
   })
 
+  it('keeps a renderer\'s pin defaults when the tab saves other edits', async () => {
+    const { store } = await setup('renderers:\n  faction:\n    types: [faction]\n    pin: { shape: herald, color: indigo }\n')
+    const draft = draftOf(store.state().config)
+    draft.types.faction = 'faction, guild'
+    expect(configOf(draft, store.state().config).renderers.faction?.pin).toEqual({ shape: 'herald', color: 'indigo' })
+    const result = saveText(store.state(), draft)
+    expect(result.ok && parse(result.value)).toMatchObject({ renderers: { faction: { types: ['faction', 'guild'], pin: { shape: 'herald', color: 'indigo' } } } })
+  })
+
   it('leaves the file untouched when nothing was edited', async () => {
     const { store } = await setup()
     const result = saveText(store.state(), draftOf(store.state().config))

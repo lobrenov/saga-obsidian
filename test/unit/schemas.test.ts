@@ -57,6 +57,19 @@ describe('map pins', () => {
   it('keeps a valid pin', () => {
     expect(parseMapPin({ map: '[[Coast]]', x: 1, y: 2, style: 'quest' })).toEqual({ value: { map: '[[Coast]]', x: 1, y: 2, style: 'quest' }, issues: [] })
   })
+  it('keeps a valid shape, colour and icon', () => {
+    const pin = { map: '[[Coast]]', x: 1, y: 2, shape: 'herald', color: 'rust', icon: 'skull' }
+    expect(parseMapPin(pin)).toEqual({ value: pin, issues: [] })
+  })
+  it('drops an unknown shape, colour or icon, each with an issue, so the renderer\'s value applies', () => {
+    const result = parseMapPin({ map: '[[Coast]]', x: 1, y: 2, shape: 'star', color: 'pink', icon: 'not-an-icon', style: 'quest' })
+    expect(result.value).toEqual({ map: '[[Coast]]', x: 1, y: 2, style: 'quest' })
+    expect(result.issues).toEqual([
+      { path: 'shape', message: 'Unknown pin shape "star"; using the default' },
+      { path: 'color', message: 'Unknown pin colour "pink"; using the default' },
+      { path: 'icon', message: 'Unknown pin icon "not-an-icon"; using the default' }
+    ])
+  })
   it('falls back to auto for an unknown style, with an issue', () => {
     const result = parseMapPin({ map: '[[Coast]]', x: 1, y: 2, style: 'pirate' })
     expect(result.value).toEqual({ map: '[[Coast]]', x: 1, y: 2, style: 'auto' })

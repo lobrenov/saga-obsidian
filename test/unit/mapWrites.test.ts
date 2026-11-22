@@ -43,9 +43,9 @@ describe.each([['\n'], ['\r\n']])('updatePin with %j line endings', (eol) => {
   }
 
   it.each<[string, PinOpBuilder, (pins: unknown[]) => void]>([
-    ['add', () => ({ kind: 'add', pin: { map: '[[Coast]]', x: 5.55, y: 6, style: 'camp' } }), (pins) => expect(pins[2]).toEqual({ map: '[[Coast]]', x: 5.6, y: 6, style: 'camp' })],
+    ['add', () => ({ kind: 'add', pin: { map: '[[Coast]]', x: 5.55, y: 6, icon: 'tent' } }), (pins) => expect(pins[2]).toEqual({ map: '[[Coast]]', x: 5.6, y: 6, icon: 'tent' })],
     ['move', at(10, 20), (pins) => expect(pins[0]).toEqual({ map: '[[Coast]]', x: 11.3, y: 21, note: 'keep' })],
-    ['style', (list) => ({ kind: 'style', index: locateEntry(list, 0, entryMatcher(isCoast, 10, 20)) ?? 0, style: 'quest' }), (pins) => expect(pins[0]).toMatchObject({ style: 'quest', note: 'keep' })],
+    ['look', (list) => ({ kind: 'look', index: locateEntry(list, 0, entryMatcher(isCoast, 10, 20)) ?? 0, icon: 'scroll-text' }), (pins) => expect(pins[0]).toMatchObject({ icon: 'scroll-text', note: 'keep' })],
     ['remove', (list) => ({ kind: 'remove', index: locateEntry(list, 0, entryMatcher(isCoast, 10, 20)) ?? 0 }), (pins) => expect(pins).toEqual([{ map: '[[Elsewhere]]', x: 1, y: 1 }])]
   ])('%s writes only the map-pins value', async (_name, build, check) => {
     const { fake, file, app } = setup()

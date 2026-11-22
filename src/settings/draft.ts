@@ -43,7 +43,7 @@ function entryOf(draft: Draft, base: Config, id: RendererId): RendererConfig | u
     } else if (value !== '' && value !== def.key) keys[field] = value
   }
   if (!before && !typesChanged && Object.keys(keys).length === 0) return undefined
-  return { types: typesChanged ? types : (before?.types ?? []), keys, templates: before?.templates ?? [] }
+  return { types: typesChanged ? types : (before?.types ?? []), keys, templates: before?.templates ?? [], ...(before?.pin && { pin: before.pin }) }
 }
 
 /** The config the draft stands for over `base`: unedited entries (and `document`) stay as `base` has them. */

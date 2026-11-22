@@ -1,6 +1,7 @@
 import type { App, Component, Events, MarkdownView, TFile } from 'obsidian'
 import { parse } from 'yaml'
 import { parseFrontmatter, setFrontmatterKey } from '../shared/frontmatter'
+import { rendererLook, type PinLook } from '../shared/pins/look'
 import { applyPinOpToText } from '../shared/pins/ops'
 import { createRendererResolver, type RendererResolution } from '../shared/renderers/resolve'
 import { err, ioError, ok, type Issue, type Result } from '../shared/result'
@@ -89,6 +90,8 @@ export interface ConfigStore {
   state(): ConfigState
   /** The renderer a note with this frontmatter gets under the current config. */
   rendererOf(frontmatter: Frontmatter): RendererResolution
+  /** The pin look of a renderer's notes: its config `pin` over the built-in defaults. */
+  pinLookOf(renderer: RendererId): PinLook
   /** Calls `callback` after each load that changed the file's text; returns the unsubscribe. */
   subscribe(callback: (state: ConfigState) => void): () => void
   reload(): Promise<void>
@@ -138,6 +141,7 @@ export async function createConfigStore(app: App, owner: Component): Promise<Con
   return {
     state: () => state,
     rendererOf: (frontmatter) => resolver(frontmatter),
+    pinLookOf: (renderer) => rendererLook(renderer, state.config.renderers[renderer]?.pin),
     subscribe(callback) {
       listeners.add(callback)
       return () => listeners.delete(callback)

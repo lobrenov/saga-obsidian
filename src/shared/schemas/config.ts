@@ -1,4 +1,6 @@
 import { z } from 'zod'
+import type { PinLookOverrides } from '../pins/look'
+import { pinColorSchema, pinIconSchema, pinShapeSchema } from './pins'
 import { rendererDefs } from '../renderers/definitions'
 import { notePathSchema } from '../ids'
 import type { FieldDef } from '../renderers/fields'
@@ -9,7 +11,9 @@ import { zodIssues } from './issues'
 export const rendererConfigSchema = z.object({
   types: z.array(z.string()),
   keys: z.record(z.string(), z.string()),
-  templates: z.array(notePathSchema)
+  templates: z.array(notePathSchema),
+  /** The renderer's pin look; keys left out take the built-in defaults. */
+  pin: z.object({ shape: pinShapeSchema.optional(), color: pinColorSchema.optional(), icon: pinIconSchema.optional() }).optional()
 })
 export type RendererConfig = z.output<typeof rendererConfigSchema>
 
@@ -23,8 +27,33 @@ const fileSchema = z.object({ typeKey: z.string().optional(), renderers: z.recor
 const entrySchema = z.object({
   types: z.array(z.string()).default([]),
   keys: z.record(z.string(), z.string()).default({}),
-  templates: z.array(notePathSchema).default([])
+  templates: z.array(notePathSchema).default([]),
+  pin: z.unknown().optional()
 })
+
+const PIN_KEYS = [
+  ['shape', pinShapeSchema],
+  ['color', pinColorSchema],
+  ['icon', pinIconSchema]
+] as const
+
+/** The known keys of a renderer's `pin` value; unknown values are dropped and reported. */
+function readPin(raw: unknown, path: string, issues: Issue[]): PinLookOverrides | undefined {
+  if (raw === undefined || raw === null) return undefined
+  if (typeof raw !== 'object' || Array.isArray(raw)) {
+    issues.push({ path, message: 'pin must be a mapping' })
+    return undefined
+  }
+  const pin: Record<string, unknown> = {}
+  for (const [key, schema] of PIN_KEYS) {
+    const given = (raw as Record<string, unknown>)[key]
+    if (given === undefined) continue
+    const known = schema.safeParse(given)
+    if (known.success) pin[key] = known.data
+    else issues.push({ path: `${path}.${key}`, message: `Unknown pin ${key === 'color' ? 'colour' : key} ${JSON.stringify(given)}` })
+  }
+  return Object.keys(pin).length > 0 ? pin : undefined
+}
 
 const isRendererId = (id: string): id is RendererId => (RENDERER_IDS as readonly string[]).includes(id)
 
@@ -78,7 +107,9 @@ export function parseConfig(raw: unknown): { config: Config; issues: Issue[]; in
       if (owner && owner !== id) issues.push({ path: `${path}.types`, message: `Type "${type}" is already mapped to renderer "${owner}"` })
       else typeOwner.set(lower, id)
     }
-    config.renderers[id] = { ...entry.data, keys }
+    const { pin: pinRaw, ...rest } = entry.data
+    const pin = readPin(pinRaw, `${path}.pin`, issues)
+    config.renderers[id] = { ...rest, keys, ...(pin && { pin }) }
   }
   return { config, issues, invalid }
 }
