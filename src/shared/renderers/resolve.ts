@@ -36,3 +36,6 @@ export const typesOf = (config: Config, id: RendererId): readonly string[] => {
   const types = config.renderers[id]?.types
   return types?.length ? types : [id]
 }
+
+/** Every type that maps to a renderer other than `document`, in renderer order. */
+export const allTypes = (config: Config): readonly string[] => RENDERER_IDS.filter((id) => id !== 'document').flatMap((id) => typesOf(config, id))

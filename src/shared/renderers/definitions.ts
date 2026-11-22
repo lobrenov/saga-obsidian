@@ -20,6 +20,7 @@ export const location = defineRenderer({
   label: 'Location',
   icon: 'map-pin',
   color: 'location',
+  banner: 'image',
   fields: {
     image: { kind: 'image', key: 'image', label: 'Image' },
     kind: { kind: 'text', key: 'kind', label: 'Kind' },
@@ -47,6 +48,7 @@ export const item = defineRenderer({
   label: 'Item',
   icon: 'gem',
   color: 'item',
+  banner: 'image',
   fields: {
     image: { kind: 'image', key: 'image', label: 'Image' },
     kind: { kind: 'text', key: 'kind', label: 'Kind' },
@@ -63,6 +65,7 @@ export const map = defineRenderer({
   label: 'Map',
   icon: 'map',
   color: 'map',
+  banner: 'image',
   fields: {
     image: { kind: 'image', key: 'image', label: 'Image' }
   }
