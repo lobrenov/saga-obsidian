@@ -56,9 +56,11 @@ test('Faction prints its emblem, leader, base and allies', async () => {
   expect(document.querySelectorAll('[data-field="allies"] .saga-header-chip')).toHaveLength(2)
 })
 
-test('Item prints its fields', async () => {
-  await renderPrint('Items/Moonblade.md', '---\ntype: artifact\nrarity: legendary\nholder: "[[Bob]]"\nowner: "[[Harbor Guild]]"\n---\n', { config: guild })
-  expect(fieldsOf()).toEqual(['rarity', 'owner'])
+test('Item prints its image in the card and its fields', async () => {
+  await renderPrint('Items/Moonblade.md', '---\ntype: artifact\nimage: "[[portrait.png]]"\nrarity: legendary\nholder: "[[Bob]]"\nowner: "[[Harbor Guild]]"\n---\n', { config: guild })
+  expect(fieldsOf()).toEqual(['image', 'rarity', 'owner'])
+  expect(document.querySelector('.saga-header-emblem img')).not.toBeNull()
+  expect(document.querySelector('.saga-banner img')).toBeNull()
 })
 
 test('hidden fields are left out of the print', async () => {

@@ -4,7 +4,7 @@ import { rendererDefs } from '../../../src/shared/renderers/definitions'
 import { allTypes } from '../../../src/shared/renderers/resolve'
 import type { Config } from '../../../src/shared/schemas/config'
 
-const { character, location, map, document } = rendererDefs
+const { character, location, item, map, document } = rendererDefs
 
 describe('bannerOf', () => {
   it('reads image for renderers that draw it as their banner, following renames', () => {
@@ -19,6 +19,7 @@ describe('bannerOf', () => {
     expect(bannerOf(character, {}, { banner: '[[keep.jpg]]' })).toMatchObject({ key: 'banner', link: { target: 'keep.jpg' } })
     expect(bannerOf(document, {}, { banner: '[[vault.jpg]]' })).toMatchObject({ key: 'banner', link: { target: 'vault.jpg' } })
     expect(bannerOf(character, {}, { image: '[[keep.jpg]]' }).link).toBeNull()
+    expect(bannerOf(item, {}, { banner: '[[forge.jpg]]', image: '[[sword.png]]' })).toMatchObject({ key: 'banner', link: { target: 'forge.jpg' } })
   })
 
   it('has no link for a value that is not a wikilink', () => {

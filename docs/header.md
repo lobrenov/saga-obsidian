@@ -25,11 +25,11 @@ Each renderer has an accent and tint from the `--saga-<renderer>` and `--saga-<r
 - Character: portrait card (152×192) beside the name, `title` (epithet), and facts affiliation, location, status.
 - Location: name, facts kind and region.
 - Faction: emblem beside the name and facts kind, leader, base, allies, rivals.
-- Item: name, facts kind, rarity, owner, location.
+- Item: image (emblem frame) beside the name and facts kind, rarity, owner, location.
 - Map: name.
 - Document: name.
 
-Location, Item and Map draw their `image` as the note's banner (`docs/banner.md`), not inside the card.
+Location and Map draw their `image` as the note's banner (`docs/banner.md`), not inside the card.
 
 Every image field keeps its frame in its real place. A set image fills the frame (portrait 152×192, emblem 112×112) with change and remove controls on hover. An empty one is a quiet dashed frame of the same place, tinted with the renderer's `-tint` token, with the renderer icon centred (portrait 120×150, emblem 96×96); "Add portrait" shows on hover and focus, and click opens the image suggester input in place (Esc cancels). Facts are a grid of fields, left out when every field in it is. A layout that throws falls back to the title alone and logs to the console.
 

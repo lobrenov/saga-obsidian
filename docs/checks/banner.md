@@ -16,7 +16,7 @@ Run on `test/vault` in Obsidian (`npm run dev`, reload the plugin). Notes: `Plac
 - [ ] The banner control sits on the bar's right, beside Type and Properties.
 - [ ] With a banner the bar button reads Banner and its menu has Change banner…, Reposition banner, Remove banner; on a Map it reads Map image and has no Remove.
 - [ ] Hovering the banner shows no buttons and no tooltip.
-- [ ] Location, Item and Map have no image frame inside the card.
+- [ ] Location and Map have no image frame inside the card; Item shows its `image` beside the name and writes `banner` for its banner.
 
 ## Notes without a renderer
 - [ ] `Notes/Type Unknown.md` and a note with no frontmatter: a Document card with Add banner, Set type and Properties; adding a banner keeps the same card, now over the banner.

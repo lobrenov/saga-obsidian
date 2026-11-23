@@ -3,7 +3,7 @@
 Run on `test/vault` in Obsidian (`npm run dev`, reload the plugin). Notes: `Characters/Ada Lovelace.md` (character), `Places/Waterdeep.md` (location), `Factions/Harbor Guild.md` (faction, type `guild`), `Items/Moonblade.md` (item, type `artifact`), `Maps/The Shattered Coast.md` (map), `Maps/Empty Map.md` (map, no image), `Notes/Type Unknown.md` (document). Check `git diff` in the vault after each edit: only the edited key's text changes. Moonblade's `holder:` key is not an Item field and does not show.
 
 ## Display
-- [ ] Each renderer note shows its header in Live Preview: Character portrait card, Faction emblem, facts grid, renderer label and icon in the bar.
+- [ ] Each renderer note shows its header in Live Preview: Character portrait card, Faction emblem, Item image, facts grid, renderer label and icon in the bar.
 - [ ] The same notes in Reading view show the header above the content; the native title and properties are hidden.
 - [ ] `Notes/Type Unknown.md` and a note with no frontmatter: a Document card (title only) in place of the native title and properties; with Render a header on untyped notes? off and no banner, no header (banners: `docs/checks/banner.md`).
 - [ ] Source mode: no header, native title and properties visible.
@@ -29,7 +29,7 @@ Run on `test/vault` in Obsidian (`npm run dev`, reload the plugin). Notes: `Char
 ## Fields (each edit lands in the file as one key)
 - [ ] Text (Title, Kind, Rarity): typing writes once after a pause or on leaving the field, not per keystroke; the cursor stays put when the write lands; Enter leaves the field; Escape restores the saved text; clearing and leaving removes the key.
 - [ ] Choice (Status): its menu has the current value checked and no empty item; choosing another writes the value; Clear (hover) removes the key and the placeholder returns.
-- [ ] Image fields without a value show a small tinted frame in the image's place (beside the title for portrait and emblem) with the renderer icon; hover shows "Add …", click opens the image suggester in place, Esc cancels.
+- [ ] Image fields without a value show a small tinted frame in the image's place (beside the title for portrait, emblem and Item image) with the renderer icon; hover shows "Add …", click opens the image suggester in place, Esc cancels.
 - [ ] Link chips and Add pills have equal left and right padding, and no text clips, with the Saga theme (IBM Plex Sans) and without it.
 - [ ] Link (Location, Region, Leader, Base, Holder, Owner, Origin): the value shows as a chip with the linked note's renderer icon; click opens the note, Cmd/Ctrl-click opens a new tab, hovering with the modifier shows the page preview; the pencil (on hover) edits in place, Esc cancels, the x clears; the suggester lists notes; picking writes `[[Name]]`; clearing and Enter removes the key; an unresolved name is styled as an unresolved link.
 - [ ] Press Enter on a highlighted suggestion in a Link or Links input: the picked note is written, not the half-typed text.

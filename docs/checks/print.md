@@ -4,8 +4,8 @@ Run on `test/vault` in Obsidian (`npm run dev`, reload the plugin). Export with 
 
 ## Renderers
 - [ ] Each of the notes above prints its card: renderer label and icon, name, fields; no bar controls, no editors. Empty fields are absent.
-- [ ] Character: portrait beside the name and epithet; Faction: emblem beside the name; link chips show the linked note's renderer icon and name; choice values (Status) are capitalised.
-- [ ] Location, Item and Map print their `image` as the banner, not inside the card.
+- [ ] Character: portrait beside the name and epithet; Faction: emblem beside the name; Item: image beside the name; link chips show the linked note's renderer icon and name; choice values (Status) are capitalised.
+- [ ] Location and Map print their `image` as the banner, not inside the card.
 
 ## Banner
 - [ ] Ada Lovelace: the banner spans the page margins, fades into the page, and the card starts where the fade ends, with no line beside the card's edges; the image is not distorted.

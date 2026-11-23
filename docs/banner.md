@@ -3,7 +3,7 @@
 Any note in Live Preview or Reading view can show a banner: an image across the full width of the pane, behind the view header, fading into the note, with the note header's card (`docs/header.md`) over its faded lower part. No banner in Source mode, embeds or hover previews.
 
 ## Keys
-- The image: `image` (with the config's renames) for renderers whose definition sets `banner: 'image'` (Location, Item, Map); `banner` for every other note, with or without a renderer. A wikilink to an image (`[[coast.jpg]]`).
+- The image: `image` (with the config's renames) for renderers whose definition sets `banner: 'image'` (Location, Map); `banner` for every other note, with or without a renderer. A wikilink to an image (`[[coast.jpg]]`).
 - `banner-y`: the image's vertical `object-position`, a whole percentage 0–100; missing or invalid is 50.
 - Height from the note's `cssclasses`: 300 px, or 440 px with `banner-tall`.
 

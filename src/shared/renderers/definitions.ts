@@ -48,7 +48,6 @@ export const item = defineRenderer({
   label: 'Item',
   icon: 'gem',
   color: 'item',
-  banner: 'image',
   fields: {
     image: { kind: 'image', key: 'image', label: 'Image' },
     kind: { kind: 'text', key: 'kind', label: 'Kind', optional: true },

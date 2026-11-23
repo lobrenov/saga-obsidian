@@ -40,12 +40,12 @@ test('Faction: emblem, leader, base and allies', async () => {
   expect(document.querySelector('.saga-header[aria-label]')).toBeNull()
 })
 
-test('Item: kind, rarity, owner and location', async () => {
-  const { screen } = await renderHeader('Items/Moonblade.md', '---\ntype: artifact\nrarity: legendary\nholder: "[[Bob]]"\nowner: "[[Harbor Guild]]"\n---\n', {
+test('Item: image beside the name, kind, rarity, owner and location', async () => {
+  const { screen } = await renderHeader('Items/Moonblade.md', '---\ntype: artifact\nimage: "[[portrait.png]]"\nrarity: legendary\nholder: "[[Bob]]"\nowner: "[[Harbor Guild]]"\n---\n', {
     config: { typeKey: 'type', renderers: { item: { types: ['artifact'], keys: {}, templates: [] } } }
   })
   await expect.element(screen.getByRole('region', { name: 'Item header' })).toBeVisible()
-  expect(document.querySelector('.saga-header-body .saga-header-frame')).toBeNull()
+  expect(document.querySelector('.saga-header-split .saga-header-emblem img')).not.toBeNull()
   await expect.element(screen.getByRole('textbox', { name: 'Rarity' })).toHaveValue('legendary')
   await expect.element(screen.getByRole('button', { name: 'Harbor Guild', exact: true })).toBeVisible()
   await expect.element(screen.getByRole('button', { name: 'Add location…' })).toBeVisible()

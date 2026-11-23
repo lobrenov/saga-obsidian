@@ -67,10 +67,11 @@ export function FactionLayout({ title, field }: LayoutProps<typeof faction>) {
   )
 }
 
-/** Name, kind, rarity, owner and location. */
+/** Image beside the name, kind, rarity, owner and location. */
 export function ItemLayout({ title, field }: LayoutProps<typeof item>) {
   return (
-    <>
+    <div className="saga-header-split">
+      {field('image', 'saga-header-emblem')}
       <Identity title={title}>
         <Facts>
           {field('kind')}
@@ -79,7 +80,7 @@ export function ItemLayout({ title, field }: LayoutProps<typeof item>) {
           {field('location')}
         </Facts>
       </Identity>
-    </>
+    </div>
   )
 }
 
