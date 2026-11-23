@@ -187,6 +187,7 @@ export class FakeApp {
     },
     getResourcePath: (file: TFile): string => `app://local/${encodeURIComponent(file.path)}`,
     read: (file: TFile): Promise<string> => Promise.resolve(this.text(file.path)),
+    readBinary: (file: TFile): Promise<ArrayBuffer> => Promise.resolve(new TextEncoder().encode(this.text(file.path)).buffer),
     getFileByPath: (path: string): TFile | null => this.files.get(path) ?? null,
     process: (file: TFile, fn: (data: string) => string): Promise<string> => {
       const next = fn(this.text(file.path))

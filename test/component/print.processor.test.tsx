@@ -26,7 +26,7 @@ function setup(src: string, documentCard = true) {
   registerPrint(plugin, { state: () => ({ config: DEFAULT_CONFIG }) } as unknown as ConfigStore, { get: () => ({ documentCard }) } as unknown as PrefsStore)
   const ctx = { sourcePath: 'Characters/Ada.md', addChild: (child: MarkdownRenderChild) => void children.push(child) } as unknown as MarkdownPostProcessorContext
   const run = (el: HTMLElement) => processor?.(el, ctx)
-  return { run, children }
+  return { run, children, app }
 }
 
 /** A print root (`.print > .markdown-preview-view`) with `count` section divs. */
@@ -83,4 +83,50 @@ test('unloading the render child unmounts the block', async () => {
   expect(children).toHaveLength(1)
   children[0]?.unload()
   expect(root.querySelector('.saga-header')).toBeNull()
+})
+
+/** A 300×300 opaque PNG: red top half, blue bottom half. */
+async function squarePng(): Promise<ArrayBuffer> {
+  const canvas = document.createElement('canvas')
+  canvas.width = canvas.height = 300
+  const context = canvas.getContext('2d') as CanvasRenderingContext2D
+  context.fillStyle = 'red'
+  context.fillRect(0, 0, 300, 150)
+  context.fillStyle = 'blue'
+  context.fillRect(0, 150, 300, 150)
+  return (await fetch(canvas.toDataURL('image/png'))).arrayBuffer()
+}
+
+/** The RGBA of each image row's middle pixel. */
+function rows(img: HTMLImageElement): number[][] {
+  const canvas = document.createElement('canvas')
+  canvas.width = img.naturalWidth
+  canvas.height = img.naturalHeight
+  const context = canvas.getContext('2d') as CanvasRenderingContext2D
+  context.drawImage(img, 0, 0)
+  const x = Math.floor(img.naturalWidth / 2)
+  return Array.from({ length: img.naturalHeight }, (_, y) => [...context.getImageData(x, y, 1, 1).data])
+}
+
+test('the banner prints cropped to 3:1 at banner-y and faded to transparent at its foot', async () => {
+  const { run, app } = setup(PIXEL)
+  const png = await squarePng()
+  app.vault.readBinary = () => Promise.resolve(png)
+  app.addFile('Characters/Ada.md', '---\ntype: character\nbanner: "[[coast.jpg]]"\nbanner-y: 100\n---\n')
+  const { root, sections } = printRoot()
+  await run(sections[0] as HTMLElement)
+  const img = root.querySelector<HTMLImageElement>('.saga-banner img') as HTMLImageElement
+  expect(img.src.startsWith('data:image/png')).toBe(true)
+  expect([img.naturalWidth, img.naturalHeight]).toEqual([300, 100])
+  const pixels = rows(img)
+  expect(pixels[0]).toEqual([0, 0, 255, 255])
+  expect(pixels[99]?.[3]).toBeLessThan(5)
+})
+
+test('an unreadable banner file prints the image unfaded', async () => {
+  const { run } = setup(PIXEL)
+  const { root, sections } = printRoot()
+  await run(sections[0] as HTMLElement)
+  expect(root.querySelector<HTMLImageElement>('.saga-banner img')?.src).toBe(PIXEL)
+  expect(root.querySelector<HTMLElement>('.saga-banner')?.hidden).toBe(false)
 })

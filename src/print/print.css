@@ -4,7 +4,7 @@
   print-color-adjust: exact;
 }
 
-/* The banner's height follows the width; the screen's mask fades it into the page, with no scrim. */
+/* The banner's height follows the width; the image arrives cropped and faded (`fade.ts`), so it has no mask, background or scrim. */
 .saga-print .saga-banner {
   height: auto;
   aspect-ratio: 3 / 1;
@@ -14,14 +14,16 @@
 }
 .saga-print .saga-banner-image {
   background: none;
+  mask-image: none;
 }
 .saga-print .saga-banner-image::after {
   content: none;
 }
 
-/* The card starts where the banner's fade ends. */
+/* The card overlaps the banner's faded foot, as on screen: 30% of a 3:1 banner, 20% of a 2:1 one. */
 .saga-print .saga-banner:not([hidden]) + .saga-header {
-  margin-top: 0;
+  position: relative;
+  margin-top: -10cqw;
 }
 .saga-print .saga-header {
   break-inside: avoid;

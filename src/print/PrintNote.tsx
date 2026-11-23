@@ -47,7 +47,7 @@ export function PrintNote({ app, setIcon, file, frontmatter, config, documentCar
         {image ? (
           <div className="saga-banner">
             <div className="saga-banner-image">
-              <img src={resourceUrl(app, image)} alt="" style={{ objectPosition: `50% ${banner.y}%` }} />
+              <img src={resourceUrl(app, image)} alt="" data-path={image.path} data-y={banner.y} style={{ objectPosition: `50% ${banner.y}%` }} />
             </div>
           </div>
         ) : null}
