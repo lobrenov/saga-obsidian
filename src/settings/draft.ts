@@ -10,25 +10,29 @@ import { buildConfigText } from '../shared/schemas/configWrite'
 /** The renderers the tab edits; `document` is the fallback and has no types or fields of its own. */
 export const EDITABLE_IDS = RENDERER_IDS.filter((id) => id !== 'document')
 
-/** What the tab's inputs hold: `types` is comma-separated, a blank key stands for the field's default, `pin` is each renderer's pin look as drawn (built-ins under the configured keys). */
+/** What the tab's inputs hold: `types` is comma-separated, a blank key stands for the field's default, `hidden` is true per optional field the header leaves out, `pin` is each renderer's pin look as drawn (built-ins under the configured keys). */
 export interface Draft {
   typeKey: string
   types: Record<string, string>
   keys: Record<string, Record<string, string>>
+  hidden: Record<string, Record<string, boolean>>
   pin: Record<string, PinLook>
 }
 
 const fieldsOf = (id: RendererId): Fields => rendererDefs[id].fields
+const optionalFieldsOf = (id: RendererId): string[] => Object.keys(fieldsOf(id)).filter((field) => fieldsOf(id)[field]?.optional)
 
 export function draftOf(config: Config): Draft {
   const types: Draft['types'] = {}
   const keys: Draft['keys'] = {}
+  const hidden: Draft['hidden'] = {}
   for (const id of EDITABLE_IDS) {
     types[id] = typesOf(config, id).join(', ')
     keys[id] = Object.fromEntries(Object.keys(fieldsOf(id)).map((field) => [field, config.renderers[id]?.keys[field] ?? '']))
+    hidden[id] = Object.fromEntries(optionalFieldsOf(id).map((field) => [field, config.renderers[id]?.hidden?.includes(field) ?? false]))
   }
   const pin = Object.fromEntries(RENDERER_IDS.map((id) => [id, rendererLook(id, config.renderers[id]?.pin)]))
-  return { typeKey: config.typeKey, types, keys, pin }
+  return { typeKey: config.typeKey, types, keys, hidden, pin }
 }
 
 const same = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b)
@@ -60,8 +64,9 @@ function entryOf(draft: Draft, base: Config, id: RendererId): RendererConfig | u
     } else if (value !== '' && value !== def.key) keys[field] = value
   }
   const pin = pinOf(draft, base, id)
-  if (!before && !typesChanged && Object.keys(keys).length === 0 && !pin) return undefined
-  return { types: typesChanged ? types : (before?.types ?? []), keys, templates: before?.templates ?? [], ...(pin && { pin }) }
+  const hidden = optionalFieldsOf(id).filter((field) => draft.hidden[id]?.[field])
+  if (!before && !typesChanged && Object.keys(keys).length === 0 && !pin && hidden.length === 0) return undefined
+  return { types: typesChanged ? types : (before?.types ?? []), keys, templates: before?.templates ?? [], ...(pin && { pin }), ...(hidden.length > 0 && { hidden }) }
 }
 
 /** The config the draft stands for over `base`: unedited entries (and `document`) stay as `base` has them. */
@@ -95,8 +100,15 @@ export function rebase(draft: Draft, previous: Config, next: Config): Draft {
   const pick = <T extends string>(mine: T, before: T, after: T): T => (mine === before ? after : mine)
   const types: Draft['types'] = {}
   const keys: Draft['keys'] = {}
+  const hidden: Draft['hidden'] = {}
   for (const id of EDITABLE_IDS) {
     types[id] = pick(draft.types[id] ?? '', was.types[id] ?? '', now.types[id] ?? '')
+    hidden[id] = Object.fromEntries(
+      Object.entries(now.hidden[id] ?? {}).map(([field, value]) => {
+        const [mine, before] = [draft.hidden[id]?.[field] ?? false, was.hidden[id]?.[field] ?? false]
+        return [field, mine === before ? value : mine]
+      })
+    )
     keys[id] = Object.fromEntries(
       Object.entries(now.keys[id] ?? {}).map(([field, value]) => [field, pick(draft.keys[id]?.[field] ?? '', was.keys[id]?.[field] ?? '', value)])
     )
@@ -107,5 +119,5 @@ export function rebase(draft: Draft, previous: Config, next: Config): Draft {
       return [id, { shape: pick(mine.shape, before.shape, after.shape), color: pick(mine.color, before.color, after.color), icon: pick(mine.icon, before.icon, after.icon) }]
     })
   )
-  return { typeKey: pick(draft.typeKey, was.typeKey, now.typeKey), types, keys, pin }
+  return { typeKey: pick(draft.typeKey, was.typeKey, now.typeKey), types, keys, hidden, pin }
 }

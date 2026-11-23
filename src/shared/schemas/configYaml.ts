@@ -50,7 +50,8 @@ export function applyConfigToYaml(existing: string | null, config: Config, base?
     const pinKeys = (['shape', 'color', 'icon'] as const).filter((key) => entry.pin?.[key] !== old.pin?.[key])
     const typesChanged = !same(entry.types, old.types)
     const templatesChanged = !same(entry.templates, old.templates)
-    if (!typesChanged && !templatesChanged && renamed.length === 0 && pinKeys.length === 0) continue
+    const hiddenChanged = !same(entry.hidden ?? [], old.hidden ?? [])
+    if (!typesChanged && !templatesChanged && !hiddenChanged && renamed.length === 0 && pinKeys.length === 0) continue
     if (mapAt(doc, path) === null) doc.setIn(path, doc.createNode({}))
 
     if (typesChanged) setFlow(doc, [...path, 'types'], entry.types)
@@ -73,8 +74,12 @@ export function applyConfigToYaml(existing: string | null, config: Config, base?
       }
     }
     if (mapAt(doc, [...path, 'pin'])?.items.length === 0) doc.deleteIn([...path, 'pin'])
-    const pinOnly = old.types.length === 0 && Object.keys(old.keys).length === 0 && old.templates.length === 0
-    if (pinOnly && mapAt(doc, path)?.items.length === 0) doc.deleteIn(path)
+    if (hiddenChanged) {
+      if (entry.hidden?.length) setFlow(doc, [...path, 'hidden'], entry.hidden)
+      else doc.deleteIn([...path, 'hidden'])
+    }
+    const pinOrHiddenOnly = old.types.length === 0 && Object.keys(old.keys).length === 0 && old.templates.length === 0
+    if (pinOrHiddenOnly && mapAt(doc, path)?.items.length === 0) doc.deleteIn(path)
   }
   const after = doc.toString(options)
   return ok(existing !== null && after === before ? existing : after)

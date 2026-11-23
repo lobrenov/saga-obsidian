@@ -1,6 +1,6 @@
 # Note header: manual checks
 
-Run on `test/vault` in Obsidian (`npm run dev`, reload the plugin). Notes: `Characters/Ada Lovelace.md` (character), `Places/Waterdeep.md` (location), `Factions/Harbor Guild.md` (faction, type `guild`), `Items/Moonblade.md` (item, type `artifact`), `Maps/The Shattered Coast.md` (map), `Maps/Empty Map.md` (map, no image), `Notes/Type Unknown.md` (document). Check `git diff` in the vault after each edit: only the edited key's text changes.
+Run on `test/vault` in Obsidian (`npm run dev`, reload the plugin). Notes: `Characters/Ada Lovelace.md` (character), `Places/Waterdeep.md` (location), `Factions/Harbor Guild.md` (faction, type `guild`), `Items/Moonblade.md` (item, type `artifact`), `Maps/The Shattered Coast.md` (map), `Maps/Empty Map.md` (map, no image), `Notes/Type Unknown.md` (document). Check `git diff` in the vault after each edit: only the edited key's text changes. Moonblade's `holder:` key is not an Item field and does not show.
 
 ## Display
 - [ ] Each renderer note shows its header in Live Preview: Character portrait card, Faction emblem, facts grid, renderer label and icon in the bar.

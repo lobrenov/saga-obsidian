@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { Children, type ReactNode } from 'react'
 import type { character, document, faction, item, location, map } from '../shared/renderers/definitions'
 import type { LayoutProps } from './types'
 
@@ -12,6 +12,12 @@ function Identity({ title, children }: { title: ReactNode; children: ReactNode }
   )
 }
 
+/** The facts grid; nothing when every field in it is left out. */
+function Facts({ children }: { children: ReactNode }) {
+  const fields = Children.toArray(children)
+  return fields.length > 0 ? <div className="saga-header-facts">{fields}</div> : null
+}
+
 /** Portrait card beside the name, epithet and facts (affiliation, location, status). */
 export function CharacterLayout({ title, field }: LayoutProps<typeof character>) {
   return (
@@ -19,11 +25,11 @@ export function CharacterLayout({ title, field }: LayoutProps<typeof character>)
       {field('portrait', 'saga-header-portrait')}
       <Identity title={title}>
         {field('title', 'saga-header-epithet')}
-        <div className="saga-header-facts">
+        <Facts>
           {field('affiliation')}
           {field('location')}
           {field('status')}
-        </div>
+        </Facts>
       </Identity>
     </div>
   )
@@ -34,10 +40,10 @@ export function LocationLayout({ title, field }: LayoutProps<typeof location>) {
   return (
     <>
       <Identity title={title}>
-        <div className="saga-header-facts">
+        <Facts>
           {field('kind')}
           {field('region')}
-        </div>
+        </Facts>
       </Identity>
     </>
   )
@@ -49,31 +55,29 @@ export function FactionLayout({ title, field }: LayoutProps<typeof faction>) {
     <div className="saga-header-split">
       {field('emblem', 'saga-header-emblem')}
       <Identity title={title}>
-        <div className="saga-header-facts">
+        <Facts>
           {field('kind')}
           {field('leader')}
           {field('base')}
           {field('allies')}
           {field('rivals')}
-        </div>
+        </Facts>
       </Identity>
     </div>
   )
 }
 
-/** Name, kind, rarity, holder, owner, location and origin. */
+/** Name, kind, rarity, owner and location. */
 export function ItemLayout({ title, field }: LayoutProps<typeof item>) {
   return (
     <>
       <Identity title={title}>
-        <div className="saga-header-facts">
+        <Facts>
           {field('kind')}
           {field('rarity')}
-          {field('holder')}
           {field('owner')}
           {field('location')}
-          {field('origin')}
-        </div>
+        </Facts>
       </Identity>
     </>
   )

@@ -174,17 +174,33 @@ class SettingsTab extends PluginSettingTab {
             })
         )
       for (const [field, fieldDef] of Object.entries(def.fields as Fields)) {
-        new Setting(section).setName(fieldDef.label).addText((text) =>
+        const hidden = (): boolean => this.draft.hidden[id]?.[field] ?? false
+        const row = new Setting(section).setName(fieldDef.label)
+        let keyInput: { setDisabled: (disabled: boolean) => unknown } | undefined
+        row.addText((text) => {
+          keyInput = text
           text
             .setPlaceholder(fieldDef.key)
             .setValue(this.draft.keys[id]?.[field] ?? '')
-            .setDisabled(readOnly)
+            .setDisabled(readOnly || hidden())
             .onChange((value) => {
               const keys = (this.draft.keys[id] ??= {})
               keys[field] = value
               this.changed()
             })
-        )
+        })
+        if (fieldDef.optional)
+          row.addToggle((toggle) =>
+            toggle
+              .setTooltip('Show in the header')
+              .setValue(!hidden())
+              .setDisabled(readOnly)
+              .onChange((shown) => {
+                ;(this.draft.hidden[id] ??= {})[field] = !shown
+                keyInput?.setDisabled(!shown)
+                this.changed()
+              })
+          )
       }
     }
     new Setting(rendererCard(containerEl).createDiv({ cls: 'setting-items' })).setName(rendererDefs.document.label).setDesc('any other type')

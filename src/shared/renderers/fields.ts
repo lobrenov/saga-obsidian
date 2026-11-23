@@ -5,6 +5,8 @@ interface FieldBase {
   /** Default note (frontmatter) key; the config may rename it. */
   key: string
   label: string
+  /** The header shows the field unless the renderer's config hides it. */
+  optional?: boolean
 }
 
 type Plain<K extends 'text' | 'list' | 'link' | 'links' | 'image'> = FieldBase & { kind: K }

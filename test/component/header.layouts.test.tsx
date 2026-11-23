@@ -40,16 +40,23 @@ test('Faction: emblem, leader, base and allies', async () => {
   expect(document.querySelector('.saga-header[aria-label]')).toBeNull()
 })
 
-test('Item: the holder, owner, location and origin links', async () => {
+test('Item: kind, rarity, owner and location', async () => {
   const { screen } = await renderHeader('Items/Moonblade.md', '---\ntype: artifact\nrarity: legendary\nholder: "[[Bob]]"\nowner: "[[Harbor Guild]]"\n---\n', {
     config: { typeKey: 'type', renderers: { item: { types: ['artifact'], keys: {}, templates: [] } } }
   })
   await expect.element(screen.getByRole('region', { name: 'Item header' })).toBeVisible()
   expect(document.querySelector('.saga-header-body .saga-header-frame')).toBeNull()
   await expect.element(screen.getByRole('textbox', { name: 'Rarity' })).toHaveValue('legendary')
-  await expect.element(screen.getByRole('button', { name: 'Bob', exact: true })).toBeVisible()
   await expect.element(screen.getByRole('button', { name: 'Harbor Guild', exact: true })).toBeVisible()
-  await expect.element(screen.getByRole('button', { name: 'Add origin…' })).toBeVisible()
+  await expect.element(screen.getByRole('button', { name: 'Add location…' })).toBeVisible()
+  expect([...document.querySelectorAll('.saga-header-facts [data-field]')].map((el) => el.getAttribute('data-field'))).toEqual(['kind', 'rarity', 'owner', 'location'])
+})
+
+test('hidden fields are left out even with a value, and facts with every field hidden draw no rule', async () => {
+  const hidden = { typeKey: 'type', renderers: { character: { types: ['character'], keys: {}, templates: [], hidden: ['title', 'affiliation', 'location', 'status'] } } }
+  await renderHeader('Characters/Ada Lovelace.md', '---\ntype: character\ntitle: Countess\nstatus: alive\n---\n', { config: hidden })
+  expect([...document.querySelectorAll('[data-field]')].map((el) => el.getAttribute('data-field'))).toEqual(['portrait'])
+  expect(document.querySelector('.saga-header-facts')).toBeNull()
 })
 
 test('Map: name only', async () => {

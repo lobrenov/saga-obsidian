@@ -14,6 +14,8 @@ export interface LayoutInput {
   frontmatter: Readonly<Record<string, unknown>>
   /** Field name -> note key, from the config's renames. */
   keys: Readonly<Record<string, string>>
+  /** Optional fields the config hides. */
+  hidden: readonly string[]
 }
 
 export type HeaderRendererId = 'character' | 'location' | 'faction' | 'item' | 'map' | 'document'

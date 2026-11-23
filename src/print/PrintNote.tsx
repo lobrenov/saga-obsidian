@@ -21,6 +21,7 @@ export interface PrintNoteProps {
 }
 
 const NO_KEYS: Readonly<Record<string, string>> = {}
+const NO_HIDDEN: readonly string[] = []
 
 const refuse = (name: string) => () => {
   throw new Error(`${name} is not available in print`)
@@ -60,7 +61,7 @@ export function PrintNote({ app, setIcon, file, frontmatter, config, documentCar
             </div>
             <div className="saga-header-body">
               <LayoutBoundary resetKey={`${file.path}:${renderer}`} fallback={title}>
-                <PrintLayout title={title} frontmatter={frontmatter} keys={keys} />
+                <PrintLayout title={title} frontmatter={frontmatter} keys={keys} hidden={config.renderers[renderer]?.hidden ?? NO_HIDDEN} />
               </LayoutBoundary>
             </div>
           </section>

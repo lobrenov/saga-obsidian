@@ -7,7 +7,7 @@ A note whose `type` maps to a renderer other than `document` gets a React header
 - `controller.ts`: `createHeaderController(env, config)` with `sync(views)` and `dispose()`. One React root and one host element (`.saga-header-host`) per leaf key. `sync` resolves `config.rendererOf(frontmatterOf(app, file))`; leaves in Source mode, without a file, or resolving to `document` with `documentCard()` off and no banner (`bannerOf`) are unmounted. Its third argument, `repositionBanner(key)`, is the banner controller's `reposition`, passed to `NoteHeader` as `onRepositionBanner`. `NoteHeader` is keyed by the file path, so a file switch in the same leaf unmounts the old tree (pending text edits flush to their own note) and mounts a new one. A draw is skipped when its signature (path, frontmatter, resolution, config text, Properties state) is unchanged. A mode change remounts the leaf; the Properties state is kept.
 - `dom.ts`: all knowledge of Obsidian's markup (below), `placeHost`, `markActive`, `watchPlacement`, `isolatePointer`.
 - `NoteHeader.tsx`: the section for one note: bar, layout inside `LayoutBoundary`.
-- `registry.tsx`, `layouts.tsx`, `types.ts`: `defineRendererView(def, Layout)` validates the frontmatter (`readFrontmatter` with the config's key renames) and gives the layout `title` and `field(name, className)`. `rendererRegistry` covers `character`, `location`, `faction`, `item`, `map` and `document`.
+- `registry.tsx`, `layouts.tsx`, `types.ts`: `defineRendererView(def, Layout)` validates the frontmatter (`readFrontmatter` with the config's key renames) and gives the layout `title` and `field(name, className)`, which is nothing for a field in the renderer's `hidden` config. `rendererRegistry` covers `character`, `location`, `faction`, `item`, `map` and `document`.
 - `FieldView.tsx`, `fieldEditors.tsx`: one field and one editor per kind.
 - `NoteTitle.tsx`, `Icon.tsx`, `LayoutBoundary.tsx`, `header.css`.
 - `env.ts`, `host.ts`: `HeaderEnv` and its Obsidian implementation.
@@ -25,13 +25,13 @@ Each renderer has an accent and tint from the `--saga-<renderer>` and `--saga-<r
 - Character: portrait card (152×192) beside the name, `title` (epithet), and facts affiliation, location, status.
 - Location: name, facts kind and region.
 - Faction: emblem beside the name and facts kind, leader, base, allies, rivals.
-- Item: name, facts kind, rarity, holder, owner, location, origin.
+- Item: name, facts kind, rarity, owner, location.
 - Map: name.
 - Document: name.
 
 Location, Item and Map draw their `image` as the note's banner (`docs/banner.md`), not inside the card.
 
-Every image field keeps its frame in its real place. A set image fills the frame (portrait 152×192, emblem 112×112) with change and remove controls on hover. An empty one is a quiet dashed frame of the same place, tinted with the renderer's `-tint` token, with the renderer icon centred (portrait 120×150, emblem 96×96); "Add portrait" shows on hover and focus, and click opens the image suggester input in place (Esc cancels). Facts are a grid of fields. A layout that throws falls back to the title alone and logs to the console.
+Every image field keeps its frame in its real place. A set image fills the frame (portrait 152×192, emblem 112×112) with change and remove controls on hover. An empty one is a quiet dashed frame of the same place, tinted with the renderer's `-tint` token, with the renderer icon centred (portrait 120×150, emblem 96×96); "Add portrait" shows on hover and focus, and click opens the image suggester input in place (Esc cancels). Facts are a grid of fields, left out when every field in it is. A layout that throws falls back to the title alone and logs to the console.
 
 ## Fields
 `FieldView` shows the label, the editor, and for a value failing its schema the raw value, the issue and, when `convertRaw` finds a safe conversion, a Convert button (a `setField` with the converted value). A failed write shows `role="alert"`. All writes go through `src/obsidian/vault.ts` with the note key from the config's renames; a cleared field removes its key.

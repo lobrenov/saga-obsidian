@@ -136,6 +136,32 @@ describe('pin defaults in the config', () => {
   })
 })
 
+describe('hidden fields in the config', () => {
+  it('reads hidden optional fields and reports unknown and required ones, dropping them', () => {
+    const read = parseConfig(parse('renderers:\n  character:\n    hidden: [title, portrait, nope]\n  item:\n    hidden: [holder]\n'))
+    expect(read.config.renderers.character?.hidden).toEqual(['title'])
+    expect(read.config.renderers.item?.hidden).toBeUndefined()
+    expect(read.issues.map((issue) => issue.path)).toEqual(['renderers.character.hidden', 'renderers.character.hidden', 'renderers.item.hidden'])
+    expect(read.issues.map((issue) => issue.message)).toEqual([
+      'Field "portrait" of renderer "character" cannot be hidden',
+      'Unknown field "nope" for renderer "character"',
+      'Unknown field "holder" for renderer "item"'
+    ])
+    expect(read.invalid).toEqual([])
+  })
+
+  it('writes hidden flow style beside the entry\'s other keys, keeping comments, and drops it when emptied', () => {
+    const original = 'renderers:\n  # people\n  character:\n    types: [character] # kept\n'
+    const text = apply(original, config({ character: entry({ types: ['character'], hidden: ['title', 'status'] }) }))
+    expect(text).toBe('renderers:\n  # people\n  character:\n    types: [character] # kept\n    hidden: [title, status]\n')
+    expect(apply(text, config({ character: entry({ types: ['character'] }) }))).toBe(original)
+  })
+
+  it('creates a renderer entry holding only hidden fields', () => {
+    expect(apply(null, config({ faction: entry({ hidden: ['rivals'] }) }))).toBe('renderers:\n  faction:\n    hidden: [rivals]\n')
+  })
+})
+
 describe('config schema', () => {
   it('reports key collisions, duplicate types and empty values as issues', () => {
     const { issues } = parseConfig({

@@ -58,7 +58,13 @@ test('Faction prints its emblem, leader, base and allies', async () => {
 
 test('Item prints its fields', async () => {
   await renderPrint('Items/Moonblade.md', '---\ntype: artifact\nrarity: legendary\nholder: "[[Bob]]"\nowner: "[[Harbor Guild]]"\n---\n', { config: guild })
-  expect(fieldsOf()).toEqual(['rarity', 'holder', 'owner'])
+  expect(fieldsOf()).toEqual(['rarity', 'owner'])
+})
+
+test('hidden fields are left out of the print', async () => {
+  const config: Config = { typeKey: 'type', renderers: { item: { types: ['artifact'], keys: {}, templates: [], hidden: ['rarity'] } } }
+  await renderPrint('Items/Moonblade.md', '---\ntype: artifact\nrarity: legendary\nowner: "[[Harbor Guild]]"\n---\n', { config })
+  expect(fieldsOf()).toEqual(['owner'])
 })
 
 test('Map and Document print the name alone', async () => {

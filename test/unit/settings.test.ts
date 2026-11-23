@@ -131,6 +131,38 @@ describe('settings draft', () => {
     expect(result.ok && parseConfig(parse(result.value)).config.renderers.location?.types).toEqual(['place', 'town'])
   })
 
+  describe('hidden fields', () => {
+    it('holds each optional field as shown or hidden, and saves only the hidden ones in field order', async () => {
+      const { store } = await setup('renderers:\n  character:\n    types: [character]\n    hidden: [status]\n')
+      const draft = draftOf(store.state().config)
+      expect(draft.hidden.character).toEqual({ title: false, affiliation: false, location: false, status: true })
+      expect(draft.hidden.map).toEqual({})
+      draft.hidden.character!.title = true
+      const result = saveText(store.state(), draft)
+      expect(result.ok && result.value).toBe('renderers:\n  character:\n    types: [character]\n    hidden: [title, status]\n')
+    })
+
+    it('drops hidden once every field is shown again, and writes nothing for a draft left as read', async () => {
+      const { store } = await setup('renderers:\n  faction:\n    hidden: [rivals]\n')
+      expect(saveText(store.state(), draftOf(store.state().config))).toEqual({ ok: true, value: 'renderers:\n  faction:\n    hidden: [rivals]\n' })
+      const draft = draftOf(store.state().config)
+      draft.hidden.faction!.rivals = false
+      const result = saveText(store.state(), draft)
+      expect(result.ok && parse(result.value)).toEqual({ renderers: {} })
+    })
+
+    it('keeps a toggle the user changed and takes the rest from an external change', async () => {
+      const { app, store } = await setup('renderers:\n  item:\n    hidden: [kind]\n')
+      const previous = store.state().config
+      const draft = draftOf(previous)
+      draft.hidden.item!.rarity = true
+      app.setRaw(CONFIG_PATH, 'renderers:\n  item:\n    hidden: [owner]\n')
+      await store.reload()
+      const merged = rebase(draft, previous, store.state().config)
+      expect(merged.hidden.item).toEqual({ kind: false, rarity: true, owner: true, location: false })
+    })
+  })
+
   describe('pin defaults', () => {
     it('draws each renderer\'s built-in look, or its configured keys over it', async () => {
       const { store } = await setup('renderers:\n  faction:\n    pin: { shape: herald }\n')

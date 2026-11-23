@@ -3,7 +3,7 @@ import type { PinLookOverrides } from '../pins/look'
 import { pinColorSchema, pinIconSchema, pinShapeSchema } from './pins'
 import { rendererDefs } from '../renderers/definitions'
 import { notePathSchema } from '../ids'
-import type { FieldDef } from '../renderers/fields'
+import type { FieldDef, Fields } from '../renderers/fields'
 import { RENDERER_IDS, type RendererId } from '../renderers/ids'
 import type { Issue } from '../result'
 import { zodIssues } from './issues'
@@ -13,7 +13,9 @@ export const rendererConfigSchema = z.object({
   keys: z.record(z.string(), z.string()),
   templates: z.array(notePathSchema),
   /** The renderer's pin look; keys left out take the built-in defaults. */
-  pin: z.object({ shape: pinShapeSchema.optional(), color: pinColorSchema.optional(), icon: pinIconSchema.optional() }).optional()
+  pin: z.object({ shape: pinShapeSchema.optional(), color: pinColorSchema.optional(), icon: pinIconSchema.optional() }).optional(),
+  /** Optional fields the header leaves out, in field order. */
+  hidden: z.array(z.string()).optional()
 })
 export type RendererConfig = z.output<typeof rendererConfigSchema>
 
@@ -28,7 +30,8 @@ const entrySchema = z.object({
   types: z.array(z.string()).default([]),
   keys: z.record(z.string(), z.string()).default({}),
   templates: z.array(notePathSchema).default([]),
-  pin: z.unknown().optional()
+  pin: z.unknown().optional(),
+  hidden: z.array(z.string()).default([])
 })
 
 const PIN_KEYS = [
@@ -107,9 +110,14 @@ export function parseConfig(raw: unknown): { config: Config; issues: Issue[]; in
       if (owner && owner !== id) issues.push({ path: `${path}.types`, message: `Type "${type}" is already mapped to renderer "${owner}"` })
       else typeOwner.set(lower, id)
     }
-    const { pin: pinRaw, ...rest } = entry.data
-    const pin = readPin(pinRaw, `${path}.pin`, issues)
-    config.renderers[id] = { ...rest, keys, ...(pin && { pin }) }
+    const fields: Fields = rendererDefs[id].fields
+    for (const field of entry.data.hidden) {
+      if (!Object.hasOwn(fields, field)) issues.push({ path: `${path}.hidden`, message: `Unknown field "${field}" for renderer "${id}"` })
+      else if (!fields[field]?.optional) issues.push({ path: `${path}.hidden`, message: `Field "${field}" of renderer "${id}" cannot be hidden` })
+    }
+    const hidden = Object.keys(fields).filter((field) => fields[field]?.optional && entry.data.hidden.includes(field))
+    const pin = readPin(entry.data.pin, `${path}.pin`, issues)
+    config.renderers[id] = { types: entry.data.types, keys, templates: entry.data.templates, ...(pin && { pin }), ...(hidden.length > 0 && { hidden }) }
   }
   return { config, issues, invalid }
 }

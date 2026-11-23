@@ -12,12 +12,12 @@ import type { HeaderRendererId, LayoutInput, LayoutProps, RegisteredRenderer } f
 function defineRendererView<R extends RendererDef>(def: R, Layout: ComponentType<LayoutProps<R>>): RegisteredRenderer {
   const layoutWith =
     (View: ComponentType<FieldViewProps>) =>
-    ({ title, frontmatter, keys }: LayoutInput) => {
+    ({ title, frontmatter, keys, hidden }: LayoutInput) => {
       const layers = readFrontmatter(def, frontmatter, keys).fields as Record<string, Validated<unknown>>
       const field: LayoutProps<R>['field'] = (name, className) => {
         const fieldDef = def.fields[name]
         const layer = layers[name]
-        if (!fieldDef || !layer) return null
+        if (!fieldDef || !layer || hidden.includes(name)) return null
         const noteKey = keys[name] ?? fieldDef.key
         return <View key={name} def={fieldDef} noteKey={noteKey} raw={frontmatter[noteKey]} layer={layer} className={className} />
       }

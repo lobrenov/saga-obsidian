@@ -10,6 +10,10 @@
   align-self: center;
 }
 
+.saga-settings-renderer details > .setting-item:not(summary):not(:has(.checkbox-container)) .setting-item-control {
+  padding-inline-end: calc(var(--toggle-width) + var(--size-4-2));
+}
+
 .saga-settings-renderer summary {
   cursor: var(--cursor);
 }

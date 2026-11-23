@@ -31,6 +31,7 @@ export interface NoteHeaderProps {
 }
 
 const NO_KEYS: Readonly<Record<string, string>> = {}
+const NO_HIDDEN: readonly string[] = []
 
 /** The note's `type` as a selector over the types its renderer draws (a value outside them stays selectable); on a Document card, over every configured type, with "Set type" while none is chosen. */
 function TypeField({ renderer, current }: { renderer: HeaderRendererId; current: string | null }) {
@@ -117,7 +118,7 @@ export function NoteHeader({ env, file, frontmatter, resolution, config, propert
         </div>
         <div className="saga-header-body">
           <LayoutBoundary resetKey={`${file.path}:${renderer}`} fallback={title}>
-            <Layout title={title} frontmatter={frontmatter} keys={keys} />
+            <Layout title={title} frontmatter={frontmatter} keys={keys} hidden={config.renderers[renderer]?.hidden ?? NO_HIDDEN} />
           </LayoutBoundary>
         </div>
       </section>

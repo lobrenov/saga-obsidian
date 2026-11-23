@@ -8,10 +8,10 @@ export const character = defineRenderer({
   color: 'character',
   fields: {
     portrait: { kind: 'image', key: 'portrait', label: 'Portrait' },
-    title: { kind: 'text', key: 'title', label: 'Title' },
-    affiliation: { kind: 'link', key: 'affiliation', label: 'Affiliation' },
-    location: { kind: 'link', key: 'location', label: 'Location' },
-    status: { kind: 'choice', key: 'status', label: 'Status', options: ['alive', 'dead', 'missing'] }
+    title: { kind: 'text', key: 'title', label: 'Title', optional: true },
+    affiliation: { kind: 'link', key: 'affiliation', label: 'Affiliation', optional: true },
+    location: { kind: 'link', key: 'location', label: 'Location', optional: true },
+    status: { kind: 'choice', key: 'status', label: 'Status', optional: true, options: ['alive', 'dead', 'missing'] }
   }
 })
 
@@ -23,8 +23,8 @@ export const location = defineRenderer({
   banner: 'image',
   fields: {
     image: { kind: 'image', key: 'image', label: 'Image' },
-    kind: { kind: 'text', key: 'kind', label: 'Kind' },
-    region: { kind: 'link', key: 'region', label: 'Region' }
+    kind: { kind: 'text', key: 'kind', label: 'Kind', optional: true },
+    region: { kind: 'link', key: 'region', label: 'Region', optional: true }
   }
 })
 
@@ -35,11 +35,11 @@ export const faction = defineRenderer({
   color: 'faction',
   fields: {
     emblem: { kind: 'image', key: 'emblem', label: 'Emblem' },
-    kind: { kind: 'text', key: 'kind', label: 'Kind' },
-    leader: { kind: 'link', key: 'leader', label: 'Leader' },
-    base: { kind: 'link', key: 'base', label: 'Base' },
-    allies: { kind: 'links', key: 'allies', label: 'Allies' },
-    rivals: { kind: 'links', key: 'rivals', label: 'Rivals' }
+    kind: { kind: 'text', key: 'kind', label: 'Kind', optional: true },
+    leader: { kind: 'link', key: 'leader', label: 'Leader', optional: true },
+    base: { kind: 'link', key: 'base', label: 'Base', optional: true },
+    allies: { kind: 'links', key: 'allies', label: 'Allies', optional: true },
+    rivals: { kind: 'links', key: 'rivals', label: 'Rivals', optional: true }
   }
 })
 
@@ -51,12 +51,10 @@ export const item = defineRenderer({
   banner: 'image',
   fields: {
     image: { kind: 'image', key: 'image', label: 'Image' },
-    kind: { kind: 'text', key: 'kind', label: 'Kind' },
-    rarity: { kind: 'text', key: 'rarity', label: 'Rarity' },
-    holder: { kind: 'link', key: 'holder', label: 'Held by' },
-    owner: { kind: 'link', key: 'owner', label: 'Owner' },
-    location: { kind: 'link', key: 'location', label: 'Location' },
-    origin: { kind: 'link', key: 'origin', label: 'Origin' }
+    kind: { kind: 'text', key: 'kind', label: 'Kind', optional: true },
+    rarity: { kind: 'text', key: 'rarity', label: 'Rarity', optional: true },
+    owner: { kind: 'link', key: 'owner', label: 'Owner', optional: true },
+    location: { kind: 'link', key: 'location', label: 'Location', optional: true }
   }
 })
 
