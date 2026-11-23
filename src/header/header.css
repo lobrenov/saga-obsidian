@@ -22,7 +22,7 @@
   border-top: 3px solid var(--saga-header-accent);
   border-radius: var(--radius-l);
   background: var(--background-primary);
-  box-shadow: var(--shadow-s);
+  box-shadow: var(--saga-header-shadow, var(--shadow-s));
   color: var(--text-normal);
   font-family: var(--font-interface);
   font-size: var(--font-ui-medium);
@@ -56,7 +56,7 @@
 /* Over a banner the card starts where the sizer's padding ends, `--saga-banner-overlap` above the banner's bottom, with a shadow to read over the image. */
 .saga-banner-active .saga-header {
   margin-top: 0;
-  box-shadow: 0 10px 30px rgb(0 0 0 / 0.25);
+  box-shadow: var(--saga-header-shadow, 0 10px 30px rgb(0 0 0 / 0.25));
 }
 
 .saga-header :is(button, input, select, textarea):focus-visible {
@@ -182,14 +182,27 @@
 }
 
 .saga-header .saga-header-title button {
-  all: unset;
   display: block;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: inherit;
+  white-space: normal;
   max-width: 100%;
   cursor: text;
 }
 
 .saga-header-title button:hover {
-  text-decoration: underline dotted var(--text-faint);
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: var(--text-faint);
   text-underline-offset: 6px;
 }
 
@@ -365,7 +378,9 @@
 
 .saga-header-chip.is-unresolved .saga-header-chip-link {
   color: var(--text-muted);
-  text-decoration: underline dotted var(--text-faint);
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: var(--text-faint);
 }
 
 .saga-header .saga-header-chip-action {
@@ -529,7 +544,7 @@
 
 .saga-header-portrait .saga-header-frame {
   --frame-radius: var(--radius-l);
-  box-shadow: var(--shadow-s);
+  box-shadow: var(--saga-header-shadow, var(--shadow-s));
 }
 
 .saga-header-emblem {
@@ -588,8 +603,8 @@
   opacity: 1;
 }
 
-.saga-header-frame:has(.saga-header-frame-add:hover),
-.saga-header-frame:has(.saga-header-frame-add:focus-visible) {
+.saga-header-frame[data-add]:hover,
+.saga-header-frame[data-add]:focus-within {
   border-color: var(--saga-header-accent);
 }
 

@@ -28,8 +28,8 @@ export function registerLinkIcons(plugin: Plugin, config: ConfigStore, prefs: Pr
     for (const a of Array.from(el.querySelectorAll('a.internal-link'))) {
       const href = a.getAttribute('data-href')
       const { icon, title } = href ? marksOf(parseWikiInner(href).target, ctx.sourcePath) : NO_MARKS
-      if (icon) a.prepend(linkIcon(a.ownerDocument, icon))
-      if (title) a.after(linkTitle(a.ownerDocument, title))
+      if (icon) a.prepend(linkIcon(icon))
+      if (title) a.after(linkTitle(title))
     }
   })
 

@@ -20,6 +20,7 @@ export default defineConfig({
         test: {
           name: 'component',
           globalSetup: ['test/component/bundle.setup.ts'],
+          setupFiles: ['test/fakes/dom.ts'],
           sequence: { groupOrder: 1 },
           include: ['test/component/**/*.test.tsx'],
           typecheck: { include: [] },

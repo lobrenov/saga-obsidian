@@ -273,12 +273,12 @@ export function PinLayer({ store, pins, selectedKey, labels, onSelect, onMoved, 
     }
     regroup()
     const unsubscribe = store.subscribe(() => {
-      clearTimeout(timer)
-      timer = setTimeout(() => (store.get().zoom === zoom ? relabel() : regroup()), CLUSTER_SETTLE_MS)
+      window.clearTimeout(timer)
+      timer = window.setTimeout(() => (store.get().zoom === zoom ? relabel() : regroup()), CLUSTER_SETTLE_MS)
     })
     return () => {
       unsubscribe()
-      clearTimeout(timer)
+      window.clearTimeout(timer)
     }
   }, [store, pins, selectedKey, dragKey, focusKey])
   useEffect(() => {

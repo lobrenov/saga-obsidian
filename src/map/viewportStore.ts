@@ -94,7 +94,7 @@ export class ViewportStore {
 
   /** Stops a running animation. */
   stop(): void {
-    cancelAnimationFrame(this.frame)
+    window.cancelAnimationFrame(this.frame)
     this.frame = 0
     this.target = null
   }
@@ -113,20 +113,20 @@ export class ViewportStore {
       const t = Math.min(1, (now - start) / ANIMATION_MS)
       const e = 1 - (1 - t) ** 2
       this.apply({ zoom: from.zoom + (goal.zoom - from.zoom) * e, cx: from.cx + (goal.cx - from.cx) * e, cy: from.cy + (goal.cy - from.cy) * e }, true)
-      if (t < 1) this.frame = requestAnimationFrame(step)
+      if (t < 1) this.frame = window.requestAnimationFrame(step)
       else this.stop()
     }
-    this.frame = requestAnimationFrame(step)
+    this.frame = window.requestAnimationFrame(step)
   }
 
   private apply(v: Viewport, now = false): void {
     this.v = clamp(v, this.image, this.size, this.limits)
     if (now) this.notify()
-    else if (!this.notifyFrame) this.notifyFrame = requestAnimationFrame(this.notify)
+    else if (!this.notifyFrame) this.notifyFrame = window.requestAnimationFrame(this.notify)
   }
 
   private notify = (): void => {
-    cancelAnimationFrame(this.notifyFrame)
+    window.cancelAnimationFrame(this.notifyFrame)
     this.notifyFrame = 0
     for (const listener of this.listeners) listener()
   }

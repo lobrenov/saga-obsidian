@@ -7,9 +7,9 @@ import { EXPLORER_VIEW, isFolder, pathOf, removeIcons, setTitleIcon, titlesIn } 
 import './explorer.css'
 
 /** The closed and open folder icons; CSS shows the one matching the folder's state. */
-function folderIcon(doc: Document): HTMLElement {
-  const el = doc.createElement('span')
-  for (const icon of ['folder-closed', 'folder-open']) el.appendChild(linkIcon(doc, { renderer: 'document', icon, color: null })).classList.add(`saga-${icon}`)
+function folderIcon(): HTMLElement {
+  const el = createSpan()
+  for (const icon of ['folder-closed', 'folder-open']) el.appendChild(linkIcon({ renderer: 'document', icon, color: null })).classList.add(`saga-${icon}`)
   return el
 }
 
@@ -20,13 +20,12 @@ export function registerFileIcons(plugin: Plugin, config: ConfigStore, prefs: Pr
   const explorers = new Set<HTMLElement>()
 
   const iconOf = (title: HTMLElement, current: Prefs): HTMLElement | null => {
-    const doc = title.ownerDocument
-    if (isFolder(title)) return folderIcon(doc)
+    if (isFolder(title)) return folderIcon()
     const file = app.vault.getFileByPath(pathOf(title))
     if (file?.extension !== 'md') return null
     const target = renderers.ofFile(file)
     if (target.renderer === 'document' && !current.fileIconsUntyped) return null
-    return linkIcon(doc, lookIcon(target, current.linkIconLook))
+    return linkIcon(lookIcon(target, current.linkIconLook))
   }
   const draw = (title: HTMLElement): void => {
     const current = prefs.get()

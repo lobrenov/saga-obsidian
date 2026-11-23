@@ -1,6 +1,6 @@
 {
   "name": "saga",
-  "version": "0.10.6",
+  "version": "1.0.0",
   "private": true,
   "license": "MIT",
   "description": "Saga for Obsidian: a map Bases view and note renderers over notes' frontmatter",
@@ -14,6 +14,8 @@
   },
   "devDependencies": {
     "@codemirror/language": "6.12.4",
+    "@codemirror/state": "6.7.6",
+    "@codemirror/view": "6.43.13",
     "@eslint/js": "10.0.1",
     "@types/node": "24.19.2",
     "@types/react": "19.3.0",

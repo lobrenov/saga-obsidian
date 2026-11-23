@@ -41,7 +41,7 @@ export function attachTouch(element: HTMLElement, store: ViewportStore): () => v
     own = null
   }
   const stopHold = (): void => {
-    clearTimeout(hold)
+    window.clearTimeout(hold)
     hold = 0
   }
   /** Sends the pointer's later events to the stage wherever the finger goes. */

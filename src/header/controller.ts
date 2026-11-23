@@ -77,8 +77,8 @@ export function createHeaderController(env: HeaderEnv, config: ConfigStore, repo
     const existing = mounts.get(key)
     if (existing && existing.containerEl === containerEl && existing.mode === mode) return existing
     unmount(key)
-    const host = containerEl.ownerDocument.createElement('div')
-    host.className = 'saga-header-host'
+    const host = containerEl.createDiv({ cls: 'saga-header-host' })
+    host.detach()
     isolatePointer(host)
     const mount: Mount = { containerEl, mode, host, root: createRoot(host), stopWatching: () => undefined, properties: existing?.properties ?? false, drawn, signature: '' }
     // The view re-creates its sizer on some mode and file changes; the host is placed again when it goes missing.

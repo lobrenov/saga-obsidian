@@ -2,6 +2,7 @@
 
 export const ACTIVE_CLASS = 'saga-banner-active'
 export const SCROLLED_CLASS = 'saga-banner-scrolled'
+export const SCROLLER_CLASS = 'saga-banner-scroller'
 
 const SIZER: Record<'live' | 'reading', string> = {
   live: '.cm-scroller > .cm-sizer',
@@ -11,12 +12,13 @@ const TITLE = '.inline-title'
 const LEAF = '.workspace-leaf-content'
 const VIEW_HEADER = '.view-header'
 
-/** Puts `host` before the view's sizer, in the scroller; false when the sizer is not in the DOM (yet). */
+/** Puts `host` before the view's sizer, in the scroller, which gets `SCROLLER_CLASS`; false when the sizer is not in the DOM (yet). */
 export function placeBanner(containerEl: HTMLElement, host: HTMLElement, mode: 'live' | 'reading'): boolean {
   const sizer = containerEl.querySelector(SIZER[mode])
   const scroller = sizer?.parentElement
   if (!sizer || !scroller) return false
   if (host.parentElement !== scroller || host.nextElementSibling !== sizer) scroller.insertBefore(host, sizer)
+  scroller.classList.add(SCROLLER_CLASS)
   return true
 }
 

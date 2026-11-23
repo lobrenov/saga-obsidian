@@ -24,7 +24,7 @@
 }
 
 /* The banner sits behind the content of the scroller that holds it (not an embed's); the sizer beside it is padded to leave room and lets pointers through to the banner. */
-.saga-banner-active :is(.cm-scroller, .markdown-preview-view):has(> .saga-banner-host) {
+.saga-banner-active .saga-banner-scroller {
   position: relative;
 }
 .saga-banner-active .saga-banner-host + :is(.cm-sizer, .markdown-preview-sizer) {

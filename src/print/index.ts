@@ -42,7 +42,7 @@ export function registerPrint(plugin: Plugin, config: ConfigStore, prefs: PrefsS
     await Promise.resolve()
     const file = app.vault.getFileByPath(ctx.sourcePath)
     if (!file) return
-    const host = root.ownerDocument.createElement('div')
+    const host = root.createDiv()
     root.prepend(host)
     const reactRoot = createRoot(host)
     const child = new MarkdownRenderChild(host)
@@ -57,6 +57,7 @@ export function registerPrint(plugin: Plugin, config: ConfigStore, prefs: PrefsS
       documentCard: prefs.get().documentCard
     })
     flushSync(() => reactRoot.render(note))
+    root.classList.toggle('saga-print-card', host.querySelector('.saga-print > .saga-header') !== null)
     await Promise.all([...host.querySelectorAll('img')].map(settled))
     const banner = host.querySelector<HTMLImageElement>('.saga-banner:not([hidden]) img')
     if (banner) await fade(app, banner)

@@ -7,7 +7,10 @@ An Obsidian plugin (id `saga`, desktop and mobile, Obsidian 1.10.2+) for world-b
 - `npm run build` minified build, same outputs plus the repo root
 - `npm run typecheck` `tsc -b` over the `shared`, `plugin`, `test` and `component` projects
 - `npm run lint` ESLint (type-aware; `src/shared` may not import Obsidian, React or the DOM)
-- `npm test` Vitest: `unit` (Node) and `component` (Chromium); `obsidian` is aliased to `test/fakes/obsidian.ts`; `component` first runs the production build and `bundle.test.tsx` loads `main.js` as Obsidian does
+- `npm test` Vitest: `unit` (Node) and `component` (Chromium); `obsidian` is aliased to `test/fakes/obsidian.ts` and `test/fakes/dom.ts` adds Obsidian's DOM helpers (`createDiv`, `setCssStyles`, ...) for `component`; `component` first runs the production build and `bundle.test.tsx` loads `main.js` as Obsidian does
+
+## Releases
+Pushing a version tag (`git tag 0.10.7 && git push origin 0.10.7`) runs `.github/workflows/release.yml`: it builds, attests `main.js`, `styles.css` and `manifest.json` (GitHub artifact attestations) and uploads them to the tag's release, created as a draft when there is none; add notes and publish it on GitHub.
 
 ## Layout
 - `src/main.ts` loads the config store and registers the map view, header and settings

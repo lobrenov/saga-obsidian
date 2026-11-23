@@ -77,7 +77,7 @@ export function MapStage({ host, title, imageUrl, size, pins, labels, layersOn, 
   }, [pins])
   const hold = useCallback((key: string, at: Held): void => {
     setHeld((current) => new Map(current).set(key, at))
-    setTimeout(() => setHeld((current) => (current.get(key) === at ? new Map([...current].filter(([k]) => k !== key)) : current)), HOLD_MS)
+    window.setTimeout(() => setHeld((current) => (current.get(key) === at ? new Map([...current].filter(([k]) => k !== key)) : current)), HOLD_MS)
   }, [])
   const release = useCallback((key: string): void => setHeld((current) => new Map([...current].filter(([k]) => k !== key))), [])
 
@@ -142,7 +142,7 @@ export function MapStage({ host, title, imageUrl, size, pins, labels, layersOn, 
       return
     }
     setDraft({ ...at, count: pins.length })
-    setTimeout(() => setDraft(null), HOLD_MS)
+    window.setTimeout(() => setDraft(null), HOLD_MS)
   }
 
   const onMapClick = useCallback(() => setSelectedKey(null), [])

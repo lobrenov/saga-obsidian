@@ -124,8 +124,8 @@ function TextEditor({ value, onChange, id, invalid, describedBy, placeholder }: 
   useLayoutEffect(() => {
     const el = area.current
     if (!el) return
-    el.style.height = 'auto'
-    el.style.height = `${el.scrollHeight}px`
+    el.setCssStyles({ height: 'auto' })
+    el.setCssStyles({ height: `${el.scrollHeight}px` })
   }, [draft])
 
   return (
@@ -385,7 +385,7 @@ function ImageEditor({ field, value, onChange, id, invalid, describedBy, placeho
   const icon = rendererDefs[renderer].icon
   return (
     <div className="saga-header-image">
-      <div className="saga-header-frame" data-empty={value ? undefined : ''} data-missing={value && !resolved ? '' : undefined}>
+      <div className="saga-header-frame" data-empty={value ? undefined : ''} data-missing={value && !resolved ? '' : undefined} data-add={resolved || value || editing ? undefined : ''}>
         {resolved ? (
           <img src={resourceUrl(env.app, resolved)} alt={field.label} />
         ) : value ? (

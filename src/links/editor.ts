@@ -11,9 +11,8 @@ export type MarksOf = (target: string, fromPath: string) => LinkMarks
 export const refreshLinkIcons = StateEffect.define<null>()
 
 /** The icon drawn before a link, coloured by its pin colour's `--saga-pin-<colour>` token, else its renderer's `--saga-<renderer>` token. */
-export function linkIcon(doc: Document, icon: LinkIcon): HTMLElement {
-  const el = doc.createElement('span')
-  el.className = 'saga-link-icon'
+export function linkIcon(icon: LinkIcon): HTMLElement {
+  const el = createSpan({ cls: 'saga-link-icon' })
   el.dataset.renderer = icon.renderer
   if (icon.color) el.dataset.color = icon.color
   el.setAttribute('aria-hidden', 'true')
@@ -22,11 +21,8 @@ export function linkIcon(doc: Document, icon: LinkIcon): HTMLElement {
 }
 
 /** The `, Title` drawn after a link to a character. */
-export function linkTitle(doc: Document, title: string): HTMLElement {
-  const el = doc.createElement('span')
-  el.className = 'saga-link-title'
-  el.textContent = `, ${title}`
-  return el
+export function linkTitle(title: string): HTMLElement {
+  return createSpan({ cls: 'saga-link-title', text: `, ${title}` })
 }
 
 class LinkIconWidget extends WidgetType {
@@ -36,8 +32,8 @@ class LinkIconWidget extends WidgetType {
   override eq(other: LinkIconWidget): boolean {
     return other.icon.renderer === this.icon.renderer && other.icon.icon === this.icon.icon && other.icon.color === this.icon.color
   }
-  override toDOM(view: EditorView): HTMLElement {
-    return linkIcon(view.dom.ownerDocument, this.icon)
+  override toDOM(): HTMLElement {
+    return linkIcon(this.icon)
   }
 }
 
@@ -48,8 +44,8 @@ class LinkTitleWidget extends WidgetType {
   override eq(other: LinkTitleWidget): boolean {
     return other.title === this.title
   }
-  override toDOM(view: EditorView): HTMLElement {
-    return linkTitle(view.dom.ownerDocument, this.title)
+  override toDOM(): HTMLElement {
+    return linkTitle(this.title)
   }
 }
 

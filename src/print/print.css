@@ -29,10 +29,9 @@
   break-inside: avoid;
 }
 
-/* Shadows print as grey blocks; this outranks the header's more specific shadow rules. */
-.saga-print,
-.saga-print * {
-  box-shadow: none !important;
+/* Shadows print as grey blocks. */
+.saga-print {
+  --saga-header-shadow: none;
 }
 
 /* Chips take the padding and icon colour the header gives its chip buttons. */
@@ -64,6 +63,6 @@
 }
 
 /* Core's file-name title gives way to the card, which shows the name. */
-.print .markdown-preview-view:has(.saga-print > .saga-header) > h1:not([class]) {
+.print .markdown-preview-view.saga-print-card > h1:not([class]) {
   display: none;
 }

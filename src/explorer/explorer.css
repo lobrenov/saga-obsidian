@@ -14,7 +14,7 @@
   height: var(--icon-s);
 }
 
-.collapse-icon:has(> .saga-file-icon) > .svg-icon,
+.collapse-icon.saga-file-icon-slot > .svg-icon,
 .collapse-icon.is-collapsed .saga-folder-open,
 .collapse-icon:not(.is-collapsed) .saga-folder-closed {
   display: none;

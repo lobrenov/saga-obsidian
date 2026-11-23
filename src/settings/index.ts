@@ -162,6 +162,7 @@ class SettingsTab extends PluginSettingTab {
       if (readOnly) section.createDiv({ cls: 'setting-item saga-settings-issue', text: 'This entry in renderers.yaml could not be read; fix it in the file.' })
       new Setting(section)
         .setName('Types')
+        .setClass('saga-settings-untoggled')
         .setDesc('Comma-separated values of the type key.')
         .addText((text) =>
           text
@@ -176,6 +177,7 @@ class SettingsTab extends PluginSettingTab {
       for (const [field, fieldDef] of Object.entries(def.fields as Fields)) {
         const hidden = (): boolean => this.draft.hidden[id]?.[field] ?? false
         const row = new Setting(section).setName(fieldDef.label)
+        if (!fieldDef.optional) row.setClass('saga-settings-untoggled')
         let keyInput: { setDisabled: (disabled: boolean) => unknown } | undefined
         row.addText((text) => {
           keyInput = text

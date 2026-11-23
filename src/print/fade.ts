@@ -8,7 +8,7 @@ export async function fadedBanner(data: ArrayBuffer, ratio: number, y: number): 
   const cropHeight = cropWidth / ratio
   const width = Math.round(Math.min(cropWidth, MAX_WIDTH))
   const height = Math.round(width / ratio)
-  const canvas = document.createElement('canvas')
+  const canvas = createEl('canvas')
   canvas.width = width
   canvas.height = height
   const context = canvas.getContext('2d')

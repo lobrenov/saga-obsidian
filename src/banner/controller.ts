@@ -10,7 +10,7 @@ import { rendererDefs } from '../shared/renderers/definitions'
 import type { RendererId } from '../shared/renderers/ids'
 import { AddBanner } from './AddBanner'
 import { Banner } from './Banner'
-import { markBanner, placeAdd, placeBanner, watchScroll } from './dom'
+import { markBanner, placeAdd, placeBanner, SCROLLER_CLASS, watchScroll } from './dom'
 
 type Kind = 'banner' | 'add'
 
@@ -82,6 +82,7 @@ export function createBannerController(env: HeaderEnv, config: ConfigStore, docu
     mount.stopWatching()
     mount.stopScroll()
     mount.root.unmount()
+    mount.host.parentElement?.classList.remove(SCROLLER_CLASS)
     mount.host.remove()
     markBanner(mount.containerEl, false)
   }
@@ -90,8 +91,8 @@ export function createBannerController(env: HeaderEnv, config: ConfigStore, docu
     const existing = mounts.get(key)
     if (existing && existing.containerEl === containerEl && existing.mode === mode && existing.kind === kind) return existing
     unmount(key)
-    const host = containerEl.ownerDocument.createElement('div')
-    host.className = kind === 'banner' ? 'saga-banner-host' : 'saga-banner-add-host'
+    const host = containerEl.createDiv({ cls: kind === 'banner' ? 'saga-banner-host' : 'saga-banner-add-host' })
+    host.detach()
     isolatePointer(host)
     const mount: Mount = { containerEl, mode, kind, host, root: createRoot(host), stopWatching: () => undefined, stopScroll: () => undefined, repositioning: false, drawn, signature: '' }
     // The view re-creates its sizer on some mode and file changes; the host is placed again when it goes missing.

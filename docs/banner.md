@@ -19,7 +19,7 @@ Any note in Live Preview or Reading view can show a banner: an image across the 
 - The view header is transparent over the banner, with a 56 px scrim at the image's top; it takes its background back once content would reach it.
 
 ## Modules
-- `dom.ts`: every selector. `placeBanner` (host before `.cm-scroller > .cm-sizer` or `.markdown-preview-view > .markdown-preview-sizer`), `placeAdd` (after `.inline-title`), `markBanner` (`saga-banner-active` on the leaf content), `leafOf`, `watchScroll` (`saga-banner-scrolled`, from scroll events of the host's own scroller).
+- `dom.ts`: every selector. `placeBanner` (host before `.cm-scroller > .cm-sizer` or `.markdown-preview-view > .markdown-preview-sizer`; the scroller gets `saga-banner-scroller`, removed on unmount), `placeAdd` (after `.inline-title`), `markBanner` (`saga-banner-active` on the leaf content), `leafOf`, `watchScroll` (`saga-banner-scrolled`, from scroll events of the host's own scroller).
 - `controller.ts`: `createBannerController(env, config)` with `sync(views)`, `reposition(key)` and `dispose()`. One React root per leaf with a banner, or per `document` leaf without one while `documentCard()` is off (the Add host); keyed by file path, so a file switch leaves reposition mode. A draw is skipped when its signature is unchanged. `src/header/index.ts` creates it before the header controller and syncs both from the same leaves.
 - `Banner.tsx`: image, scrim, reposition mode, missing image. `AddBanner.tsx`: the Add button.
 - `useBannerPicker.tsx`: picker state, write, popover (`BannerPicker.tsx`, a labelled group around the suggester input) and alert, shared by the Add button and the header's banner control. `useWrite.ts`: `setField` keeping a failed write's message; `removeBanner`.

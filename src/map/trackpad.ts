@@ -36,7 +36,7 @@ export function attachTrackpad(element: HTMLElement, store: ViewportStore): () =
     pan = { x: 0, y: 0 }
   }
   const schedule = (): void => {
-    if (!frame) frame = requestAnimationFrame(flush)
+    if (!frame) frame = window.requestAnimationFrame(flush)
   }
 
   const onWheel = (event: WheelEvent): void => {
@@ -67,7 +67,7 @@ export function attachTrackpad(element: HTMLElement, store: ViewportStore): () =
   const onGestureEnd = (event: Event): void => {
     event.preventDefault()
     pinchStart = null
-    cancelAnimationFrame(frame)
+    window.cancelAnimationFrame(frame)
     flush()
   }
 
@@ -76,7 +76,7 @@ export function attachTrackpad(element: HTMLElement, store: ViewportStore): () =
   element.addEventListener('gesturechange', onGestureChange)
   element.addEventListener('gestureend', onGestureEnd)
   return () => {
-    cancelAnimationFrame(frame)
+    window.cancelAnimationFrame(frame)
     element.removeEventListener('wheel', onWheel)
     element.removeEventListener('gesturestart', onGestureStart)
     element.removeEventListener('gesturechange', onGestureChange)
