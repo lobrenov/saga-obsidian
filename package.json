@@ -2,6 +2,7 @@
   "name": "saga",
   "version": "0.10.6",
   "private": true,
+  "license": "MIT",
   "description": "Saga for Obsidian: a map Bases view and note renderers over notes' frontmatter",
   "type": "module",
   "scripts": {
