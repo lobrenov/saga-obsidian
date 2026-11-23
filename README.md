@@ -4,7 +4,7 @@
 
 Saga is a work-in-progress world-building plugin for Obsidian. It renders notes differently according to their type, adds banners, portraits and emblems to notes, shows icons for files and links, and draws maps with customisable pins in a custom Bases view. Every feature works on desktop and mobile, maps included.
 
-Saga works best with the [Saga theme](https://github.com/lobrenov/saga-theme).
+Saga works best with the [Saga theme](https://community.obsidian.md/themes/saga).
 
 > **AI Disclaimer:** Saga is 100% vibe-coded. I've no intention of claiming that "I made" Saga or could quickly or easily re-create it myself. It almost definitely has many AI-isms in its visual design and codebase.
 
@@ -17,7 +17,7 @@ A note's `type` property picks its renderer. The renderer replaces the inline ti
 | Character | Portrait | Title, Affiliation, Location, Status |
 | Location | Banner | Kind, Region |
 | Faction | Emblem | Kind, Leader, Base, Allies, Rivals |
-| Item | Banner | Kind, Rarity, Owner, Location |
+| Item | Image | Kind, Rarity, Owner, Location |
 | Map | Banner | |
 | Document | Optional banner | |
 
@@ -95,7 +95,7 @@ Icons use either the renderer's icon and colour, or the note's pin look on a cho
 
 ![Saga theme, dark](assets/theme-dark.png)
 
-Saga works with any theme, but is designed alongside the [Saga theme](https://github.com/lobrenov/saga-theme): a serif parchment theme with light and dark schemes. The theme sets Saga's renderer colours, and adds its own callouts (`secret`, `statblock`, `read-aloud`) and alternative checkboxes.
+Saga works with any theme, but is designed alongside the [Saga theme](https://community.obsidian.md/themes/saga): a serif parchment theme with light and dark schemes. The theme sets Saga's renderer colours, and adds its own callouts (`secret`, `statblock`, `read-aloud`) and alternative checkboxes.
 
 ## Install
 
