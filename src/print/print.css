@@ -4,7 +4,7 @@
   print-color-adjust: exact;
 }
 
-/* The banner's height follows the width; it fades into the page rather than into a view background, with no scrim. */
+/* The banner's height follows the width; the screen's mask fades it into the page, with no scrim. */
 .saga-print .saga-banner {
   height: auto;
   aspect-ratio: 3 / 1;
@@ -14,12 +14,9 @@
 }
 .saga-print .saga-banner-image {
   background: none;
-  mask-image: none;
 }
 .saga-print .saga-banner-image::after {
-  inset: 0;
-  height: auto;
-  background: linear-gradient(to bottom, transparent 40%, var(--background-primary, #fff));
+  content: none;
 }
 
 /* The card starts where the banner's fade ends. */
