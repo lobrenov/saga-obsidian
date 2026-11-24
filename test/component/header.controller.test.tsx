@@ -184,6 +184,7 @@ test('a pending text edit is written to its own note when the leaf switches file
   await vi.waitFor(() => expect(headers(containerEl)).toHaveLength(1))
   const title = containerEl.querySelector<HTMLTextAreaElement>('[data-field="title"] textarea')
   title?.focus()
+  title?.setSelectionRange(0, 0)
   await userEvent.keyboard('X')
   controller.sync([[leaf, { containerEl, file: bob, mode: 'live' }]])
   await vi.waitFor(() => expect(app.text(ada)).toContain('title: XMathematician'))

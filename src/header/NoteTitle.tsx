@@ -3,6 +3,8 @@ import { useHeader } from './env'
 
 const FORBIDDEN_NAME = /[\\/:*?"<>|#^[\]]/
 
+const focusOnMount = (input: HTMLInputElement | null): void => input?.focus()
+
 /** The note's title as a heading that renames the note: click to edit, Enter commits, Escape cancels. The rename keeps the folder and Obsidian rewrites the links to it. */
 export function NoteTitle() {
   const { env, file } = useHeader()
@@ -84,7 +86,7 @@ export function NoteTitle() {
           disabled={busy}
           spellCheck={false}
           autoComplete="off"
-          autoFocus
+          ref={focusOnMount}
           onFocus={(event) => event.currentTarget.select()}
           onChange={(event) => {
             setDraft(event.target.value)

@@ -120,8 +120,7 @@ Copy `main.js`, `styles.css` and `manifest.json` to `<vault>/.obsidian/plugins/s
 
 ## Implementation Notes
 
-Obsidian's automated plugin review flags three things in Saga that can't be changed.
+Obsidian's automated plugin review flags two things in Saga that can't be changed.
 
-- **"Code creates script elements at runtime."** This code is in React, the library Saga's map and note headers are built with, not in Saga's own code. React can add a `<script>` tag to a page if a component asks for one. Saga never does, so this code never runs.
 - **Settings don't appear in Obsidian's settings search.** Search covers settings built with an API that Obsidian added in version 1.13. Saga supports Obsidian 1.10.2 and up, and its settings page (renderer cards, pin previews) can't be built with that API.
 - **"Only partially supported" CSS warnings** (multi-column layout, `display: contents`, `clip-path`). The checker judges these against a list of old browsers. Obsidian runs on current Chromium, and on iOS on current WebKit, which support all three fully.

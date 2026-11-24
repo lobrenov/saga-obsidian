@@ -65,7 +65,7 @@ export function attachTouch(element: HTMLElement, store: ViewportStore): () => v
     if (!finger) return
     take(id, finger)
     skipClick = true
-    const target = finger.target instanceof Node && element.contains(finger.target) ? finger.target : element
+    const target = element.contains(finger.target as Node) ? finger.target : element
     dispatch(target, new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2, clientX: finger.at.x, clientY: finger.at.y }))
   }
 

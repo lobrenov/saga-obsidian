@@ -6,7 +6,7 @@ An Obsidian plugin (id `saga`, desktop and mobile, Obsidian 1.10.2+) for world-b
 - `npm run dev` esbuild watch; writes `main.js`, `styles.css`, `manifest.json` into `test/vault/.obsidian/plugins/saga/`
 - `npm run build` minified build, same outputs plus the repo root
 - `npm run typecheck` `tsc -b` over the `shared`, `plugin`, `test` and `component` projects
-- `npm run lint` ESLint (type-aware; `src/shared` may not import Obsidian, React or the DOM)
+- `npm run lint` ESLint with `eslint-plugin-obsidianmd`'s recommended config, the rules of Obsidian's community plugin review (type-aware; `src/shared` may not import Obsidian, React or the DOM)
 - `npm test` Vitest: `unit` (Node) and `component` (Chromium); `obsidian` is aliased to `test/fakes/obsidian.ts` and `test/fakes/dom.ts` adds Obsidian's DOM helpers (`createDiv`, `setCssStyles`, ...) for `component`; `component` first runs the production build and `bundle.test.tsx` loads `main.js` as Obsidian does
 
 ## Releases
@@ -29,4 +29,5 @@ Pushing a version tag (`git tag 0.10.7 && git push origin 0.10.7`) runs `.github
 
 ## Conventions
 - Dependencies are pinned exactly.
+- UI code is written against the React API; esbuild and Vitest alias `react` and `react-dom` to `preact/compat`, so the bundle holds Preact, not React.
 - Writes to notes go through the adapter (`vault.process`), changing only the edited key's text.

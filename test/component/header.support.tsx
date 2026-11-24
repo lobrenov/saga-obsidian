@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useState } from 'react'
+import { useLayoutEffect, useReducer, useState } from 'react'
 import { render } from 'vitest-browser-react'
 import type { TFile } from 'obsidian'
 import { NoteHeader } from '../../src/header/NoteHeader'
@@ -32,7 +32,7 @@ export const DEFAULT_CONFIG: Config = parseConfig(null).config
 function Live({ app, env, file, config }: { app: HeaderFakeApp; env: HeaderEnv; file: TFile; config: Config }) {
   const [, refresh] = useReducer((n: number) => n + 1, 0)
   const [properties, setProperties] = useState(false)
-  useEffect(() => {
+  useLayoutEffect(() => {
     const ref = app.metadataCache.on('changed', refresh)
     return () => app.metadataCache.offref(ref)
   }, [app])

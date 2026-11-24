@@ -50,7 +50,7 @@ function useDraft(text: string) {
 }
 
 /** A text input that offers vault files and reports the picked file's link text. */
-export function FileInput({ kind, onPick, ...props }: { kind: 'note' | 'image'; onPick: (target: string) => void } & React.InputHTMLAttributes<HTMLInputElement>) {
+export function FileInput({ kind, onPick, autoFocus, ...props }: { kind: 'note' | 'image'; onPick: (target: string) => void } & React.InputHTMLAttributes<HTMLInputElement>) {
   const { env, file } = useHeader()
   const ref = useRef<HTMLInputElement>(null)
   const pick = useRef(onPick)
@@ -58,7 +58,7 @@ export function FileInput({ kind, onPick, ...props }: { kind: 'note' | 'image'; 
   const from = useRef(file.path)
   from.current = file.path
   const picked = useRef(false)
-  useEffect(
+  useLayoutEffect(
     () =>
       ref.current
         ? env.suggest(ref.current, kind, () => from.current, (target) => {
@@ -68,6 +68,9 @@ export function FileInput({ kind, onPick, ...props }: { kind: 'note' | 'image'; 
         : undefined,
     [env, kind]
   )
+  useLayoutEffect(() => {
+    if (autoFocus) ref.current?.focus()
+  }, [])
   return (
     <input
       ref={ref}
@@ -124,8 +127,8 @@ function TextEditor({ value, onChange, id, invalid, describedBy, placeholder }: 
   useLayoutEffect(() => {
     const el = area.current
     if (!el) return
-    el.setCssStyles({ height: 'auto' })
-    el.setCssStyles({ height: `${el.scrollHeight}px` })
+    el.style.removeProperty('height')
+    el.setCssProps({ height: `${el.scrollHeight}px` })
   }, [draft])
 
   return (
@@ -288,9 +291,9 @@ function LinkEditor({ field, value, onChange, id, invalid, describedBy, placehol
         focused.current = true
         event.currentTarget.select()
       }}
-      onBlur={() => {
+      onBlur={(event) => {
         focused.current = false
-        commit(draft)
+        commit(event.currentTarget.value)
       }}
       onKeyDown={(event) => {
         if (event.key === 'Enter') {

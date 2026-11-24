@@ -2,7 +2,11 @@ import { fileURLToPath } from 'node:url'
 import { playwright } from '@vitest/browser-playwright'
 import { defineConfig } from 'vitest/config'
 
-const alias = { obsidian: fileURLToPath(new URL('./test/fakes/obsidian.ts', import.meta.url)) }
+const alias = {
+  obsidian: fileURLToPath(new URL('./test/fakes/obsidian.ts', import.meta.url)),
+  react: 'preact/compat',
+  'react-dom': 'preact/compat'
+}
 
 export default defineConfig({
   test: {

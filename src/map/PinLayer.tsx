@@ -286,7 +286,7 @@ export function PinLayer({ store, pins, selectedKey, labels, onSelect, onMoved, 
     if (!wanted) return
     if (Date.now() > wanted.until) refocus.current = null
     else {
-      const pin = [...document.querySelectorAll<HTMLElement>('[data-pin]')].find((el) => el.dataset['pin'] === wanted.key)
+      const pin = [...activeDocument.querySelectorAll<HTMLElement>('[data-pin]')].find((el) => el.dataset['pin'] === wanted.key)
       if (pin) {
         refocus.current = null
         pin.focus({ preventScroll: true })

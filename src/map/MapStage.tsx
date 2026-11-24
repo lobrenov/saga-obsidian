@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react'
+import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react'
 import type { TFile } from 'obsidian'
 import { imageZoomLimits } from '../shared/maps/viewport'
 import { FALLBACK_ICON } from '../shared/pins/look'
@@ -67,13 +67,12 @@ export function MapStage({ host, title, imageUrl, size, pins, labels, layersOn, 
   const visible = useMemo(() => placed.filter((pin) => isVisible(pin, activeLayers)), [placed, activeLayers])
   const selected = selectedKey === null ? null : (placed.find((pin) => pinKey(pin) === selectedKey) ?? null)
 
-  // The base reports a pin elsewhere than before the write (or the pin gone): the held position is dropped; so is a held new pin once a pin is added.
+  // The base reports a pin elsewhere than before the write (or the pin gone): the held position is dropped.
   useEffect(() => {
     setHeld((current) => {
       const next = new Map([...current].filter(([key, at]) => pins.some((pin) => pinKey(pin) === key && pin.x === at.from.x && pin.y === at.from.y)))
       return next.size === current.size ? current : next
     })
-    setDraft((current) => (current && current.count !== null && pins.length > current.count ? null : current))
   }, [pins])
   const hold = useCallback((key: string, at: Held): void => {
     setHeld((current) => new Map(current).set(key, at))
@@ -148,15 +147,17 @@ export function MapStage({ host, title, imageUrl, size, pins, labels, layersOn, 
   const onMapClick = useCallback(() => setSelectedKey(null), [])
 
   // Escape closes the card when focus is inside this map view.
-  useEffect(() => {
+  useLayoutEffect(() => {
+    const doc = root.current?.ownerDocument
+    if (!doc) return
     const onKey = (event: KeyboardEvent): void => {
       const view = root.current?.closest('.saga-map')
-      if (event.key !== 'Escape' || event.defaultPrevented || !selectedKey || !view || !(event.target instanceof Node) || !view.contains(event.target)) return
+      if (event.key !== 'Escape' || event.defaultPrevented || !selectedKey || !view || !view.contains(event.target as Node | null)) return
       setSelectedKey(null)
       event.preventDefault()
     }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
+    doc.addEventListener('keydown', onKey)
+    return () => doc.removeEventListener('keydown', onKey)
   }, [selectedKey])
 
   const relook = async (pin: PlacedPin, change: LookChange): Promise<void> => {
@@ -188,7 +189,7 @@ export function MapStage({ host, title, imageUrl, size, pins, labels, layersOn, 
         <div className="saga-map-canvas">
           <MapCanvas store={store} imageUrl={imageUrl} title={title} onMapClick={onMapClick} onMapMenu={onMapMenu} stageRef={setStage}>
             <PinLayer store={store} pins={visible} selectedKey={selectedKey} labels={labels} onSelect={select} onMoved={commitMove} onDragStart={closeCard} onHover={hover} onMenu={onPinMenu} />
-            {draft ? <FixedGhost store={store} x={draft.x} y={draft.y} /> : null}
+            {draft && (draft.count === null || pins.length <= draft.count) ? <FixedGhost store={store} x={draft.x} y={draft.y} /> : null}
           </MapCanvas>
         </div>
 

@@ -23,6 +23,7 @@ const context = await esbuild.context({
   entryPoints: ['src/main.ts'],
   bundle: true,
   jsx: 'automatic',
+  alias: { react: 'preact/compat', 'react-dom': 'preact/compat' },
   outfile: 'main.js',
   format: 'cjs',
   target: 'es2022',

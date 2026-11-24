@@ -1,5 +1,5 @@
-import js from '@eslint/js'
 import { builtinModules } from 'node:module'
+import obsidianmd from 'eslint-plugin-obsidianmd'
 import tseslint from 'typescript-eslint'
 
 // Node builtins, both bare (`fs`) and prefixed (`node:fs`).
@@ -7,9 +7,9 @@ const nodeBuiltins = builtinModules
 
 export default tseslint.config(
   { ignores: ['main.js', 'styles.css', 'main.css', 'test/vault/**', 'dist/**', 'coverage/**', 'node_modules/**', '.claude/**'] },
-  js.configs.recommended,
-  ...tseslint.configs.recommendedTypeChecked,
+  ...obsidianmd.configs.recommended,
   {
+    files: ['**/*.{ts,tsx,mts}'],
     languageOptions: {
       parserOptions: {
         project: ['./tsconfig.shared.json', './tsconfig.plugin.json', './tsconfig.test.json', './tsconfig.component.json'],
@@ -23,6 +23,20 @@ export default tseslint.config(
     }
   },
   { files: ['**/*.mjs'], ...tseslint.configs.disableTypeChecked },
+  // `react` and `react-dom` resolve to `preact/compat` through the esbuild and Vitest aliases.
+  { settings: { 'import/core-modules': ['react', 'react/jsx-runtime', 'react-dom', 'react-dom/client'] } },
+  // Tests build fixture DOM from fixed strings and load the bundle as Obsidian does; Obsidian's scanner does not lint them.
+  {
+    files: ['test/**'],
+    rules: {
+      'no-unsanitized/method': 'off',
+      'no-unsanitized/property': 'off',
+      '@microsoft/sdl/no-inner-html': 'off',
+      'obsidianmd/rule-custom-message': 'off',
+      'no-restricted-globals': 'off',
+      'import/no-extraneous-dependencies': 'off'
+    }
+  },
   { files: ['esbuild.config.mjs'], languageOptions: { globals: { console: 'readonly', process: 'readonly' } } },
 
   // `src/shared` is plain TypeScript: no Obsidian, React, DOM-specific or Node modules, no imports from the rest of `src`.

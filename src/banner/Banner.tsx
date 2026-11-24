@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import type { TFile } from 'obsidian'
 import { useHeader } from '../header/env'
 import { resourceUrl } from '../obsidian/vault'
@@ -34,7 +34,7 @@ export function Banner({ banner, image, repositioning, onRepositioningChange }: 
     if (!repositioning) setDraft(null)
   }
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!repositioning || !root.current) return
     const el = root.current
     const leaf = leafOf(el)

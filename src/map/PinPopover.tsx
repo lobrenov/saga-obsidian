@@ -51,10 +51,10 @@ export function PinPopover({ store, host, pin, onClose, onLook, busy }: PinPopov
 
   // Focus moves into the card and goes back to where it was when the card closes.
   useLayoutEffect(() => {
-    const before = document.activeElement
+    const before = root.current?.ownerDocument.activeElement
     root.current?.querySelector<HTMLElement>('[data-autofocus]')?.focus({ preventScroll: true })
     return () => {
-      if (before instanceof HTMLElement && before.isConnected) before.focus({ preventScroll: true })
+      if (before?.instanceOf(HTMLElement) && before.isConnected) before.focus({ preventScroll: true })
     }
   }, [path, pin.index])
   useEffect(() => {

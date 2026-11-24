@@ -69,7 +69,7 @@ export function MapCanvas({ store, imageUrl, title, onMapClick, onMapMenu, stage
     const box = element.current?.getBoundingClientRect()
     return { x: event.clientX - (box?.left ?? 0), y: event.clientY - (box?.top ?? 0) }
   }
-  const overPin = (event: { target: EventTarget }): boolean => event.target instanceof Element && event.target.closest(OVER_PIN) !== null
+  const overPin = (event: { target: EventTarget }): boolean => (event.target as Element).closest(OVER_PIN) !== null
 
   const onPointerDown = (event: PointerEvent<HTMLDivElement>): void => {
     if (event.button !== 0 || overPin(event)) return

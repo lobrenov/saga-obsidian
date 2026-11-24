@@ -1,4 +1,4 @@
-/** Obsidian's DOM helpers (`detach`, `empty`, `createEl`, `createDiv`, `createSpan`, `createSvg`, `setCssStyles`, `setCssProps`) for browser tests, covering the `cls`, `text` and `attr` options. */
+/** Obsidian's DOM helpers (`detach`, `empty`, `instanceOf`, `createEl`, `createDiv`, `createSpan`, `createSvg`, `setCssStyles`, `setCssProps`, `activeDocument`) for browser tests, covering the `cls`, `text` and `attr` options. */
 type Info = { cls?: string | string[]; text?: string; attr?: Record<string, string | number | boolean | null> }
 
 function fill<T extends Element>(el: T, o?: Info | string): T {
@@ -17,6 +17,9 @@ Object.assign(Node.prototype, {
   },
   empty(this: Node) {
     while (this.firstChild) this.removeChild(this.firstChild)
+  },
+  instanceOf(this: Node, type: new () => unknown) {
+    return this instanceof type
   },
   createEl(this: Node, tag: string, o?: Info | string) {
     return this.appendChild(fill(docOf(this).createElement(tag), o))
@@ -42,6 +45,7 @@ Object.assign(HTMLElement.prototype, {
 })
 
 Object.assign(globalThis, {
+  activeDocument: document,
   createEl: (tag: string, o?: Info | string) => fill(document.createElement(tag), o),
   createDiv: (o?: Info | string) => fill(document.createElement('div'), o),
   createSpan: (o?: Info | string) => fill(document.createElement('span'), o),

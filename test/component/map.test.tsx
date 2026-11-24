@@ -133,10 +133,10 @@ test('in hover mode a label shows only for the pin under the pointer or with foc
   await renderMap((fake) => void (fake.pinLabels = 'hover'))
   await vi.waitFor(() => expect(markers()).toHaveLength(3))
   expect(document.querySelectorAll('.saga-map-label')).toHaveLength(0)
-  marker('Saltmere').dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))
+  marker('Saltmere').dispatchEvent(new MouseEvent('mouseenter'))
   await vi.waitFor(() => expect(document.querySelectorAll('.saga-map-label')).toHaveLength(1))
   expect(document.querySelector('.saga-map-label')?.textContent).toBe('Saltmere')
-  marker('Saltmere').dispatchEvent(new MouseEvent('mouseout', { bubbles: true }))
+  marker('Saltmere').dispatchEvent(new MouseEvent('mouseleave'))
   await vi.waitFor(() => expect(document.querySelectorAll('.saga-map-label')).toHaveLength(0))
   marker('The Gull King').focus()
   await vi.waitFor(() => expect(document.querySelector('.saga-map-label')?.textContent).toBe('The Gull King'))
@@ -157,7 +157,7 @@ test('labels sit beside their pins, and one with no free slot shows on hover, on
     }
   }
   expect(document.querySelectorAll('.saga-map-label-top')).toHaveLength(0)
-  marker('D').dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))
+  marker('D').dispatchEvent(new MouseEvent('mouseenter'))
   await vi.waitFor(() => expect(document.querySelectorAll('.saga-map-label-top .saga-map-label')).toHaveLength(1))
   expect(document.querySelector('.saga-map-label-top')?.textContent).toBe('D')
 })
