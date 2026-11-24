@@ -43,7 +43,7 @@
   grid-column: 1 / -1;
   grid-template-columns: subgrid;
   align-items: center;
-  column-gap: var(--size-4-3);
+  gap: 0 var(--size-4-3);
 }
 
 .saga-pin-rows .setting-item-info {
@@ -64,7 +64,7 @@
   }
 
   .saga-pin-rows > .setting-item {
-    column-gap: var(--size-4-2);
+    gap: 0 var(--size-4-2);
   }
 
   .saga-pin-rows .setting-item-info {
