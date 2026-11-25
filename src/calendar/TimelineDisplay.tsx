@@ -144,6 +144,7 @@ function RowItem({ calendar, row, mark, selected, onSelect }: RowItemProps) {
       </button>
       <div
         className="saga-timeline-track"
+        data-opens-card=""
         onClick={() => onSelect(entry, slot)}
       >
         <span

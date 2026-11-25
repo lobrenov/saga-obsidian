@@ -83,6 +83,19 @@ test('an empty When and Ends are quiet buttons', async () => {
   expect(document.querySelectorAll('[aria-label="Remove When"], [aria-label="Remove Ends"]')).toHaveLength(0)
 })
 
+test('a date is a chip whose edit button opens the picker and whose remove button clears it', async () => {
+  const { screen, text } = await renderHeader(path, lore('year: 1312\nmonth: 1\nday: 3\n'), { files: CALENDARS })
+  const chip = document.querySelector('.saga-lore-date .saga-header-chip')
+  expect(chip?.textContent).toBe('3 Thawmoon 1312 AL')
+  expect(getComputedStyle(chip!.querySelector('button')!).whiteSpace).toBe('nowrap')
+  await userEvent.hover(chip!)
+  await screen.getByRole('button', { name: 'Edit When' }).click()
+  await expect.element(screen.getByRole('dialog')).toBeVisible()
+  await userEvent.hover(chip!)
+  await screen.getByRole('button', { name: 'Remove When' }).click()
+  await vi.waitFor(() => expect(text()).not.toContain('year:'))
+})
+
 test('Day: choosing a day writes year, month and day', async () => {
   const { screen, text, app } = await renderHeader(path, lore('year: 1312\nmonth: 1\nday: 3\n'), { files: CALENDARS })
   await open(screen, 'When')
@@ -416,11 +429,11 @@ test('the footer follows notes added to the calendar', async () => {
   await vi.waitFor(() => expect(document.querySelector('.saga-lore-neighbour[data-direction="after"]')?.textContent).toContain('Next'), { timeout: 3000 })
 })
 
-test('the date controls are at least 36px tall', async () => {
+test('the date popover controls are at least 36px tall', async () => {
   const { screen } = await renderHeader(path, lore('year: 1312\nmonth: 1\nday: 3\n'), { files: CALENDARS })
   await open(screen, 'When')
   const controls = [...document.querySelectorAll<HTMLElement>('.saga-lore-popover button:not(.saga-lore-link)')]
-  for (const control of [document.querySelector<HTMLElement>('.saga-lore-date-button'), ...controls]) expect(control?.getBoundingClientRect().height).toBeGreaterThanOrEqual(36)
+  for (const control of controls) expect(control.getBoundingClientRect().height).toBeGreaterThanOrEqual(36)
 })
 
 test('opening moves focus to the selected day; one day is the tab stop; arrows, Home, End and Page keys move; Enter picks', async () => {

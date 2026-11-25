@@ -184,6 +184,21 @@ test('a row label opens the entry card', async () => {
   await settle()
   expect(document.querySelector('.saga-calview-card-title')?.textContent).toBe('Day')
   expect(label.getAttribute('aria-expanded')).toBe('true')
+  expect(getComputedStyle(label).justifyContent).toBe('flex-start')
+})
+
+test('a pointer down outside the view closes the card; one on another row moves it there', async () => {
+  await renderTimeline({ scale: 'decade' }, dated)
+  const outside = document.body.appendChild(document.createElement('div'))
+  row('Another year').querySelector<HTMLElement>('.saga-timeline-label')!.click()
+  await settle()
+  row('Came before').querySelector('.saga-timeline-track')!.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))
+  await settle()
+  expect(document.querySelector('.saga-calview-card')).not.toBeNull()
+  outside.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))
+  await settle()
+  expect(document.querySelector('.saga-calview-card')).toBeNull()
+  outside.remove()
 })
 
 const box = (el: Element): DOMRect => el.getBoundingClientRect()
