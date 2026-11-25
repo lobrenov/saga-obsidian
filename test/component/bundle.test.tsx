@@ -54,5 +54,5 @@ it('loads the built plugin and registers its views', async () => {
   const SagaPlugin = module.exports.default
   if (!SagaPlugin) throw new Error('No default export')
   await new SagaPlugin().onload()
-  expect(calls.sort()).toEqual(['editor extension', 'hover saga', 'hover saga-header', 'post processor', 'post processor', 'settings', 'view saga-map'])
+  expect(calls.sort()).toEqual(['editor extension', 'hover saga', 'hover saga-calendar', 'hover saga-header', 'post processor', 'post processor', 'settings', 'view saga-calendar', 'view saga-map'])
 })

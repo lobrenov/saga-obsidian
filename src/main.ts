@@ -1,4 +1,5 @@
 import { Plugin } from 'obsidian'
+import { registerCalendarView } from './calendar'
 import { registerFileIcons } from './explorer'
 import { registerHeader } from './header'
 import { registerLinkIcons } from './links'
@@ -14,6 +15,7 @@ export default class SagaPlugin extends Plugin {
     const config = await createConfigStore(this.app, this)
     const prefs = await createPrefsStore(this)
     registerMapView(this, config, prefs)
+    registerCalendarView(this, config)
     registerHeader(this, config, prefs)
     registerLinkIcons(this, config, prefs)
     registerFileIcons(this, config, prefs)
