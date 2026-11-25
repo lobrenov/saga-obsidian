@@ -64,11 +64,11 @@ Step 1 comes first. Steps 2, 3 and 4 can then run in parallel (separate files). 
 
 ### 2. Calendar renderer and header (`calendar`)
 - `RENDERER_IDS`, `rendererDefs`, `PIN_DEFAULTS`, `--saga-calendar` and `-tint` (slate blue, light and dark), config default `types: [calendar]`, explorer icon `calendar-days`.
-- Layout in `src/header/layouts.tsx` (its own component, not field editors): Months table (name, days, drag to reorder, add, remove), Week chips (add, remove, reorder), "Year 1 began on" select, Eras table (side, name, short, start; first era of each side has a fixed start), the era strip, and "<year> at a glance" with days that have lore. Lore days come from the vault's notes whose `calendar` resolves here (`metadataCache`), not from a base.
+- Layout in `src/header/layouts.tsx` (its own component, not field editors): Months table (name, days, drag to reorder, add, remove), Week chips (add, remove, reorder), "Year 1 began on" select, Eras table (side, name, short, start; first era of each side has a fixed start), and the era strip.
 - Writes: each control replaces one key's whole value with `setField` (`months`, `weekdays`, `first-weekday`, `eras`).
 - Era rename: committing a changed era name finds the notes whose `calendar` resolves here and whose `era` or `end-era` holds the old name. None: write `eras` only. Some: a confirm `Modal` ("Rename Age of Lanterns to Age of Lamps in 3 notes?", Rename / Cancel); Rename writes `eras`, then each note's keys with `setField`, and a Notice lists any note that failed. Cancel restores the old name.
 - **Agent:** `react-dev`.
-- **Done:** component tests: each editor writes the expected YAML and only its key; invalid entries show their issue; the strip and glance follow the data; an era rename updates `era` and `end-era` in linked notes only, asks only when notes use it, and Cancel writes nothing. `typecheck`, `lint`, `test` pass.
+- **Done:** component tests: each editor writes the expected YAML and only its key; invalid entries show their issue; the strip follows the data; an era rename updates `era` and `end-era` in linked notes only, asks only when notes use it, and Cancel writes nothing. `typecheck`, `lint`, `test` pass.
 
 ### 3. Lore renderer and date editor (`lore`)
 - `RENDERER_IDS`, `rendererDefs` (fields: `calendar` link, `where` link, `who` links; the date fields below), `PIN_DEFAULTS`, `--saga-lore` and `-tint` (plum), config default `types: [lore, event]`, explorer icon `scroll-text`.

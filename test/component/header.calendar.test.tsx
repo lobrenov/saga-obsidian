@@ -132,38 +132,6 @@ test('the era strip follows the eras, each as wide as its span', async () => {
   await expect.element(screen.getByText('counting up →')).toBeVisible()
 })
 
-test('the glance shows a year with the days of linked notes marked, and steps back a year', async () => {
-  const { screen, app } = await renderHeader(path, note(), {
-    files: {
-      'Lore/Flood.md': lore('year: 1312\nmonth: 1\nday: 3\nend-year: 1312\nend-month: 1\nend-day: 5\n'),
-      'Lore/Feast.md': lore('year: 1312\nmonth: 2\nday: 20\n'),
-      'Lore/Month only.md': lore('year: 1312\nmonth: 2\n'),
-      'Lore/Elsewhere.md': lore('year: 1312\nmonth: 2\nday: 1\n', '"[[Other]]"'),
-      'Calendars/Other.md': note()
-    }
-  })
-  await expect.element(screen.getByRole('heading', { name: '1312 AL at a glance' })).toBeVisible()
-  const months = document.querySelectorAll('.saga-calendar-month')
-  expect([...months].map((m) => m.querySelectorAll('.saga-calendar-cells [data-lore]').length)).toEqual([3, 1])
-  expect([...months].map((m) => m.querySelectorAll('.saga-calendar-cells [data-day]').length)).toEqual([30, 20])
-  expect([...months].map((m) => m.querySelector('[role="img"]')?.getAttribute('aria-label'))).toEqual(['Thawmoon: days with lore: 3, 4, 5', 'Seedtide: days with lore: 20'])
-  // 1312 AL starts 1311 years * 50 days after Moonday of year 1: a weekday offset of 1311 * 50 % 4 = 2.
-  expect(months[0]?.querySelectorAll('[data-blank]')).toHaveLength(2)
-  app.addFile('Lore/Later.md', lore('year: 1312\nmonth: 1\nday: 10\n'))
-  await vi.waitFor(() => expect(document.querySelector('.saga-calendar-month')?.querySelectorAll('.saga-calendar-cells [data-lore]')).toHaveLength(4), { timeout: 3000 })
-  await screen.getByRole('button', { name: 'Previous year' }).click()
-  await expect.element(screen.getByRole('heading', { name: '1311 AL at a glance' })).toBeVisible()
-})
-
-test('the glance without dated notes opens on year 1 and steps back to 1 BL', async () => {
-  const { screen } = await renderHeader(path, note())
-  await expect.element(screen.getByRole('heading', { name: '1 AL at a glance' })).toBeVisible()
-  await screen.getByRole('button', { name: 'Previous year' }).click()
-  await expect.element(screen.getByRole('heading', { name: '1 BL at a glance' })).toBeVisible()
-  await screen.getByRole('button', { name: 'Next year' }).click()
-  await expect.element(screen.getByRole('heading', { name: '1 AL at a glance' })).toBeVisible()
-})
-
 const inEra = {
   'Lore/Founding.md': lore('era: Age of Lanterns\n'),
   'Lore/Span.md': lore('year: 3\nend-era: Age of Lanterns\n'),
@@ -268,16 +236,6 @@ test('reordering keeps every start and the menu and Alt+Arrow move rows', async 
   await userEvent.keyboard('{Alt>}{ArrowDown}{/Alt}')
   await vi.waitFor(() => expect(names(text()).slice(0, 2)).toEqual(['Thawmoon', 'Seedtide']))
   expect(document.activeElement?.getAttribute('aria-label')).toBe('Move Seedtide')
-})
-
-test('the glance stays, with its year, while the calendar is invalid', async () => {
-  const { screen } = await renderHeader(path, note())
-  await screen.getByRole('button', { name: 'Previous year' }).click()
-  await expect.element(screen.getByRole('heading', { name: '1 BL at a glance' })).toBeVisible()
-  await screen.getByRole('spinbutton', { name: 'Thawmoon days' }).fill('0')
-  cell(screen.getByRole('spinbutton', { name: 'Thawmoon days' }).element()).blur()
-  await expect.element(screen.getByText('A month needs at least 1 day')).toBeVisible()
-  await expect.element(screen.getByRole('heading', { name: '1 BL at a glance' })).toBeVisible()
 })
 
 test('the summary leaves out what is empty', async () => {
