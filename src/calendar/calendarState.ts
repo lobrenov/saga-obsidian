@@ -1,5 +1,5 @@
 import type { App, TFile } from 'obsidian'
-import { frontmatterOf, resolveLink, type ConfigStore } from '../obsidian/vault'
+import { frontmatterOf, isRendererNote, resolveLink, type ConfigStore } from '../obsidian/vault'
 import { parseCalendar } from '../shared/calendars/schema'
 import { collectEntries } from './entries'
 import type { CalendarHost } from './host'
@@ -15,20 +15,20 @@ export interface CalendarViewInput {
 }
 
 /** Whether the note is a calendar under the current config (its type resolves to the `calendar` renderer). */
-export const isCalendarNote = (app: App, settings: ConfigStore, file: TFile): boolean => file.extension === 'md' && settings.rendererOf(frontmatterOf(app, file)).renderer === 'calendar'
+export const isCalendarNote = (app: App, settings: ConfigStore, file: TFile): boolean => isRendererNote(app, (frontmatter) => settings.rendererOf(frontmatter), 'calendar')(file)
 
 const DISPLAYS: readonly Display[] = ['calendar', 'feed', 'timeline']
 
 /** What the view shows: the chosen calendar with the base's entries on it, or why there is no calendar. */
 export function calendarStateOf(app: App, settings: ConfigStore, input: CalendarViewInput): CalendarState {
-  const empty = (message: string, issues: string[] = []): CalendarState => ({ kind: 'empty', message, issues })
+  const empty = (message: string, issues: string[] = [], link?: TFile): CalendarState => ({ kind: 'empty', message, issues, ...(link && { link: { file: link, host: input.host(link) } }) })
   const path = input.option('calendar')
   if (typeof path !== 'string' || path === '') return empty('Choose a calendar note in the view options.')
   const file = app.vault.getFileByPath(path) ?? resolveLink(app, path.startsWith('[[') ? path : `[[${path}]]`, '')
   if (!file) return empty(`${path} is not in the vault.`)
-  if (!isCalendarNote(app, settings, file)) return empty(`${file.basename} is not a calendar note.`)
+  if (!isCalendarNote(app, settings, file)) return empty(`${file.basename} is not a calendar note.`, [], file)
   const parsed = parseCalendar(frontmatterOf(app, file))
-  if (!parsed.value) return empty(`${file.basename} is not a valid calendar.`, parsed.issues.map((issue) => `${issue.path}: ${issue.message}`))
+  if (!parsed.value) return empty(`${file.basename} is not a valid calendar.`, parsed.issues.map((issue) => `${issue.path}: ${issue.message}`), file)
   const display = input.option('display')
   return {
     kind: 'calendar',

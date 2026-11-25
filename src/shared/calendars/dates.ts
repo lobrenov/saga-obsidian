@@ -211,3 +211,13 @@ export function dateRange(calendar: Calendar, date: CalendarDate): { from: numbe
   const from = dayNumber(calendar, date.year, date.month, date.day ?? 1)
   return { from, to: date.day === undefined ? from + (calendar.months[date.month - 1]?.days ?? 1) - 1 : from }
 }
+
+/** Weekday labels of the same length, at least 2 letters and long enough to tell the days apart. */
+export function shortNames(names: string[]): string[] {
+  const longest = Math.max(...names.map((name) => name.length))
+  for (let length = 2; length <= longest; length++) {
+    const short = names.map((name) => name.slice(0, length))
+    if (new Set(short).size === short.length) return short
+  }
+  return names
+}

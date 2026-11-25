@@ -7,7 +7,8 @@ export type Display = 'calendar' | 'feed' | 'timeline'
 export type Range = 'month' | 'year'
 
 export type CalendarState =
-  | { kind: 'empty'; message: string; issues: string[] }
+  /** `link` is the note the message begins with. */
+  | { kind: 'empty'; message: string; issues: string[]; link?: { file: TFile; host: CalendarHost } }
   | {
       kind: 'calendar'
       host: CalendarHost

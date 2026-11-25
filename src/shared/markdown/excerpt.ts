@@ -1,4 +1,4 @@
-import { splitFrontmatter } from '../shared/frontmatter'
+import { splitFrontmatter } from '../frontmatter'
 
 /** The note body's first block as plain text (headings, code and embeds dropped, list and task markers removed, wikilinks as alias or target), at most `maxChars` long. */
 export function toExcerpt(text: string, maxChars: number): string {

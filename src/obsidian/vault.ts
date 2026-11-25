@@ -27,6 +27,18 @@ export function resolveLink(app: App, link: WikiLink | string, fromPath: string)
   return parsed ? app.metadataCache.getFirstLinkpathDest(parsed.target, fromPath) : null
 }
 
+/** Whether the link under `key` in `frontmatter`, written in `note`, resolves to `target`. */
+export function linksTo(app: App, target: TFile, note: TFile, frontmatter: Frontmatter, key = 'calendar'): boolean {
+  const link = frontmatter[key]
+  return typeof link === 'string' && resolveLink(app, link, note.path)?.path === target.path
+}
+
+/** A test for markdown notes drawn by `renderer`, given how frontmatter resolves to a renderer. */
+export const isRendererNote =
+  (app: App, resolve: (frontmatter: Frontmatter) => RendererResolution, renderer: RendererId) =>
+  (file: TFile): boolean =>
+    file.extension === 'md' && resolve(frontmatterOf(app, file)).renderer === renderer
+
 /** The URL an `<img>` can load the file from. */
 export const resourceUrl = (app: App, file: TFile): string => app.vault.getResourcePath(file)
 

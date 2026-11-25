@@ -1,6 +1,6 @@
 import type { App, TFile } from 'obsidian'
 import { loreCalendarKey } from '../header/noteCalendar'
-import { frontmatterOf, resolveLink, type ConfigStore } from '../obsidian/vault'
+import { frontmatterOf, linksTo, type ConfigStore } from '../obsidian/vault'
 import { checkDate, compareDates, readDate, type CalendarDate } from '../shared/calendars/dates'
 import type { Calendar } from '../shared/calendars/schema'
 import type { RendererId } from '../shared/renderers/ids'
@@ -29,8 +29,7 @@ export function collectEntries(app: App, config: ConfigStore, files: readonly TF
     if (note.extension !== 'md' || note.path === file.path) continue
     const frontmatter = frontmatterOf(app, note)
     const { renderer } = config.rendererOf(frontmatter)
-    const link = frontmatter[key]
-    if (typeof link !== 'string' || resolveLink(app, link, note.path)?.path !== file.path) continue
+    if (!linksTo(app, file, note, frontmatter, key)) continue
 
     const read = readDate(frontmatter, '')
     const issues = [...read.issues]
@@ -54,6 +53,7 @@ export function collectEntries(app: App, config: ConfigStore, files: readonly TF
       end = undefined
     }
 
+    if (!start && issues.length === 0 && end) issues.push({ path: 'end', message: 'Ends without When' })
     if (!start && issues.length === 0) continue
     entries.push({ file: note, title: note.basename, renderer, start, end: start ? end : undefined, issues: describe(issues) })
   }

@@ -1,5 +1,5 @@
 import type { App, TFile } from 'obsidian'
-import { frontmatterOf, resolveLink } from '../obsidian/vault'
+import { frontmatterOf, isRendererNote, resolveLink } from '../obsidian/vault'
 import type { Calendar } from '../shared/calendars/schema'
 import { parseCalendar } from '../shared/calendars/schema'
 import { rendererDefs } from '../shared/renderers/definitions'
@@ -27,8 +27,7 @@ export interface NoteCalendar {
 
 /** Whether a note is drawn by the calendar renderer under `config`. */
 export function calendarFilter(app: App, config: Config): (file: TFile) => boolean {
-  const resolve = createRendererResolver(config)
-  return (file) => resolve(frontmatterOf(app, file)).renderer === 'calendar'
+  return isRendererNote(app, createRendererResolver(config), 'calendar')
 }
 
 /** The calendar a note of `renderer` is on: the note its calendar link resolves to; with no link, the only calendar note in the vault. */

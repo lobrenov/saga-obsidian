@@ -1,4 +1,4 @@
-import { useEffect, useReducer } from 'react'
+import { useLayoutEffect, useReducer } from 'react'
 import { expect, test, vi } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { render } from 'vitest-browser-react'
@@ -9,11 +9,12 @@ import type { App, BasesViewConfig } from 'obsidian'
 import type { ConfigStore } from '../../src/obsidian/vault'
 import { CONFIG_PATH } from '../../src/obsidian/vault'
 import { CAL, CONFIG_YAML, CalendarFake, OTHER_CAL, lore } from '../fakes/calendar'
+import '../../src/styles.css'
 import './mapVars.css'
 
 function Live({ fake }: { fake: CalendarFake }) {
   const [, update] = useReducer((n: number) => n + 1, 0)
-  useEffect(() => fake.subscribe(update), [fake])
+  useLayoutEffect(() => fake.subscribe(update), [fake])
   return <CalendarRoot state={fake.state()} />
 }
 
@@ -39,12 +40,13 @@ async function renderCalendar(setup?: (fake: CalendarFake) => void, width = 1100
 }
 
 const title = (): string => document.querySelector('.saga-calview-title')?.textContent?.replace(/\s+/g, ' ').trim() ?? ''
+const dayName = (el: Element): string => el.querySelector('.saga-calview-sr')?.textContent ?? ''
 const cell = (name: string): HTMLElement => {
-  const found = [...document.querySelectorAll<HTMLElement>('[role="gridcell"]')].find((el) => el.getAttribute('aria-label') === name)
+  const found = [...document.querySelectorAll<HTMLElement>('.saga-calview-day')].find((el) => dayName(el) === name)
   if (!found) throw new Error(`no cell ${name}`)
   return found
 }
-const cells = (row: number): string[] => [...document.querySelectorAll('.saga-calview-grid [role="row"]')[row + 1]!.querySelectorAll('[role="gridcell"]')].map((el) => el.getAttribute('aria-label') ?? '')
+const cells = (row: number): string[] => [...document.querySelectorAll('.saga-calview-grid .saga-calview-week')[row + 1]!.querySelectorAll('.saga-calview-day')].map(dayName)
 const bars = (el: ParentNode = document): HTMLElement[] => [...el.querySelectorAll<HTMLElement>('.saga-calview-bar:not([data-spacer])')]
 const chips = (): string[] => [...document.querySelectorAll('.saga-calview-chip')].map((el) => el.textContent ?? '')
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0))
@@ -148,13 +150,12 @@ test('without a calendar, with a missing or non-calendar note, or with an invali
 test('the month opens on the earliest dated entry; weeks run on the calendar weekdays with neighbouring days dimmed', async () => {
   await renderCalendar()
   expect(title()).toBe('Highsun 1 AL')
-  expect([...document.querySelectorAll('[role="columnheader"]')].map((el) => el.textContent)).toEqual(['Moonday', 'Tideday', 'Netday', 'Saltday', 'Lampday', 'Restday'])
-  expect(document.querySelector('[role="grid"]')?.getAttribute('aria-label')).toBe('Highsun 1 AL')
-  expect(cells(0)).toEqual(['25 Seedtide', '26 Seedtide', '27 Seedtide', '28 Seedtide', '1 Highsun', '2 Highsun'])
-  expect(cells(5).slice(-2)).toEqual(['1 Thawmoon', '2 Thawmoon'])
-  expect(document.querySelectorAll('.saga-calview-grid [role="row"]')).toHaveLength(7)
-  const outside = [...document.querySelectorAll('[role="gridcell"][data-outside]')].map((el) => el.getAttribute('aria-label'))
-  expect(outside).toEqual(['25 Seedtide', '26 Seedtide', '27 Seedtide', '28 Seedtide', '1 Thawmoon', '2 Thawmoon'])
+  expect([...document.querySelectorAll('.saga-calview-weekday-full')].map((el) => el.textContent)).toEqual(['Moonday', 'Tideday', 'Netday', 'Saltday', 'Lampday', 'Restday'])
+  expect(document.querySelector('.saga-calview-grid')?.getAttribute('aria-label')).toBe('Highsun 1 AL')
+  expect(cells(0)).toEqual(['25 Seedtide 1 AL', '26 Seedtide 1 AL', '27 Seedtide 1 AL', '28 Seedtide 1 AL', '1 Highsun 1 AL', '2 Highsun 1 AL'])
+  expect(cells(5).slice(-2)).toEqual(['1 Thawmoon 2 AL', '2 Thawmoon 2 AL'])
+  expect(document.querySelectorAll('.saga-calview-grid .saga-calview-week')).toHaveLength(7)
+  expect([...document.querySelectorAll('.saga-calview-day[data-outside]')].map(dayName)).toEqual(['25 Seedtide 1 AL', '26 Seedtide 1 AL', '27 Seedtide 1 AL', '28 Seedtide 1 AL', '1 Thawmoon 2 AL', '2 Thawmoon 2 AL'])
 })
 
 test('with no dated entry the view opens on the first month of year 1', async () => {
@@ -163,7 +164,7 @@ test('with no dated entry the view opens on the first month of year 1', async ()
     fake.base.push(CAL)
   })
   expect(title()).toBe('Thawmoon 1 AL')
-  expect(cells(0)[0]).toBe('1 Thawmoon')
+  expect(cells(0)[0]).toBe('1 Thawmoon 1 AL')
 })
 
 test('a multi-day bar is one bar per week, continued through the cells and cut at the week break; lanes keep bars apart', async () => {
@@ -171,17 +172,17 @@ test('a multi-day bar is one bar per week, continued through the cells and cut a
   const festival = bars().filter((el) => el.textContent === 'Festival of Lamps')
   expect(festival).toHaveLength(2)
   const [first, second] = festival as [HTMLElement, HTMLElement]
-  expect(first.closest('[role="gridcell"]')?.getAttribute('aria-label')).toBe('2 Highsun')
+  expect(dayName(first.closest('.saga-calview-day')!)).toBe('2 Highsun 1 AL')
   expect([first.dataset['joinStart'], first.dataset['joinEnd']]).toEqual([undefined, 'true'])
-  expect(second.closest('[role="gridcell"]')?.getAttribute('aria-label')).toBe('3 Highsun')
+  expect(dayName(second.closest('.saga-calview-day')!)).toBe('3 Highsun 1 AL')
   expect([second.dataset['joinStart'], second.dataset['joinEnd']]).toEqual(['true', 'true'])
-  const day4 = bars(cell('4 Highsun'))
+  const day4 = bars(cell('4 Highsun 1 AL'))
   expect(day4).toHaveLength(1)
   expect([day4[0]?.getAttribute('aria-hidden'), day4[0]?.dataset['joinStart'], day4[0]?.dataset['joinEnd']]).toEqual(['true', 'true', undefined])
   // Day 3 holds the long bar in lane 0 and the single-day bar below it; day 5 holds neither.
-  expect([...cell('3 Highsun').querySelectorAll('.saga-calview-bar')].map((el) => el.textContent || (el as HTMLElement).dataset['span'])).toEqual(['Festival of Lamps', 'Chain toll raised'])
-  expect(bars(cell('5 Highsun'))).toHaveLength(0)
-  expect(cell('3 Highsun').getBoundingClientRect().height).toBe(cell('4 Highsun').getBoundingClientRect().height)
+  expect([...cell('3 Highsun 1 AL').querySelectorAll('.saga-calview-bar')].map((el) => el.textContent || (el as HTMLElement).dataset['span'])).toEqual(['Festival of Lamps', 'Chain toll raised'])
+  expect(bars(cell('5 Highsun 1 AL'))).toHaveLength(0)
+  expect(cell('3 Highsun 1 AL').getBoundingClientRect().height).toBe(cell('4 Highsun 1 AL').getBoundingClientRect().height)
 })
 
 test('entries of other calendars and notes outside the base are not drawn', async () => {
@@ -269,7 +270,7 @@ test('Escape, the close button, the same bar and a click elsewhere close the car
   await closed()
 
   await open()
-  cell('20 Highsun').click()
+  cell('20 Highsun 1 AL').click()
   await closed()
 })
 
@@ -298,7 +299,7 @@ test('previous and next step by month and the range title follows, across year 1
   expect(title()).toBe('Thawmoon 1 AL')
   await prev()
   expect(title()).toBe('Highsun 1 BL')
-  expect(document.querySelector('[role="grid"]')?.getAttribute('aria-label')).toBe('Highsun 1 BL')
+  expect(document.querySelector('.saga-calview-grid')?.getAttribute('aria-label')).toBe('Highsun 1 BL')
   expect(cells(0).every((label) => label.length > 0)).toBe(true)
   await prev()
   expect(title()).toBe('Seedtide 1 BL')
@@ -310,7 +311,7 @@ test('entries in years before 1 are drawn in their month', async () => {
   await renderCalendar((fake) => void fake.addNote('Lore/Old flood.md', lore('year: -1\nmonth: 3\nday: 5')))
   expect(title()).toBe('Highsun 1 BL')
   expect(bars().map((el) => el.textContent)).toEqual(['Old flood'])
-  expect(bars()[0]?.closest('[role="gridcell"]')?.getAttribute('aria-label')).toBe('5 Highsun')
+  expect(dayName(bars()[0]!.closest('.saga-calview-day')!)).toBe('5 Highsun 1 BL')
   await next()
   expect(title()).toBe('Thawmoon 1 AL')
   await next(2)
@@ -341,15 +342,15 @@ test('the opens option opens the Year range, one small month per month of the ca
   expect(title()).toBe('1 AL')
   expect([...document.querySelectorAll('.saga-calview-mini-title')].map((el) => el.textContent)).toEqual(['Thawmoon', 'Seedtide', 'Highsun'])
   const highsun = document.querySelectorAll('.saga-calview-mini-grid')[2]!
-  expect([...highsun.querySelectorAll('[role="columnheader"]')].map((el) => el.textContent)).toEqual(['M', 'T', 'N', 'S', 'L', 'R'])
-  expect(highsun.querySelectorAll('[role="row"]')).toHaveLength(7)
+  expect([...highsun.querySelectorAll('.saga-calview-weekday')].map((el) => el.textContent)).toEqual(['M', 'T', 'N', 'S', 'L', 'R'])
+  expect(highsun.querySelectorAll('.saga-calview-week')).toHaveLength(7)
 })
 
 test('in the Year range a day with an entry opens its card and a day with several opens a menu of them', async () => {
   const { fake, screen } = await renderCalendar((f) => void (f.options['opens'] = 'year'))
   const marks = [...document.querySelectorAll('.saga-calview-mini-mark')].map((el) => el.getAttribute('aria-label'))
-  expect(marks).toEqual(['2 Highsun: Festival of Lamps', '3 Highsun: Chain toll raised, Festival of Lamps', '4 Highsun: Festival of Lamps'])
-  await screen.getByRole('button', { name: '4 Highsun: Festival of Lamps' }).click()
+  expect(marks).toEqual(['2 Highsun 1 AL: Festival of Lamps', '3 Highsun 1 AL: Chain toll raised, Festival of Lamps', '4 Highsun 1 AL: Festival of Lamps'])
+  await screen.getByRole('button', { name: '4 Highsun 1 AL: Festival of Lamps' }).click()
   await expect.element(screen.getByRole('dialog', { name: 'Festival of Lamps' })).toBeVisible()
 
   await userEvent.keyboard('{Escape}')
@@ -385,4 +386,147 @@ test('at phone width the grid fits, controls are reachable and the card runs the
   expect(card.right).toBeLessThanOrEqual(view.right)
   expect(card.width).toBeGreaterThan(300)
   expect(card.top).toBeGreaterThanOrEqual(document.querySelector<HTMLElement>('[aria-expanded="true"]')!.getBoundingClientRect().bottom)
+})
+
+test('the range the toggle chose follows the opens option once the option shows it, and the option wins after that', async () => {
+  const { fake } = await renderCalendar()
+  document.querySelector<HTMLElement>('.saga-calview-range button:last-child')!.click()
+  await vi.waitFor(() => expect(title()).toBe('1 AL'))
+  expect(fake.options['opens']).toBe('year')
+  fake.set('opens', 'month')
+  await vi.waitFor(() => expect(title()).toBe('Highsun 1 AL'))
+  fake.set('opens', 'year')
+  await vi.waitFor(() => expect(title()).toBe('1 AL'))
+})
+
+test('the opening month is fixed on first render and does not jump when data changes', async () => {
+  const { fake } = await renderCalendar()
+  fake.addNote('Lore/Earlier.md', lore('year: 1\nmonth: 1\nday: 1'))
+  await settle()
+  expect(title()).toBe('Highsun 1 AL')
+})
+
+test('a month beyond the calendar after an edit is clamped to its last month', async () => {
+  const { fake } = await renderCalendar()
+  fake.fake.addFile(CAL, fake.fake.text(CAL).replace('  - { name: Highsun, days: 30 }\n', ''))
+  await vi.waitFor(() => expect(title()).toBe('Seedtide 1 AL'))
+})
+
+test('a note with an end and no start is a Date problem', async () => {
+  const fake = await CalendarFake.create()
+  fake.addNote('Lore/Orphan end.md', lore('end-year: 1'))
+  const state = fake.state()
+  expect(state.kind === 'calendar' && state.entries.map((entry) => [entry.title, entry.start, entry.issues])).toEqual([['Orphan end', undefined, ['end: Ends without When']]])
+})
+
+test('a month chip names its year when it is not the visible one', async () => {
+  await renderCalendar((fake) => void fake.addNote('Lore/Long run.md', lore('year: 1\nmonth: 3\nend-year: 2\nend-month: 1')))
+  expect(chips()).toContain('HighsunLong run')
+  await next()
+  expect(title()).toBe('Thawmoon 2 AL')
+  expect(chips()).toContain('Highsun 1 ALLong run')
+})
+
+test('navigating closes an open card and leaves focus on the navigation button', async () => {
+  const { screen } = await renderCalendar()
+  await screen.getByRole('button', { name: 'Chain toll raised' }).click()
+  await expect.element(screen.getByRole('dialog')).toBeVisible()
+  const nextButton = screen.getByRole('button', { name: 'Next month' })
+  await nextButton.click()
+  await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull())
+  expect(document.activeElement).toBe(nextButton.element())
+})
+
+test('PageDown and PageUp step the range', async () => {
+  await renderCalendar()
+  document.querySelector<HTMLElement>('.saga-calview-step')!.focus()
+  await userEvent.keyboard('{PageDown}')
+  expect(title()).toBe('Thawmoon 2 AL')
+  await userEvent.keyboard('{PageUp}')
+  expect(title()).toBe('Highsun 1 AL')
+})
+
+test('Shift+Tab from the card returns to the bar it opened from', async () => {
+  const { screen } = await renderCalendar()
+  const bar = screen.getByRole('button', { name: 'Chain toll raised' })
+  await bar.click()
+  screen.getByRole('button', { name: 'Close' }).element().focus()
+  await userEvent.tab({ shift: true })
+  expect(document.activeElement).toBe(bar.element())
+})
+
+test('more than three bars in a week show three and a +N button that lists the day', async () => {
+  const { fake, screen } = await renderCalendar((f) => {
+    for (const name of ['A', 'B', 'C', 'D']) f.addNote(`Lore/Day twenty ${name}.md`, lore('year: 1\nmonth: 3\nday: 20'))
+  })
+  const day = cell('20 Highsun 1 AL')
+  expect(bars(day)).toHaveLength(3)
+  await screen.getByRole('button', { name: '1 more on 20 Highsun 1 AL' }).click()
+  expect(fake.menus.at(-1)?.items.map((item) => item.title)).toEqual(['Day twenty A', 'Day twenty B', 'Day twenty C', 'Day twenty D'])
+  fake.choose('Day twenty D')
+  await expect.element(screen.getByRole('dialog', { name: 'Day twenty D' })).toBeVisible()
+})
+
+test('in the Year range a day with several entries shows a count and a day an entry only continues through is faint', async () => {
+  await renderCalendar((fake) => void (fake.options['opens'] = 'year'))
+  const mark = (day: number): HTMLElement => document.querySelector<HTMLElement>(`[data-slot="day|2|${day}"]`)!
+  expect(mark(3).querySelector('.saga-calview-mini-count')?.textContent).toBe('2')
+  expect([mark(2).dataset['faint'], mark(3).dataset['faint'], mark(4).dataset['faint']]).toEqual([undefined, undefined, 'true'])
+  expect(mark(3).title).toBe('Chain toll raised, Festival of Lamps')
+})
+
+test('the note named by a not-a-calendar message is a link that opens it', async () => {
+  const fake = await CalendarFake.create()
+  fixture(fake)
+  fake.options['calendar'] = 'Lore/Chain toll raised.md'
+  const screen = await render(<CalendarRoot state={fake.state()} />)
+  await screen.getByRole('link', { name: 'Chain toll raised' }).click()
+  expect(fake.opened).toEqual([{ linktext: 'Lore/Chain toll raised.md', sourcePath: 'Lore/Chain toll raised.md', newLeaf: false }])
+  await expect.element(screen.getByText('is not a calendar note.', { exact: false })).toBeVisible()
+})
+
+test('keyboard focus draws a ring on a bar, also on the selected one, and hovering a bar tints all its segments', async () => {
+  const { screen } = await renderCalendar()
+  await userEvent.keyboard('{Tab}')
+  let focused = document.activeElement as HTMLElement
+  for (let i = 0; i < 20 && !focused.classList.contains('saga-calview-bar'); i++) {
+    await userEvent.keyboard('{Tab}')
+    focused = document.activeElement as HTMLElement
+  }
+  expect(focused.classList.contains('saga-calview-bar')).toBe(true)
+  expect(getComputedStyle(focused).outlineStyle).toBe('solid')
+  await userEvent.keyboard('{Enter}')
+  await expect.element(screen.getByRole('dialog')).toBeVisible()
+  document.querySelector<HTMLElement>('.saga-calview-card-close')!.focus()
+  await userEvent.tab({ shift: true })
+  expect(document.activeElement).toBe(focused)
+  expect(focused.dataset['selected']).toBe('true')
+  expect(getComputedStyle(focused).outlineStyle).toBe('solid')
+
+  await userEvent.keyboard('{Escape}')
+  const festival = bars().filter((el) => el.textContent === 'Festival of Lamps')[0]!
+  const before = getComputedStyle(festival).backgroundColor
+  await userEvent.hover(screen.getByRole('button', { name: 'Herring run fails' }).elements()[0] ?? festival)
+  await userEvent.hover(festival)
+  expect(getComputedStyle(festival).backgroundColor).not.toBe(before)
+  expect(getComputedStyle(festival).cursor).toBe('pointer')
+  expect(bars(cell('4 Highsun 1 AL'))[0]?.dataset['hover']).toBe('true')
+})
+
+test('weekday headers are two-letter labels at phone width and bars are colour only', async () => {
+  await renderCalendar(undefined, 360)
+  const short = [...document.querySelectorAll<HTMLElement>('.saga-calview-weekday-short')]
+  expect(short.map((el) => el.textContent)).toEqual(['Mo', 'Ti', 'Ne', 'Sa', 'La', 'Re'])
+  expect(short.every((el) => getComputedStyle(el).display !== 'none')).toBe(true)
+  expect(getComputedStyle(document.querySelector('.saga-calview-weekday-full')!).display).toBe('none')
+  const text = document.querySelector<HTMLElement>('.saga-calview-bar-text')!
+  expect(text.getBoundingClientRect().width).toBeLessThanOrEqual(1)
+  expect(getComputedStyle(document.querySelector('.saga-calview-bar .saga-calview-glyph')!).display).toBe('none')
+})
+
+test('the Year range lays out two months across at phone width', async () => {
+  await renderCalendar((fake) => void (fake.options['opens'] = 'year'), 390)
+  const tops = [...document.querySelectorAll('.saga-calview-mini')].map((el) => Math.round(el.getBoundingClientRect().top))
+  expect(tops[0]).toBe(tops[1])
+  expect(tops[2]).toBeGreaterThan(tops[0]!)
 })
