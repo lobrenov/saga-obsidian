@@ -41,7 +41,6 @@ export const calendarSchema = z
       if (era.side === 'before' && seen.after) issue(at('side'), 'Before eras come first')
       if (!seen[era.side]) {
         seen[era.side] = true
-        if (era.start !== undefined) issue(at('start'), `The first ${era.side} era has no start`)
         return
       }
       if (era.start === undefined) return issue(at('start'), 'Needs a start')
@@ -51,6 +50,15 @@ export const calendarSchema = z
       last[era.side] = era.start
     })
   })
+  // The first era of each side starts at the earliest year or year 1; its `start` is dropped.
+  .transform((calendar) => ({
+    ...calendar,
+    eras: calendar.eras.map((era, index): Era => {
+      if (calendar.eras.findIndex((e) => e.side === era.side) !== index) return era
+      const { start: _start, ...rest } = era
+      return rest
+    })
+  }))
 export type Calendar = z.output<typeof calendarSchema>
 
 /** Validates a calendar note's frontmatter. */

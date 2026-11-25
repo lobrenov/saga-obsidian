@@ -50,9 +50,15 @@ describe('parseCalendar', () => {
     expect(paths({ eras })).toEqual(['eras.1.side'])
   })
 
-  it('gives the first era on each side no start and the others one', () => {
-    expect(paths({ eras: [{ name: 'A', short: 'A', side: 'after', start: 5 }] })).toEqual(['eras.0.start'])
-    expect(paths({ eras: [{ name: 'A', short: 'A', side: 'before', start: 5 }] })).toEqual(['eras.0.start'])
+  it('ignores a start on the first era of each side and needs one on the others', () => {
+    const first = parse({
+      eras: [
+        { name: 'A', short: 'A', side: 'before', start: 5 },
+        { name: 'B', short: 'B', side: 'after', start: 300 }
+      ]
+    })
+    expect(first.issues).toEqual([])
+    expect(first.value?.eras.map((era) => era.start)).toEqual([undefined, undefined])
     const eras = [
       { name: 'A', short: 'A', side: 'after' },
       { name: 'B', short: 'B', side: 'after' }
