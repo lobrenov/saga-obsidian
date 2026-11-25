@@ -30,7 +30,7 @@ export function testEnv(app: HeaderFakeApp): {
   env: HeaderEnv
   suggesters: Suggester[]
   hovered: string[]
-  menus: { at: MenuAt; items: MenuItem[] }[]
+  menus: { at: MenuAt; items: MenuItem[]; onHide?: (() => void) | undefined }[]
   confirms: { title: string; message: string; action: string; cancel: string }[]
   notices: string[]
   /** What the next confirmations answer. */
@@ -40,7 +40,7 @@ export function testEnv(app: HeaderFakeApp): {
 } {
   const suggesters: Suggester[] = []
   const hovered: string[] = []
-  const menus: { at: MenuAt; items: MenuItem[] }[] = []
+  const menus: { at: MenuAt; items: MenuItem[]; onHide?: (() => void) | undefined }[] = []
   const confirms: { title: string; message: string; action: string; cancel: string }[] = []
   const notices: string[] = []
   const answer = { confirm: true }
@@ -51,7 +51,7 @@ export function testEnv(app: HeaderFakeApp): {
     setIcon: (el, name) => {
       el.dataset.icon = name
     },
-    showMenu: (at, items) => void menus.push({ at, items }),
+    showMenu: (at, items, onHide) => void menus.push({ at, items, onHide }),
     confirm: (title, message, action, cancel) => {
       confirms.push({ title, message, action, cancel })
       return Promise.resolve(answer.confirm)
@@ -79,9 +79,11 @@ export function testEnv(app: HeaderFakeApp): {
     }
   }
   const choose = (title: string): void => {
-    const item = menus.at(-1)?.items.find((candidate) => candidate.title === title)
+    const menu = menus.at(-1)
+    const item = menu?.items.find((candidate) => candidate.title === title)
     if (!item) throw new Error(`no menu item ${title}`)
     item.onClick()
+    menu?.onHide?.()
   }
   return { env, suggesters, hovered, menus, confirms, notices, answer, choose }
 }
