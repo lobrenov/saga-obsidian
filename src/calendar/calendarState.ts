@@ -3,7 +3,7 @@ import { frontmatterOf, isRendererNote, resolveLink, type ConfigStore } from '..
 import { parseCalendar } from '../shared/calendars/schema'
 import { collectEntries } from './entries'
 import type { CalendarHost } from './host'
-import type { CalendarState, Display } from './types'
+import type { CalendarState, Display, Scale } from './types'
 
 /** What the Bases view supplies: its option values, the notes of the base, and the host of a calendar. */
 export interface CalendarViewInput {
@@ -18,6 +18,7 @@ export interface CalendarViewInput {
 export const isCalendarNote = (app: App, settings: ConfigStore, file: TFile): boolean => isRendererNote(app, (frontmatter) => settings.rendererOf(frontmatter), 'calendar')(file)
 
 const DISPLAYS: readonly Display[] = ['calendar', 'feed', 'timeline']
+const SCALES: readonly Scale[] = ['all', 'century', 'decade', 'year']
 
 /** What the view shows: the chosen calendar with the base's entries on it, or why there is no calendar. */
 export function calendarStateOf(app: App, settings: ConfigStore, input: CalendarViewInput): CalendarState {
@@ -39,6 +40,9 @@ export function calendarStateOf(app: App, settings: ConfigStore, input: Calendar
     entries: collectEntries(app, settings, input.files(), file, parsed.value),
     display: DISPLAYS.find((id) => id === display) ?? 'calendar',
     opens: input.option('opens') === 'year' ? 'year' : 'month',
+    scale: SCALES.find((id) => id === input.option('scale')) ?? 'all',
+    order: input.option('order') === 'newest' ? 'newest' : 'oldest',
+    banners: input.option('banners') !== false,
     setOption: input.setOption
   }
 }

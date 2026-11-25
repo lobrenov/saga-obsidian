@@ -3,9 +3,11 @@ import { addMonths, addYears, compareDates, dayNumber, daysInYear, formatDate, t
 import type { Calendar } from '../shared/calendars/schema'
 import { EntryCard } from './EntryCard'
 import type { CalendarEntry } from './entries'
+import { FeedDisplay } from './FeedDisplay'
 import { Glyph } from './Glyph'
 import { MonthGrid, type Selection } from './MonthGrid'
 import { place, type Placed } from './placement'
+import { TimelineDisplay } from './TimelineDisplay'
 import type { CalendarState, Range } from './types'
 import { YearGrid, type DayEntries } from './YearGrid'
 
@@ -217,6 +219,7 @@ export function CalendarRoot({ state }: { state: CalendarState }) {
       </div>
     )
   else if (state.display === 'calendar') body = <CalendarDisplay key={state.file.path} state={state} />
-  else body = <p className="saga-calview-state">The {state.display} display is not available yet.</p>
+  else if (state.display === 'feed') body = <FeedDisplay key={state.file.path} state={state} />
+  else body = <TimelineDisplay key={state.file.path} state={state} />
   return <div className="saga-calview">{body}</div>
 }

@@ -1,8 +1,10 @@
 import type { App, TFile } from 'obsidian'
 import { loreCalendarKey } from '../header/noteCalendar'
-import { frontmatterOf, linksTo, type ConfigStore } from '../obsidian/vault'
+import { frontmatterOf, linksTo, resolveLink, resourceUrl, type ConfigStore } from '../obsidian/vault'
 import { checkDate, compareDates, readDate, type CalendarDate } from '../shared/calendars/dates'
 import type { Calendar } from '../shared/calendars/schema'
+import { bannerOf } from '../shared/renderers/banner'
+import { rendererDefs } from '../shared/renderers/definitions'
 import type { RendererId } from '../shared/renderers/ids'
 import type { Issue } from '../shared/result'
 
@@ -17,6 +19,8 @@ export interface CalendarEntry {
   /** Undefined without an end, or when the end is invalid or before the start. */
   end: CalendarDate | undefined
   issues: string[]
+  /** The note's banner image URL and vertical position in percent, when it has a banner that resolves. */
+  banner: { url: string; y: number } | undefined
 }
 
 const describe = (issues: Issue[]): string[] => issues.map((issue) => `${issue.path}: ${issue.message}`)
@@ -55,7 +59,9 @@ export function collectEntries(app: App, config: ConfigStore, files: readonly TF
 
     if (!start && issues.length === 0 && end) issues.push({ path: 'end', message: 'Ends without When' })
     if (!start && issues.length === 0) continue
-    entries.push({ file: note, title: note.basename, renderer, start, end: start ? end : undefined, issues: describe(issues) })
+    const banner = bannerOf(rendererDefs[renderer], config.state().config.renderers[renderer]?.keys ?? {}, frontmatter)
+    const image = banner.link ? resolveLink(app, banner.link, note.path) : null
+    entries.push({ file: note, title: note.basename, renderer, start, end: start ? end : undefined, issues: describe(issues), banner: image ? { url: resourceUrl(app, image), y: banner.y } : undefined })
   }
   return entries
 }

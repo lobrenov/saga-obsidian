@@ -1,0 +1,334 @@
+/* Saga calendar view, Timeline display: the shared `saga-calview` rules style the header, chips and card. */
+.saga-timeline {
+  --saga-timeline-label: 240px;
+  --saga-timeline-cell: 160px;
+  --saga-timeline-row: 40px;
+}
+
+.saga-timeline[data-scale='year'] {
+  --saga-timeline-cell: 64px;
+}
+.saga-timeline[data-scale='decade'] {
+  --saga-timeline-cell: 96px;
+}
+.saga-timeline[data-scale='century'] {
+  --saga-timeline-cell: 18px;
+}
+
+/* Overview: the eras, a tick for each dated entry, and the window the chart shows. */
+.saga-timeline-overview {
+  position: relative;
+  display: flex;
+  flex: none;
+  height: 30px;
+  overflow: hidden;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  font-size: var(--font-ui-smaller);
+}
+
+.saga-timeline-era {
+  display: flex;
+  flex: var(--saga-timeline-weight, 1) 1 0;
+  align-items: center;
+  min-width: 0;
+  padding: 0 var(--size-4-2);
+  overflow: hidden;
+  background: var(--background-secondary);
+  color: var(--text-muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.saga-timeline-era[data-side='after'] {
+  background: var(--background-primary-alt);
+}
+
+.saga-timeline-era + .saga-timeline-era {
+  border-left: 1px solid var(--background-modifier-border);
+}
+
+.saga-timeline-tick {
+  position: absolute;
+  top: 8px;
+  left: var(--saga-timeline-left);
+  width: 2px;
+  height: 14px;
+  background: var(--saga-lore, var(--color-purple));
+}
+
+.saga-timeline-window {
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  left: var(--saga-timeline-left);
+  width: var(--saga-timeline-width);
+  min-width: 8px;
+  border: 2px solid var(--text-normal);
+  border-radius: var(--radius-s);
+  background: color-mix(in srgb, var(--text-normal) 12%, transparent);
+}
+
+/* Chart: scrolls sideways inside the view; the label column stays in view. */
+.saga-timeline-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-l);
+}
+
+.saga-timeline-chart {
+  position: relative;
+  min-width: calc(var(--saga-timeline-label) + var(--saga-timeline-columns, 1) * var(--saga-timeline-cell));
+}
+
+.saga-timeline-grid,
+.saga-timeline-columns {
+  display: flex;
+}
+
+.saga-timeline-grid {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: var(--saga-timeline-label);
+}
+
+.saga-timeline-column,
+.saga-timeline-column-label {
+  flex: var(--saga-timeline-weight, 1) 1 0;
+  min-width: 0;
+  border-left: 1px solid var(--background-modifier-border);
+}
+
+.saga-timeline-head {
+  position: relative;
+  display: flex;
+  height: 36px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+}
+
+.saga-timeline-corner {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  flex: none;
+  align-items: center;
+  width: var(--saga-timeline-label);
+  padding: 0 var(--size-4-3);
+  border-right: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  font-weight: var(--font-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.saga-timeline-columns {
+  flex: 1;
+}
+
+.saga-timeline-column-label {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--size-2-3);
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  font-weight: var(--font-semibold);
+  white-space: nowrap;
+}
+
+.saga-timeline-rows {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.saga-timeline-row {
+  display: flex;
+  height: var(--saga-timeline-row);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.saga-timeline-row[data-selected] {
+  background: var(--background-modifier-hover);
+}
+
+.saga-calview .saga-timeline-label {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--size-4-2);
+  width: var(--saga-timeline-label);
+  height: 100%;
+  margin: 0;
+  padding: 0 var(--size-4-3);
+  border: 0;
+  border-right: 1px solid var(--background-modifier-border);
+  border-radius: 0;
+  background: var(--background-primary);
+  box-shadow: none;
+  color: var(--text-normal);
+  font-size: var(--font-ui-small);
+  text-align: left;
+}
+
+.saga-calview .saga-timeline-label .saga-calview-glyph {
+  color: var(--saga-calview-accent);
+}
+
+.saga-timeline-label-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.saga-calview button.saga-timeline-label:hover,
+.saga-timeline-row[data-selected] button.saga-timeline-label {
+  background: var(--background-modifier-hover);
+}
+
+.saga-timeline-track {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Marks: a diamond for a day, a bar for a date to its end, hatching for a month, year or era; an open edge fades and points on. */
+.saga-timeline-mark {
+  position: absolute;
+  top: 50%;
+  left: var(--saga-timeline-left);
+  box-sizing: border-box;
+}
+
+.saga-timeline-mark[data-kind='point'] {
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  border-radius: var(--radius-s);
+  background: var(--saga-calview-accent);
+  box-shadow: 0 0 0 2px var(--background-primary);
+  transform: rotate(45deg);
+}
+
+.saga-timeline-mark[data-kind='bar'],
+.saga-timeline-mark[data-kind='span'] {
+  width: var(--saga-timeline-width);
+  min-width: 6px;
+  height: 20px;
+  margin-top: -10px;
+  border: 1px solid var(--saga-calview-accent);
+  border-radius: var(--radius-s);
+  background: var(--saga-calview-tint);
+}
+
+.saga-timeline-mark[data-kind='span'] {
+  border-style: dashed;
+  background: repeating-linear-gradient(135deg, var(--saga-calview-tint) 0 6px, color-mix(in srgb, var(--saga-calview-accent) 18%, var(--saga-calview-tint)) 6px 12px);
+}
+
+.saga-timeline-mark[data-open-start] {
+  border-left-style: none;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  mask-image: linear-gradient(to right, transparent, #000 28px);
+}
+
+.saga-timeline-mark[data-open-end] {
+  border-right-style: none;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  mask-image: linear-gradient(to left, transparent, #000 28px);
+}
+
+.saga-timeline-mark[data-open-start][data-open-end] {
+  mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent);
+}
+
+.saga-timeline-when {
+  position: absolute;
+  top: 50%;
+  left: var(--saga-timeline-left);
+  margin: -10px 0 0 var(--size-4-3);
+  padding: 0 var(--size-2-3);
+  border-radius: var(--radius-s);
+  background: color-mix(in srgb, var(--background-primary) 90%, transparent);
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  line-height: 20px;
+  white-space: nowrap;
+}
+
+.saga-timeline-when[data-flip] {
+  left: auto;
+  right: calc(100% - var(--saga-timeline-left));
+  margin: -10px var(--size-4-3) 0 0;
+}
+
+.saga-timeline-empty {
+  margin: 0;
+  padding: var(--size-4-6);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.saga-timeline-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-2-3) var(--size-4-5);
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.saga-timeline-legend > span {
+  display: flex;
+  align-items: center;
+  gap: var(--size-4-2);
+}
+
+.saga-timeline-swatch {
+  display: inline-block;
+  box-sizing: border-box;
+  border: 1px solid var(--saga-lore, var(--color-purple));
+  background: color-mix(in srgb, var(--saga-lore, var(--color-purple)) 14%, var(--background-primary));
+}
+
+.saga-timeline-swatch[data-kind='point'] {
+  width: 10px;
+  height: 10px;
+  background: var(--saga-lore, var(--color-purple));
+  transform: rotate(45deg);
+}
+
+.saga-timeline-swatch[data-kind='bar'],
+.saga-timeline-swatch[data-kind='span'] {
+  width: 22px;
+  height: 10px;
+  border-radius: var(--radius-s);
+}
+
+.saga-timeline-swatch[data-kind='span'] {
+  border-style: dashed;
+}
+
+@container (max-width: 560px) {
+  .saga-timeline {
+    --saga-timeline-label: 132px;
+  }
+}
+
+@media (pointer: coarse) {
+  .saga-timeline {
+    --saga-timeline-row: 44px;
+  }
+}
