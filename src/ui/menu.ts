@@ -18,10 +18,11 @@ export interface MenuAt {
   overlap?: boolean
 }
 
-export type ShowMenu = (at: MenuAt, items: MenuItem[]) => void
+/** Opens a menu; `onHide` runs when it closes. */
+export type ShowMenu = (at: MenuAt, items: MenuItem[], onHide?: () => void) => void
 
 /** Opens an Obsidian menu, which Obsidian draws natively when its native menus setting is on. */
-export const showMenu: ShowMenu = (at, items) => {
+export const showMenu: ShowMenu = (at, items, onHide) => {
   const menu = new Menu()
   for (const entry of items) {
     menu.addItem((item) => {
@@ -31,5 +32,6 @@ export const showMenu: ShowMenu = (at, items) => {
       if (entry.warning) item.setWarning(true)
     })
   }
+  if (onHide) menu.onHide(onHide)
   menu.showAtPosition(at)
 }

@@ -40,7 +40,7 @@ export class MapFake {
   /** Whether Obsidian runs on a phone or tablet. */
   mobile = false
   /** Menus the view opened, newest last. */
-  readonly menus: { at: MenuAt; items: MenuItem[] }[] = []
+  readonly menus: { at: MenuAt; items: MenuItem[]; onHide?: (() => void) | undefined }[] = []
   readonly notices: string[] = []
   readonly hovered: string[] = []
   readonly prompts: string[] = []
@@ -123,7 +123,7 @@ export class MapFake {
         },
         notify: (message) => void this.notices.push(message),
         hoverNote: (_event, _target, file) => void this.hovered.push(file.path),
-        showMenu: (at, items) => void this.menus.push({ at, items })
+        showMenu: (at, items, onHide) => void this.menus.push({ at, items, onHide })
     }
   }
 
@@ -135,11 +135,13 @@ export class MapFake {
     return () => this.fake.metadataCache.offref(ref)
   }
 
-  /** Chooses an item of the newest menu by title, as a click would. */
+  /** Chooses an item of the newest menu by title and closes the menu, as a click would. */
   choose(title: string): void {
-    const item = this.menus.at(-1)?.items.find((candidate) => candidate.title === title)
+    const menu = this.menus.at(-1)
+    const item = menu?.items.find((candidate) => candidate.title === title)
     if (!item) throw new Error(`no menu item ${title}`)
     item.onClick()
+    menu?.onHide?.()
   }
 
   /** Holds every write until the returned function is called. */

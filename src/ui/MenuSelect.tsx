@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import type { ShowMenu } from './menu'
 
 export interface MenuOption {
@@ -25,6 +26,9 @@ interface MenuSelectProps {
 /** A dropdown button that opens a menu of `options` below it, the current one checked. */
 export function MenuSelect({ id, label, className, value, options, placeholder, disabled, invalid, describedBy, showMenu, onChange }: MenuSelectProps) {
   const current = options.find((option) => option.value === value)
+  const open = useRef(false)
+  /** Whether the menu was open when the current click began, so the click only closes it. */
+  const closing = useRef(false)
   return (
     <button
       type="button"
@@ -35,7 +39,14 @@ export function MenuSelect({ id, label, className, value, options, placeholder, 
       aria-invalid={invalid || undefined}
       aria-describedby={describedBy}
       disabled={disabled}
+      onPointerDown={() => {
+        closing.current = open.current
+      }}
       onClick={(event) => {
+        if (closing.current) {
+          closing.current = false
+          return
+        }
         const box = event.currentTarget.getBoundingClientRect()
         showMenu(
           { x: box.left, y: box.bottom, width: box.width, overlap: true },
@@ -45,8 +56,11 @@ export function MenuSelect({ id, label, className, value, options, placeholder, 
             onClick: () => {
               if (option.value !== value) onChange(option.value)
             }
-          }))
+          })),
+          // Cleared a task later: a pointer down on the button that closes the menu still sees it open.
+          () => window.setTimeout(() => (open.current = false))
         )
+        open.current = true
       }}
     >
       {current?.label ?? placeholder}

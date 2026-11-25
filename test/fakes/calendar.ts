@@ -29,7 +29,7 @@ export class CalendarFake {
   readonly options: Record<string, unknown> = { calendar: CAL }
   /** Option writes of the view's controls, in order. */
   readonly written: [string, string][] = []
-  readonly menus: { at: MenuAt; items: MenuItem[] }[] = []
+  readonly menus: { at: MenuAt; items: MenuItem[]; onHide?: (() => void) | undefined }[] = []
   readonly hovered: string[] = []
   private cached: { path: string; host: CalendarHost } | null = null
   private readonly listeners = new Set<() => void>()
@@ -74,7 +74,7 @@ export class CalendarFake {
       files: () => this.base.map((path) => this.file(path)),
       host: (calendar) => {
         if (this.cached?.path !== calendar.path) {
-          const ui = { showMenu: (at: MenuAt, items: MenuItem[]) => void this.menus.push({ at, items }), hoverNote: (_event: MouseEvent, _target: HTMLElement, file: TFile) => void this.hovered.push(file.path) }
+          const ui = { showMenu: (at: MenuAt, items: MenuItem[], onHide?: () => void) => void this.menus.push({ at, items, onHide }), hoverNote: (_event: MouseEvent, _target: HTMLElement, file: TFile) => void this.hovered.push(file.path) }
           this.cached = { path: calendar.path, host: createHost(this.app, calendar, ui) }
         }
         return this.cached.host
@@ -102,11 +102,13 @@ export class CalendarFake {
     }
   }
 
-  /** Chooses an item of the newest menu by title, as a click would. */
+  /** Chooses an item of the newest menu by title and closes the menu, as a click would. */
   choose(title: string): void {
-    const item = this.menus.at(-1)?.items.find((candidate) => candidate.title === title)
+    const menu = this.menus.at(-1)
+    const item = menu?.items.find((candidate) => candidate.title === title)
     if (!item) throw new Error(`no menu item ${title}`)
     item.onClick()
+    menu?.onHide?.()
   }
 
   get opened(): FakeApp['opened'] {
