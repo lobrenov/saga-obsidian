@@ -12,6 +12,7 @@ import { Icon } from './Icon'
 import type { LayoutInput } from './types'
 import { loreCalendarKey } from './noteCalendar'
 import { useReorder } from './useReorder'
+import { useHiddenLabel } from '../ui/hiddenLabel'
 
 const STRIP_OPEN_WEIGHT = 300
 const NEW_ERA_STEP = 100
@@ -438,9 +439,11 @@ function EraStrip({ calendar }: { calendar: Calendar }) {
   const before = calendar.eras.filter((era) => era.side === 'before')
   const after = calendar.eras.filter((era) => era.side === 'after')
   const names = [...before.map((era) => era.name), 'then year 1', ...after.map((era) => era.name)]
+  const [labelId, label] = useHiddenLabel(`Eras in sequence: ${names.join(', ')}`)
   return (
     <div className="saga-calendar-strip-wrap">
-      <div className="saga-calendar-strip" role="img" aria-label={`Eras in sequence: ${names.join(', ')}`}>
+      {label}
+      <div className="saga-calendar-strip" role="img" aria-labelledby={labelId}>
         {calendar.eras.map((era, i) => {
           const { from, to } = eraSpan(calendar, era)
           const weight = Number.isFinite(from) && Number.isFinite(to) ? to - from + 1 : STRIP_OPEN_WEIGHT

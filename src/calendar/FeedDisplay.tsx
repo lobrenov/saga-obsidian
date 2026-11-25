@@ -11,7 +11,7 @@ import { NoteLink } from "./NoteLink";
 import type { CalendarState } from "./types";
 import { useExcerpt } from "./useExcerpt";
 import "./feed.css";
-import { useHiddenLabel } from "./hiddenLabel";
+import { useHiddenLabel } from "../ui/hiddenLabel";
 
 type Ready = Extract<CalendarState, { kind: "calendar" }>;
 

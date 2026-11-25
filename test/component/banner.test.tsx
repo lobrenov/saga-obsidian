@@ -390,7 +390,7 @@ test('the picker is a labelled group; Esc returns focus to the trigger and the t
   expect(trigger.getAttribute('aria-expanded')).toBe('true')
   const popover = containerEl.querySelector('.saga-banner-popover')!
   expect(popover.getAttribute('role')).toBe('group')
-  expect(popover.getAttribute('aria-label')).toBe('Choose banner image')
+  expect(document.getElementById(popover.getAttribute('aria-labelledby') ?? '')?.textContent).toBe('Choose banner image')
   suggesters[0]?.input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
   await vi.waitFor(() => expect(containerEl.querySelector('.saga-banner-popover')).toBeNull())
   await vi.waitFor(() => expect(document.activeElement).toBe(trigger))

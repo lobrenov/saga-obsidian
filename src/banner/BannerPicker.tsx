@@ -1,9 +1,12 @@
 import { FileInput } from '../header/fieldEditors'
+import { useHiddenLabel } from '../ui/hiddenLabel'
 
 /** A small popover holding the image suggester input; Esc or leaving the input closes it (`refocus`: nothing else took the focus). */
 export function BannerPicker({ onPick, onClose }: { onPick: (target: string) => void; onClose: (refocus: boolean) => void }) {
+  const [labelId, label] = useHiddenLabel('Choose banner image')
   return (
-    <div className="saga-banner-popover" role="group" aria-label="Choose banner image">
+    <div className="saga-banner-popover" role="group" aria-labelledby={labelId}>
+      {label}
       <FileInput
         kind="image"
         className="saga-header-input"

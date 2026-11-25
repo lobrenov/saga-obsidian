@@ -1,4 +1,4 @@
-import { useEffect, useId, useLayoutEffect, useRef } from 'react'
+import { useId, useLayoutEffect, useRef } from 'react'
 import type { Calendar } from '../shared/calendars/schema'
 import { rendererDefs } from '../shared/renderers/definitions'
 import { dateText } from './entryDate'
@@ -7,7 +7,7 @@ import { Glyph } from './Glyph'
 import type { CalendarHost } from './host'
 import { NoteLink } from './NoteLink'
 import { useExcerpt } from './useExcerpt'
-import { useHiddenLabel } from './hiddenLabel'
+import { useHiddenLabel } from '../ui/hiddenLabel'
 
 const WIDTH = 300
 const GAP = 6
@@ -43,15 +43,17 @@ export function EntryCard({ host, calendar, entry, slot, onClose }: EntryCardPro
   }, [entry.file.path])
 
   // A pointer down outside the card closes it, except on an element that opens a card, which selects its own.
-  useEffect(() => {
+  const close = useRef(onClose)
+  close.current = onClose
+  useLayoutEffect(() => {
     const doc = root.current?.ownerDocument
     const away = (event: PointerEvent): void => {
       const target = event.target as Node | null
-      if (target?.instanceOf(Element) && !root.current?.contains(target) && !target.closest('[data-slot], [data-opens-card]')) onClose()
+      if (target?.instanceOf(Element) && !root.current?.contains(target) && !target.closest('[data-slot], [data-opens-card]')) close.current()
     }
     doc?.addEventListener('pointerdown', away, true)
     return () => doc?.removeEventListener('pointerdown', away, true)
-  }, [onClose])
+  }, [])
 
   // The card sits beside its anchor, on the side with room; in a narrow view the style puts it below the anchor, full width.
   useLayoutEffect(() => {

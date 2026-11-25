@@ -7,7 +7,7 @@ import type { CalendarEntry } from './entries'
 import { Glyph } from './Glyph'
 import type { CalendarHost } from './host'
 import type { Placed } from './placement'
-import { useHiddenLabel } from './hiddenLabel'
+import { useHiddenLabel } from '../ui/hiddenLabel'
 
 export interface Selection {
   path: string

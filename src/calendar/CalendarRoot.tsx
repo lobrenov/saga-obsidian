@@ -13,7 +13,7 @@ import { place, type Placed } from './placement'
 import { TimelineDisplay } from './TimelineDisplay'
 import type { CalendarState, Range } from './types'
 import { YearGrid, type DayEntries } from './YearGrid'
-import { useHiddenLabel } from './hiddenLabel'
+import { useHiddenLabel } from '../ui/hiddenLabel'
 
 type Ready = Extract<CalendarState, { kind: 'calendar' }>
 

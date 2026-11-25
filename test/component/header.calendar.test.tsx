@@ -37,6 +37,8 @@ test('the header shows the calendar, its summary and its tables', async () => {
   await expect.element(screen.getByRole('button', { name: 'Year 1 began on' })).toHaveTextContent('Moonday')
   expect([...document.querySelectorAll('.saga-calendar-fixed')].map((el) => el.textContent)).toEqual(['Earliest', 'Year 1'])
   expect(document.querySelectorAll('.saga-calendar-start input')).toHaveLength(2)
+  // Obsidian draws an aria-label as a tooltip: only controls have one.
+  expect([...document.querySelectorAll('.saga-header [aria-label]')].filter((el) => !el.matches('button, input'))).toEqual([])
 })
 
 test('months: name, days, add and remove write only months', async () => {

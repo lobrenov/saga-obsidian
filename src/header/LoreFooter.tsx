@@ -5,6 +5,7 @@ import { loreOf } from './CalendarLayout'
 import { useHeader } from './env'
 import { Icon } from './Icon'
 import { noteCalendar } from './noteCalendar'
+import { useHiddenLabel } from '../ui/hiddenLabel'
 
 const RELOAD_DELAY_MS = 250
 
@@ -13,6 +14,7 @@ export function LoreFooter() {
   const { env, file, config, renderer } = useHeader()
   const { app } = env
   const [, reload] = useReducer((n: number) => n + 1, 0)
+  const [labelId, label] = useHiddenLabel('Neighbouring lore')
 
   useLayoutEffect(() => {
     let timer: number | undefined
@@ -61,7 +63,8 @@ export function LoreFooter() {
     )
 
   return (
-    <nav className="saga-lore-footer" aria-label="Neighbouring lore">
+    <nav className="saga-lore-footer" aria-labelledby={labelId}>
+      {label}
       {neighbour(notes[at - 1], 'before')}
       {neighbour(notes[at + 1], 'after')}
     </nav>
