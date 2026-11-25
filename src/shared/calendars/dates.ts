@@ -1,4 +1,4 @@
-import type { Validated } from '../result'
+import type { Issue, Validated } from '../result'
 import type { Calendar, Era } from './schema'
 import { dateKeysSchema } from './schema'
 
@@ -34,10 +34,9 @@ export function readDate(frontmatter: Readonly<Record<string, unknown>>, prefix:
   }
   const { era, year, month, day } = parsed.data
   if (era !== undefined) return { value: { era }, issues: [] }
-  if (year === undefined) return { value: undefined, issues: [] }
   return {
     value: {
-      year,
+      year: year!,
       ...(month !== undefined && { month }),
       ...(day !== undefined && { day })
     },
@@ -60,7 +59,7 @@ export function eraOf(calendar: Calendar, year: number): Era | undefined {
 /** The first and last year of an era; infinite where it runs without end. */
 export function eraSpan(calendar: Calendar, era: Era): { from: number; to: number } {
   const side = calendar.eras.filter((e) => e.side === era.side)
-  const next = side[side.indexOf(era) + 1]
+  const next = side[side.findIndex((e) => e.name === era.name) + 1]
   return {
     from: eraFrom(era),
     to: next ? eraFrom(next) - 1 : era.side === 'before' ? -1 : Infinity
@@ -85,12 +84,12 @@ export function compareDates(calendar: Calendar, a: CalendarDate, b: CalendarDat
   return 0
 }
 
-/** `28 Highsun 1312 AL`, `Highsun 1312 AL`, `1312 AL`, or the era's name. */
+/** `28 Highsun 1312 AL`, `Highsun 1312 AL`, `1312 AL`, or the era's name; a month beyond the calendar's is `Month 13`. */
 export function formatDate(calendar: Calendar, date: CalendarDate): string {
   if ('era' in date) return date.era
   const era = eraOf(calendar, date.year)
   const year = era ? `${Math.abs(date.year)} ${era.short}` : String(date.year)
-  const month = date.month === undefined ? undefined : (calendar.months[date.month - 1]?.name ?? String(date.month))
+  const month = date.month === undefined ? undefined : (calendar.months[date.month - 1]?.name ?? `Month ${date.month}`)
   return [date.day, month, year].filter((part) => part !== undefined).join(' ')
 }
 
@@ -101,9 +100,27 @@ export function dayOfYear(calendar: Calendar, month: number, day: number): numbe
   return calendar.months.slice(0, month - 1).reduce((total, m) => total + m.days, 0) + day
 }
 
-/** Days since 1 <first month> 1 (negative before it). Year 1 follows year -1. */
-const dayNumber = (calendar: Calendar, year: number, month: number, day: number): number =>
-  (year > 0 ? year - 1 : year) * daysInYear(calendar) + dayOfYear(calendar, month, day) - 1
+/** The 0-based count of years from year 1 (year -1 is -1). */
+const yearIndex = (year: number): number => {
+  if (year === 0) throw new RangeError('There is no year 0')
+  return year > 0 ? year - 1 : year
+}
+const yearAt = (index: number): number => (index >= 0 ? index + 1 : index)
+
+/** The year `n` years from `year`, skipping year 0. */
+export const addYears = (year: number, n: number): number => yearAt(yearIndex(year) + n)
+
+/** The month `n` months from `{ year, month }`, skipping year 0. */
+export function addMonths(calendar: Calendar, at: { year: number; month: number }, n: number): { year: number; month: number } {
+  const count = calendar.months.length
+  const total = yearIndex(at.year) * count + (at.month - 1) + n
+  const index = Math.floor(total / count)
+  return { year: yearAt(index), month: total - index * count + 1 }
+}
+
+/** Days since 1 <first month> 1 (negative before it). Year 1 follows year -1; year 0 throws. */
+export const dayNumber = (calendar: Calendar, year: number, month: number, day: number): number =>
+  yearIndex(year) * daysInYear(calendar) + dayOfYear(calendar, month, day) - 1
 
 function fromDayNumber(calendar: Calendar, n: number): Omit<GridDay, 'inMonth'> {
   const length = daysInYear(calendar)
@@ -115,17 +132,17 @@ function fromDayNumber(calendar: Calendar, n: number): Omit<GridDay, 'inMonth'> 
     rest -= m.days
     month++
   }
-  return { year: index >= 0 ? index + 1 : index, month, day: rest + 1 }
+  return { year: yearAt(index), month, day: rest + 1 }
 }
 
-/** The index into `weekdays` of a day. */
+/** The index into `weekdays` of a day; year 0 throws. */
 export function weekdayOf(calendar: Calendar, year: number, month: number, day: number): number {
   const length = calendar.weekdays.length
   const first = calendar.weekdays.indexOf(calendar['first-weekday'])
   return (((first + dayNumber(calendar, year, month, day)) % length) + length) % length
 }
 
-/** A month as weeks of `weekdays.length` days, with days of the neighbouring months filling the first and last week. */
+/** A month as weeks (year 0 throws) of `weekdays.length` days, with days of the neighbouring months filling the first and last week. */
 export function monthGrid(calendar: Calendar, year: number, month: number): GridDay[][] {
   const length = calendar.weekdays.length
   const days = calendar.months[month - 1]?.days ?? 0
@@ -150,4 +167,38 @@ export function dateKeys(date: CalendarDate, prefix: string): { write: Record<st
     write,
     remove: KEYS.map((key) => prefix + key).filter((key) => !(key in write))
   }
+}
+
+/** The issues of a date against its calendar: an unknown era, a month beyond the calendar's, a day beyond its month's. */
+export function checkDate(calendar: Calendar, date: CalendarDate, prefix = ''): Issue[] {
+  if ('era' in date) {
+    return calendar.eras.some((era) => era.name === date.era) ? [] : [{ path: prefix + 'era', message: `Unknown era ${JSON.stringify(date.era)}` }]
+  }
+  const { month, day } = date
+  if (month === undefined) return []
+  const days = calendar.months[month - 1]?.days
+  if (days === undefined) return [{ path: prefix + 'month', message: `Month ${month} is beyond the calendar's ${calendar.months.length} months` }]
+  if (day !== undefined && day > days)
+    return [{ path: prefix + 'day', message: `Day ${day} is beyond the ${days} days of ${calendar.months[month - 1]?.name}` }]
+  return []
+}
+
+/** The first and last day number of a date at its precision; an era-only date covers its era (infinite where open, and from `Infinity` for an unknown era). */
+export function dateRange(calendar: Calendar, date: CalendarDate): { from: number; to: number } {
+  const length = daysInYear(calendar)
+  if ('era' in date) {
+    const era = calendar.eras.find((e) => e.name === date.era)
+    if (!era) return { from: Infinity, to: Infinity }
+    const span = eraSpan(calendar, era)
+    return {
+      from: Number.isFinite(span.from) ? dayNumber(calendar, span.from, 1, 1) : -Infinity,
+      to: Number.isFinite(span.to) ? dayNumber(calendar, span.to, 1, 1) + length - 1 : Infinity
+    }
+  }
+  if (date.month === undefined) {
+    const from = dayNumber(calendar, date.year, 1, 1)
+    return { from, to: from + length - 1 }
+  }
+  const from = dayNumber(calendar, date.year, date.month, date.day ?? 1)
+  return { from, to: date.day === undefined ? from + (calendar.months[date.month - 1]?.days ?? 1) - 1 : from }
 }

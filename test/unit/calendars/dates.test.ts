@@ -1,7 +1,12 @@
 import fc from 'fast-check'
 import { describe, expect, it } from 'vitest'
 import {
+  addMonths,
+  addYears,
+  checkDate,
   compareDates,
+  dateRange,
+  dayNumber,
   dateKeys,
   dayOfYear,
   daysInYear,
@@ -29,7 +34,7 @@ const dateArb: fc.Arbitrary<CalendarDate> = fc.oneof(
     .record({
       year,
       month: fc.option(fc.integer({ min: 1, max: 6 }), { nil: undefined }),
-      day: fc.option(fc.integer({ min: 1, max: 28 }), { nil: undefined })
+      day: fc.option(fc.integer({ min: 1, max: 31 }), { nil: undefined })
     })
     .map(({ year, month, day }): CalendarDate => (month === undefined ? { year } : day === undefined ? { year, month } : { year, month, day }))
 )
@@ -61,6 +66,11 @@ describe('eras', () => {
     expect(span('The Second Tide')).toEqual({ from: 1400, to: Infinity })
   })
 
+  it('finds an era by name, so a copy spans like the original', () => {
+    expect(eraSpan(calendar, { ...eraNamed('The Second Tide') })).toEqual({ from: 1400, to: Infinity })
+    expect(eraSpan(calendar, { ...eraNamed('Age of Lanterns') })).toEqual({ from: 1, to: 1399 })
+  })
+
   it('places every year in the span of its era', () => {
     fc.assert(
       fc.property(year, (y) => {
@@ -85,6 +95,10 @@ describe('formatDate', () => {
     expect(formatDate(calendar, { year: -600, month: 1, day: 3 })).toBe('3 Thawmoon 600 BL')
     expect(formatDate(calendar, { year: -601 })).toBe('601 DA')
     expect(formatDate(calendar, { year: 1 })).toBe('1 AL')
+  })
+
+  it("names a month beyond the calendar's", () => {
+    expect(formatDate(calendar, { year: 1, month: 13, day: 2 })).toBe('2 Month 13 1 AL')
   })
 
   it('shows the signed year without an era', () => {
@@ -276,5 +290,131 @@ describe('dateKeys', () => {
       write: { 'end-year': 3, 'end-month': 1 },
       remove: ['end-era', 'end-day']
     })
+  })
+})
+
+describe('stepping over year 0', () => {
+  it('steps years', () => {
+    expect(addYears(1, -1)).toBe(-1)
+    expect(addYears(-1, 1)).toBe(1)
+    expect(addYears(-2, 3)).toBe(2)
+    expect(addYears(5, 2)).toBe(7)
+    expect(addYears(-5, -2)).toBe(-7)
+  })
+
+  it('steps months across year boundaries', () => {
+    expect(addMonths(calendar, { year: 1, month: 1 }, -1)).toEqual({ year: -1, month: 6 })
+    expect(addMonths(calendar, { year: -1, month: 6 }, 1)).toEqual({ year: 1, month: 1 })
+    expect(addMonths(calendar, { year: 1312, month: 6 }, 1)).toEqual({ year: 1313, month: 1 })
+    expect(addMonths(calendar, { year: 3, month: 2 }, 13)).toEqual({ year: 5, month: 3 })
+    expect(addMonths(calendar, { year: 1, month: 3 }, 0)).toEqual({ year: 1, month: 3 })
+  })
+
+  it('never produces year 0 and undoes itself', () => {
+    fc.assert(
+      fc.property(year, fc.integer({ min: 1, max: 6 }), fc.integer({ min: -50, max: 50 }), (y, m, n) => {
+        const there = addMonths(calendar, { year: y, month: m }, n)
+        expect(there.year).not.toBe(0)
+        expect(addMonths(calendar, there, -n)).toEqual({ year: y, month: m })
+        expect(addYears(addYears(y, n), -n)).toBe(y)
+      })
+    )
+  })
+
+  it('refuses year 0', () => {
+    expect(() => weekdayOf(calendar, 0, 1, 1)).toThrow(RangeError)
+    expect(() => monthGrid(calendar, 0, 1)).toThrow(RangeError)
+    expect(() => addYears(0, 1)).toThrow(RangeError)
+    expect(() => dayNumber(calendar, 0, 1, 1)).toThrow(RangeError)
+  })
+})
+
+describe('monthGrid edges', () => {
+  const label = (cell: { year: number; month: number; day: number }) => `${cell.day}/${cell.month}/${cell.year}`
+
+  it('reaches over several months when a year is shorter than a week', () => {
+    const tiny = load({
+      months: [
+        { name: 'A', days: 2 },
+        { name: 'B', days: 1 }
+      ],
+      weekdays: ['a', 'b', 'c', 'd', 'e', 'f', 'g'],
+      'first-weekday': 'a'
+    })
+    const flat = monthGrid(tiny, 2, 2).flat()
+    expect(flat).toHaveLength(7)
+    expect(flat.map(label)).toEqual(['1/1/1', '2/1/1', '1/2/1', '1/1/2', '2/1/2', '1/2/2', '1/1/3'])
+    expect(flat.filter((cell) => cell.inMonth).map(label)).toEqual(['1/2/2'])
+  })
+
+  it('trails the last month into the next positive year', () => {
+    const flat = monthGrid(calendar, 1, 6).flat()
+    expect(flat.at(-2)).toMatchObject({ year: 1, month: 6, day: 31, inMonth: true })
+    expect(flat.at(-1)).toMatchObject({ year: 2, month: 1, day: 1, inMonth: false })
+  })
+})
+
+describe('checkDate', () => {
+  it('accepts dates inside the calendar', () => {
+    expect(checkDate(calendar, { year: 1, month: 6, day: 31 })).toEqual([])
+    expect(checkDate(calendar, { year: 1, month: 2 })).toEqual([])
+    expect(checkDate(calendar, { year: -9 })).toEqual([])
+    expect(checkDate(calendar, { era: 'Age of Lanterns' })).toEqual([])
+  })
+
+  it('flags an unknown era, month or day under the prefix', () => {
+    expect(checkDate(calendar, { era: 'Nope' }, 'end-')).toEqual([{ path: 'end-era', message: 'Unknown era "Nope"' }])
+    expect(checkDate(calendar, { year: 1, month: 7 })).toEqual([{ path: 'month', message: "Month 7 is beyond the calendar's 6 months" }])
+    expect(checkDate(calendar, { year: 1, month: 2, day: 29 }, 'end-')).toEqual([{ path: 'end-day', message: 'Day 29 is beyond the 28 days of Seedtide' }])
+  })
+
+  it('agrees with the calendar for every month and day', () => {
+    fc.assert(
+      fc.property(fc.integer({ min: 1, max: 8 }), fc.integer({ min: 1, max: 33 }), (month, day) => {
+        const inside = month <= 6 && day <= (calendar.months[month - 1]?.days ?? 0)
+        expect(checkDate(calendar, { year: 1, month, day }).length === 0).toBe(inside)
+      })
+    )
+  })
+})
+
+describe('dateRange', () => {
+  const length = 179
+
+  it('covers a date at its precision', () => {
+    expect(dateRange(calendar, { year: 1, month: 1, day: 1 })).toEqual({ from: 0, to: 0 })
+    expect(dateRange(calendar, { year: 1, month: 2 })).toEqual({ from: 30, to: 57 })
+    expect(dateRange(calendar, { year: 2 })).toEqual({ from: length, to: 2 * length - 1 })
+    expect(dateRange(calendar, { year: -1 })).toEqual({ from: -length, to: -1 })
+    expect(dateRange(calendar, { year: -1, month: 6, day: 31 })).toEqual({ from: -1, to: -1 })
+  })
+
+  it('covers an era by its span', () => {
+    expect(dateRange(calendar, { era: 'The Drowned Age' })).toEqual({ from: -Infinity, to: -600 * length - 1 })
+    expect(dateRange(calendar, { era: 'Before the Lanterns' })).toEqual({ from: -600 * length, to: -1 })
+    expect(dateRange(calendar, { era: 'Age of Lanterns' })).toEqual({ from: 0, to: 1399 * length - 1 })
+    expect(dateRange(calendar, { era: 'The Second Tide' })).toEqual({ from: 1399 * length, to: Infinity })
+    expect(dateRange(calendar, { era: 'Nope' })).toEqual({ from: Infinity, to: Infinity })
+  })
+
+  it('nests a day in its month, its year and its era', () => {
+    fc.assert(
+      fc.property(year, fc.integer({ min: 1, max: 6 }), fc.integer({ min: 1, max: 28 }), (y, month, day) => {
+        const [d, m, yr, era] = [
+          dateRange(calendar, { year: y, month, day }),
+          dateRange(calendar, { year: y, month }),
+          dateRange(calendar, { year: y }),
+          dateRange(calendar, { era: eraOf(calendar, y)!.name })
+        ]
+        expect(d.from).toBe(dayNumber(calendar, y, month, day))
+        for (const [inner, outer] of [
+          [d, m],
+          [m, yr],
+          [yr, era]
+        ] as const) {
+          expect(outer.from <= inner.from && inner.to <= outer.to).toBe(true)
+        }
+      })
+    )
   })
 })
