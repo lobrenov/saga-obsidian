@@ -1,0 +1,281 @@
+/* Saga calendar Feed display; the header, Order control, renderer colours and focus rules are calendar.css's. */
+.saga-feed {
+  --saga-feed-spine: var(--background-modifier-border-hover);
+  --saga-feed-columns: minmax(0, 1fr) 64px minmax(0, 1fr);
+  --saga-feed-node: 14px;
+}
+
+.saga-feed .saga-calview-content {
+  max-width: 1080px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.saga-feed-list {
+  display: grid;
+  grid-template-columns: var(--saga-feed-columns);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Every row carries a stretch of the spine. */
+.saga-feed-row {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: var(--size-4-2) 0;
+  background: linear-gradient(var(--saga-feed-spine), var(--saga-feed-spine)) center / 2px 100% no-repeat;
+}
+
+.saga-feed-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.saga-feed-era {
+  margin: var(--size-4-4) 0 var(--size-4-2);
+  padding: var(--size-4-2) var(--size-4-5);
+  border: 1px solid var(--saga-calendar, var(--color-blue));
+  border-radius: 999px;
+  background: var(--saga-calendar-tint, var(--background-secondary));
+  color: var(--text-normal);
+  font-size: var(--font-ui-large);
+  font-weight: var(--font-semibold);
+}
+
+.saga-feed-short {
+  font-family: var(--font-monospace);
+  font-size: var(--font-ui-smaller);
+  font-weight: var(--font-medium);
+}
+
+.saga-feed-gap {
+  background: repeating-linear-gradient(var(--saga-feed-spine) 0 4px, transparent 4px 9px) center / 2px 100% no-repeat;
+}
+
+.saga-feed-gap span {
+  padding: 0 var(--size-4-2);
+  border-radius: var(--radius-m);
+  background: var(--background-primary);
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.saga-feed-year {
+  margin: 0;
+  padding: 2px var(--size-4-3);
+  border-radius: var(--radius-s);
+  background: var(--text-normal);
+  color: var(--background-primary);
+  font-family: var(--font-monospace);
+  font-size: var(--font-ui-small);
+  font-weight: var(--font-medium);
+}
+
+/* Entry: the card on one side, the node in the middle column. */
+.saga-feed-entry {
+  display: grid;
+  grid-template-columns: var(--saga-feed-columns);
+  align-items: center;
+}
+
+.saga-feed-entry[data-side='left'] .saga-feed-card {
+  grid-column: 1;
+  justify-self: end;
+}
+
+.saga-feed-entry[data-side='right'] .saga-feed-card {
+  grid-column: 3;
+  justify-self: start;
+}
+
+.saga-feed-card {
+  grid-row: 1;
+  position: relative;
+  box-sizing: border-box;
+  width: min(100%, 420px);
+  padding: var(--size-4-3) var(--size-4-4);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-l);
+  background: var(--background-primary);
+  box-shadow: var(--shadow-s);
+}
+
+.saga-feed-card[data-precision='era'] {
+  background: var(--saga-calview-tint);
+}
+
+.saga-feed-banner {
+  height: 96px;
+  margin: calc(-1 * var(--size-4-3)) calc(-1 * var(--size-4-4)) var(--size-4-3);
+  overflow: hidden;
+  border-radius: calc(var(--radius-l) - 1px) calc(var(--radius-l) - 1px) 0 0;
+  background: var(--background-secondary);
+}
+
+.saga-feed-banner img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% var(--saga-feed-banner-y, 50%);
+}
+
+.saga-feed-date {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--size-2-3) var(--size-4-2);
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  font-weight: var(--font-semibold);
+}
+
+.saga-feed-precision {
+  padding: 0 var(--size-4-2);
+  border: 1px solid var(--saga-calview-accent);
+  border-radius: var(--radius-m);
+  font-size: var(--font-smallest);
+  font-weight: var(--font-medium);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.saga-feed-title {
+  margin: var(--size-2-2) 0 0;
+  font-size: var(--font-ui-large);
+  font-weight: var(--font-semibold);
+  line-height: 1.25;
+}
+
+.saga-feed .saga-feed-title a.internal-link {
+  color: var(--text-normal);
+  text-decoration: none;
+}
+
+.saga-feed .saga-feed-title a.internal-link:hover {
+  text-decoration: underline;
+}
+
+.saga-feed-excerpt {
+  margin: var(--size-4-1) 0 0;
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+  line-height: 1.45;
+}
+
+/* Node by precision: day filled, month and year tinted, era hollow. */
+.saga-feed-node {
+  display: inline-block;
+  flex: none;
+  box-sizing: border-box;
+  width: var(--saga-feed-node);
+  height: var(--saga-feed-node);
+  border: 2px solid var(--saga-calview-accent);
+  border-radius: 50%;
+  background: var(--saga-calview-tint);
+  box-shadow: 0 0 0 4px var(--background-primary);
+}
+
+.saga-feed-entry > .saga-feed-node {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: center;
+}
+
+.saga-feed-node[data-precision='day'] {
+  background: var(--saga-calview-accent);
+}
+
+.saga-feed-node[data-precision='era'] {
+  background: var(--background-primary);
+}
+
+.saga-feed-legend {
+  --saga-calview-accent: var(--text-muted);
+  --saga-calview-tint: var(--background-modifier-hover);
+
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--size-4-2) var(--size-4-5);
+  margin: var(--size-4-4) 0 0;
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.saga-feed-legend > span {
+  display: flex;
+  align-items: center;
+  gap: var(--size-4-2);
+}
+
+.saga-feed-legend .saga-feed-node {
+  --saga-feed-node: 12px;
+
+  box-shadow: none;
+}
+
+/* Date problem */
+.saga-feed-problems h2 {
+  margin: 0 0 var(--size-4-1);
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.saga-feed-problems ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.saga-feed-problems li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--size-4-3);
+  padding: var(--size-2-2) 0;
+}
+
+.saga-feed-issues {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+/* Narrow: the spine moves to the left edge and cards stack on its right. */
+@container (max-width: 560px) {
+  .saga-feed-list {
+    --saga-feed-columns: 28px minmax(0, 1fr);
+  }
+  .saga-feed-row {
+    background-position: 13px 0;
+  }
+  .saga-feed-marker {
+    align-items: flex-start;
+    padding-left: 28px;
+  }
+  .saga-feed-entry[data-side] .saga-feed-card {
+    grid-column: 2;
+    justify-self: stretch;
+    width: auto;
+  }
+  .saga-feed-entry > .saga-feed-node {
+    grid-column: 1;
+    justify-self: center;
+  }
+  .saga-feed-gap span,
+  .saga-feed-year {
+    margin-left: calc(-1 * var(--size-4-2));
+  }
+}
+
+@media (pointer: coarse) {
+  .saga-feed .saga-feed-title a.internal-link,
+  .saga-feed .saga-calview-on a.internal-link,
+  .saga-feed-problems a.internal-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+  }
+}

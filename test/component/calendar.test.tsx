@@ -369,11 +369,6 @@ test('the calendar name links to the calendar note and previews on hover', async
   expect(fake.opened).toEqual([{ linktext: CAL, sourcePath: CAL, newLeaf: false }])
 })
 
-test('Feed and Timeline show a placeholder until they are built', async () => {
-  const { screen } = await renderCalendar((fake) => void (fake.options['display'] = 'feed'))
-  await expect.element(screen.getByText('The feed display is not available yet.')).toBeVisible()
-})
-
 test('at phone width the grid fits, controls are reachable and the card runs the width of the view', async () => {
   const { screen } = await renderCalendar(undefined, 360)
   const body = document.querySelector('.saga-calview-body')!
