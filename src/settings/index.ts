@@ -175,6 +175,7 @@ class SettingsTab extends PluginSettingTab {
             })
         )
       for (const [field, fieldDef] of Object.entries(def.fields as Fields)) {
+        if (fieldDef.kind === 'date') continue
         const hidden = (): boolean => this.draft.hidden[id]?.[field] ?? false
         const row = new Setting(section).setName(fieldDef.label)
         if (!fieldDef.optional) row.setClass('saga-settings-untoggled')

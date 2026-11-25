@@ -1,4 +1,6 @@
 import type { Config } from '../schemas/config'
+import type { RendererDef } from './define'
+import { rendererDefs } from './definitions'
 import { RENDERER_IDS, type RendererId } from './ids'
 
 export interface RendererResolution {
@@ -13,9 +15,11 @@ export const typeOf = (config: Config, frontmatter: Readonly<Record<string, unkn
   return typeof raw === 'string' && raw.trim() ? raw.trim() : null
 }
 
+const defaultTypes = (id: RendererId): readonly string[] => (rendererDefs[id] as RendererDef).types ?? [id]
+
 /**
  * Builds the type -> renderer lookup once per config (case-insensitive types, `document` fallback).
- * A renderer without configured `types` matches the type equal to its id; configured types replace that default.
+ * A renderer without configured `types` matches its default types (its id unless the definition lists others); configured types replace them.
  */
 export function createRendererResolver(config: Config): (frontmatter: Readonly<Record<string, unknown>>) => RendererResolution {
   const byType = new Map<string, RendererId>()
@@ -24,17 +28,17 @@ export function createRendererResolver(config: Config): (frontmatter: Readonly<R
     if (!byType.has(lower)) byType.set(lower, id)
   }
   for (const id of RENDERER_IDS) config.renderers[id]?.types.forEach((type) => add(type, id))
-  for (const id of RENDERER_IDS) if (!config.renderers[id]?.types.length) add(id, id)
+  for (const id of RENDERER_IDS) if (!config.renderers[id]?.types.length) defaultTypes(id).forEach((type) => add(type, id))
   return (frontmatter) => {
     const type = typeOf(config, frontmatter)
     return { type, renderer: (type && byType.get(type.toLowerCase())) || 'document' }
   }
 }
 
-/** The types that map to a renderer: its configured list, else its id. */
+/** The types that map to a renderer: its configured list, else its default types. */
 export const typesOf = (config: Config, id: RendererId): readonly string[] => {
   const types = config.renderers[id]?.types
-  return types?.length ? types : [id]
+  return types?.length ? types : defaultTypes(id)
 }
 
 /** Every type that maps to a renderer other than `document`, in renderer order. */

@@ -216,7 +216,7 @@ test('the list editor adds and removes items', async () => {
   const layer = readFrontmatter({ fields: { aliases: def } }, { aliases: ['a'] }).fields.aliases
   const screen = await render(
     <HeaderCtx.Provider value={{ env, file, config: DEFAULT_CONFIG, renderer: 'character' }}>
-      <FieldView def={def} noteKey="aliases" raw={['a']} layer={layer} />
+      <FieldView def={def} noteKey="aliases" raw={['a']} layer={layer} frontmatter={{ aliases: ['a'] }} />
     </HeaderCtx.Provider>
   )
   await screen.getByRole('textbox', { name: 'Aliases' }).fill('b')

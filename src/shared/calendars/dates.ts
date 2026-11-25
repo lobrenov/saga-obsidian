@@ -14,13 +14,22 @@ export interface GridDay {
 
 const KEYS = ['era', 'year', 'month', 'day'] as const
 
-/** Reads the date under `prefix` (`''` or `end-`); undefined without issues when no date key is present. */
-export function readDate(frontmatter: Readonly<Record<string, unknown>>, prefix: string): Validated<CalendarDate> {
+/** The names of the keys a date is stored under. */
+export const dateKeyNames = (prefix: string): string[] => KEYS.map((key) => prefix + key)
+
+/** The date keys present under `prefix`, as written and without their prefix. */
+export function dateEntries(frontmatter: Readonly<Record<string, unknown>>, prefix: string): Record<string, unknown> {
   const raw: Record<string, unknown> = {}
   for (const key of KEYS) {
     const value = frontmatter[prefix + key]
     if (value !== undefined && value !== null) raw[key] = value
   }
+  return raw
+}
+
+/** Reads the date under `prefix` (`''` or `end-`); undefined without issues when no date key is present. */
+export function readDate(frontmatter: Readonly<Record<string, unknown>>, prefix: string): Validated<CalendarDate> {
+  const raw = dateEntries(frontmatter, prefix)
   if (Object.keys(raw).length === 0) return { value: undefined, issues: [] }
   const parsed = dateKeysSchema.safeParse(raw)
   if (!parsed.success) {

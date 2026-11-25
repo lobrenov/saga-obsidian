@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { FakeApp } from '../fakes/obsidian'
-import { CONFIG_PATH, createConfigStore, frontmatterOf, resolveLink, resourceUrl, setField, updateField, updatePins } from '../../src/obsidian/vault'
+import { CONFIG_PATH, createConfigStore, frontmatterOf, resolveLink, resourceUrl, setField, setFields, updateField, updatePins } from '../../src/obsidian/vault'
 import { parseFrontmatter } from '../../src/shared/frontmatter'
 
 const BOM = '﻿'
@@ -64,6 +64,61 @@ describe.each([['\n'], ['\r\n']])('writes with %j line endings', (eol) => {
     expect(fake.text('Waterdeep.md')).toBe(file(eol).replace('type: Location', 'type: Settlement'))
     expect((await setField(fake.asApp(), f, 'type', undefined)).ok).toBe(true)
     expect(fake.text('Waterdeep.md')).toBe(file(eol).replace('type: Location\r\n', '').replace('type: Location\n', ''))
+  })
+})
+
+describe.each([['\n'], ['\r\n']])('setFields with %j line endings', (eol) => {
+  const dated = (keys: string[]): string => `---${eol}# kept${eol}type: event${eol}${keys.map((key) => key + eol).join('')}tags: [a] # trailing${eol}---${eol}# Body${eol}`
+
+  it('sets, inserts and removes keys in one write, changing only their text', async () => {
+    const fake = new FakeApp()
+    const f = fake.addFile('Event.md', dated(['year: 1312', 'month: 4', 'day: 28']))
+    const result = await setFields(fake.asApp(), f, { year: 1400, month: 2, day: undefined, 'end-year': 1401 })
+    expect(result.ok).toBe(true)
+    expect(fake.processed).toEqual(['Event.md'])
+    expect(fake.text('Event.md')).toBe(`---${eol}# kept${eol}type: event${eol}year: 1400${eol}month: 2${eol}tags: [a] # trailing${eol}end-year: 1401${eol}---${eol}# Body${eol}`)
+  })
+
+  it('removes keys that are absent without touching the file', async () => {
+    const fake = new FakeApp()
+    const f = fake.addFile('Event.md', dated(['year: 1312']))
+    expect((await setFields(fake.asApp(), f, { era: undefined, month: undefined })).ok).toBe(true)
+    expect(fake.processed).toEqual([])
+    expect(fake.text('Event.md')).toBe(dated(['year: 1312']))
+  })
+
+  it('creates the frontmatter block when the note has none', async () => {
+    const fake = new FakeApp()
+    const f = fake.addFile('Plain.md', '# Body\n')
+    expect((await setFields(fake.asApp(), f, { year: 3, month: 1 })).ok).toBe(true)
+    expect(parseFrontmatter(fake.text('Plain.md')).data).toEqual({ year: 3, month: 1 })
+    expect(fake.text('Plain.md').endsWith('# Body\n')).toBe(true)
+  })
+
+  it('takes the entries from the frontmatter as written at write time, or refuses with the reason', async () => {
+    const fake = new FakeApp()
+    const f = fake.addFile('Event.md', dated(['year: 1312']))
+    fake.addFile('Event.md', dated(['year: 1312', 'month: 2']))
+    const seen: unknown[] = []
+    const next = await setFields(fake.asApp(), f, (current) => {
+      seen.push(current['month'])
+      return { month: (current['month'] as number) + 1 }
+    })
+    expect(next.ok).toBe(true)
+    expect(seen).toEqual([2])
+    expect(fake.text('Event.md')).toBe(dated(['year: 1312', 'month: 3']))
+    const refused = await setFields(fake.asApp(), f, () => 'Ends cannot be earlier than When')
+    expect(refused).toEqual({ ok: false, error: { kind: 'validation', message: 'Ends cannot be earlier than When', issues: [] } })
+    expect(fake.text('Event.md')).toBe(dated(['year: 1312', 'month: 3']))
+  })
+
+  it('leaves a note with invalid frontmatter unchanged', async () => {
+    const fake = new FakeApp()
+    const broken = '---\nkey: [unclosed\n---\nbody\n'
+    const f = fake.addFile('Bad.md', broken)
+    expect((await setFields(fake.asApp(), f, { year: 1 })).ok).toBe(false)
+    expect((await setFields(fake.asApp(), f, () => ({ year: 1 }))).ok).toBe(false)
+    expect(fake.text('Bad.md')).toBe(broken)
   })
 })
 

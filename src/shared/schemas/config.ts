@@ -84,7 +84,7 @@ export function parseConfig(raw: unknown): { config: Config; issues: Issue[]; in
       invalid.push(id)
       continue
     }
-    const known = rendererDefs[id].fields as Record<string, unknown>
+    const known = Object.fromEntries(Object.entries<FieldDef>(rendererDefs[id].fields).filter(([, def]) => def.kind !== 'date'))
     const keys: Record<string, string> = {}
     for (const [field, key] of Object.entries(entry.data.keys)) {
       if (Object.hasOwn(known, field)) keys[field] = key
@@ -92,6 +92,7 @@ export function parseConfig(raw: unknown): { config: Config; issues: Issue[]; in
     }
     const byKey = new Map<string, string>()
     for (const [field, def] of Object.entries<FieldDef>(rendererDefs[id].fields)) {
+      if (def.kind === 'date') continue
       const key = keys[field] ?? def.key
       const other = byKey.get(key)
       if (key.trim() === '') issues.push({ path: `${path}.keys.${field}`, message: `The key for "${field}" must not be empty` })

@@ -1,4 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
+import type { TFile } from 'obsidian'
+import type { CalendarDate } from '../shared/calendars/dates'
 import { frontmatterOf, resolveLink, resourceUrl } from '../obsidian/vault'
 import type { EditorProps, FieldEditors } from '../shared/renderers/define'
 import { rendererDefs } from '../shared/renderers/definitions'
@@ -7,7 +9,9 @@ import { createRendererResolver } from '../shared/renderers/resolve'
 import { parseWikiLink, type WikiLink } from '../shared/wikilink'
 import { useHeader } from './env'
 import { MenuSelect } from '../ui/MenuSelect'
+import { DateEditor } from './DateEditor'
 import { Icon } from './Icon'
+import type { NoteCalendar } from './noteCalendar'
 
 /** What every field editor receives besides the field, its value and `onChange`. */
 export interface EditorCtx {
@@ -19,6 +23,8 @@ export interface EditorCtx {
   placeholder: string
   /** Rewrites the field's raw array as written in the note at write time. */
   update: (change: (current: unknown[]) => unknown[]) => void
+  /** For a date: the calendar of the note. */
+  calendar?: NoteCalendar | undefined
 }
 
 /** Quiet period after the last keystroke before a text edit is written. */
@@ -50,13 +56,15 @@ function useDraft(text: string) {
 }
 
 /** A text input that offers vault files and reports the picked file's link text. */
-export function FileInput({ kind, onPick, autoFocus, ...props }: { kind: 'note' | 'image'; onPick: (target: string) => void } & React.InputHTMLAttributes<HTMLInputElement>) {
+export function FileInput({ kind, onPick, only, autoFocus, ...props }: { kind: 'note' | 'image'; onPick: (target: string) => void; only?: (file: TFile) => boolean } & React.InputHTMLAttributes<HTMLInputElement>) {
   const { env, file } = useHeader()
   const ref = useRef<HTMLInputElement>(null)
   const pick = useRef(onPick)
   pick.current = onPick
   const from = useRef(file.path)
   from.current = file.path
+  const filter = useRef(only)
+  filter.current = only
   const picked = useRef(false)
   useLayoutEffect(
     () =>
@@ -64,7 +72,7 @@ export function FileInput({ kind, onPick, autoFocus, ...props }: { kind: 'note' 
         ? env.suggest(ref.current, kind, () => from.current, (target) => {
             picked.current = true
             pick.current(target)
-          })
+          }, (candidate) => filter.current?.(candidate) ?? true)
         : undefined,
     [env, kind]
   )
@@ -454,7 +462,8 @@ export const fieldEditors: FieldEditors<ReactNode, EditorCtx> = {
   link: (props) => <LinkEditor {...props} />,
   links: (props) => <LinksEditor {...props} />,
   image: (props) => <ImageEditor {...props} />,
-  choice: (props) => <ChoiceEditor {...props} />
+  choice: (props) => <ChoiceEditor {...props} />,
+  date: (props) => <DateEditor {...props} />
 }
 
 /** Renders the editor for `field`'s kind. `value` has already passed the field's schema (or is undefined). */
@@ -472,5 +481,7 @@ export function renderEditor(field: FieldDef, props: EditorCtx & { value: unknow
       return fieldEditors.image({ ...props, field, value: props.value as WikiLink | undefined })
     case 'choice':
       return fieldEditors.choice({ ...props, field, value: props.value as string | undefined })
+    case 'date':
+      return fieldEditors.date({ ...props, field, value: props.value as CalendarDate | undefined })
   }
 }

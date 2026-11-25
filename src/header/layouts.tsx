@@ -1,5 +1,6 @@
 import { Children, type ReactNode } from 'react'
-import type { character, document, faction, item, location, map } from '../shared/renderers/definitions'
+import type { character, document, faction, item, location, lore, map } from '../shared/renderers/definitions'
+import { LoreFooter } from './LoreFooter'
 import type { LayoutProps } from './types'
 
 /** The note's title and facts to the right of the field beside them. */
@@ -87,6 +88,31 @@ export function ItemLayout({ title, field }: LayoutProps<typeof item>) {
 /** The map's name. */
 export function MapLayout({ title }: LayoutProps<typeof map>) {
   return <Identity title={title}>{null}</Identity>
+}
+
+/** The name, then when, ends, calendar, where and who. */
+export function LorePrintLayout({ title, field }: LayoutProps<typeof lore>) {
+  return (
+    <Identity title={title}>
+      <Facts>
+        {field('when')}
+        {field('end')}
+        {field('calendar')}
+        {field('where')}
+        {field('who')}
+      </Facts>
+    </Identity>
+  )
+}
+
+/** The Lore facts, then the notes before and after on the same calendar. */
+export function LoreLayout(props: LayoutProps<typeof lore>) {
+  return (
+    <>
+      <LorePrintLayout {...props} />
+      <LoreFooter />
+    </>
+  )
 }
 
 /** The title alone. */

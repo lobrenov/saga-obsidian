@@ -77,6 +77,22 @@ export const calendar = defineRenderer({
   fields: {}
 })
 
+/** A dated note: the calendar it is dated on, when it starts and ends, where it happened and who was there. */
+export const lore = defineRenderer({
+  id: 'lore',
+  label: 'Lore',
+  icon: 'scroll-text',
+  color: 'lore',
+  types: ['lore', 'event'],
+  fields: {
+    when: { kind: 'date', key: 'when', prefix: '', label: 'When' },
+    end: { kind: 'date', key: 'end', prefix: 'end-', label: 'Ends' },
+    calendar: { kind: 'link', key: 'calendar', label: 'Calendar', optional: true },
+    where: { kind: 'link', key: 'where', label: 'Where', optional: true },
+    who: { kind: 'links', key: 'who', label: 'Who', optional: true }
+  }
+})
+
 /** The fallback renderer: no fields, any note is compatible. */
 export const document = defineRenderer({
   id: 'document',
@@ -86,4 +102,4 @@ export const document = defineRenderer({
   fields: {}
 })
 
-export const rendererDefs = { character, location, faction, item, map, calendar, document } as const
+export const rendererDefs = { character, location, faction, item, map, calendar, lore, document } as const

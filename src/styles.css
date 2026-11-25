@@ -6,6 +6,7 @@ body {
   --saga-item: #845512;
   --saga-map: #4f5b3a;
   --saga-calendar: #35596b;
+  --saga-lore: #6e3b5c;
   --saga-document: #5e564b;
   --saga-character-tint: #efdcd3;
   --saga-location-tint: #dfe8e3;
@@ -13,6 +14,7 @@ body {
   --saga-item-tint: #f4e8cf;
   --saga-map-tint: #d9e1da;
   --saga-calendar-tint: #e1e9ee;
+  --saga-lore-tint: #efe4eb;
   --saga-document-tint: #eee7da;
   --saga-pin-crimson: #9a3324;
   --saga-pin-rust: #a4441f;
@@ -35,6 +37,7 @@ body.theme-dark {
   --saga-item: #d4a35a;
   --saga-map: #a3b57e;
   --saga-calendar: #8fb0c4;
+  --saga-lore: #c99bb7;
   --saga-document: #b3a898;
   --saga-character-tint: #3a2622;
   --saga-location-tint: #213330;
@@ -42,6 +45,7 @@ body.theme-dark {
   --saga-item-tint: #392d1c;
   --saga-map-tint: #2b3122;
   --saga-calendar-tint: #1f2c35;
+  --saga-lore-tint: #33222d;
   --saga-document-tint: #2f2a24;
   --saga-pin-crimson: #d9806e;
   --saga-pin-rust: #e0895f;

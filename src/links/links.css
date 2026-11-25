@@ -29,6 +29,9 @@
 .saga-link-icon[data-renderer='calendar'] {
   --saga-link-accent: var(--saga-calendar, var(--color-blue));
 }
+.saga-link-icon[data-renderer='lore'] {
+  --saga-link-accent: var(--saga-lore, var(--color-purple));
+}
 
 .saga-link-icon[data-color='crimson'] {
   --saga-link-accent: var(--saga-pin-crimson);

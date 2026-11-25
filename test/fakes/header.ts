@@ -19,6 +19,8 @@ export interface Suggester {
   input: HTMLInputElement
   kind: 'note' | 'image'
   from: () => string
+  /** The paths of the notes it offers. */
+  offered: () => string[]
   /** What choosing a suggestion does in Obsidian: the input takes the value and the picker reports it. */
   pick(target: string): void
 }
@@ -55,11 +57,17 @@ export function testEnv(app: HeaderFakeApp): {
       return Promise.resolve(answer.confirm)
     },
     notify: (message) => void notices.push(message),
-    suggest(input, kind, from, onPick) {
+    suggest(input, kind, from, onPick, only) {
       const suggester: Suggester = {
         input,
         kind,
         from,
+        offered: () =>
+          app
+            .asApp()
+            .vault.getMarkdownFiles()
+            .filter((file) => only?.(file) ?? true)
+            .map((file) => file.path),
         pick(target) {
           Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(input, target)
           input.dispatchEvent(new Event('input', { bubbles: true }))
