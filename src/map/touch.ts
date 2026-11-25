@@ -4,7 +4,7 @@ import type { ViewportStore } from './viewportStore'
 /** A finger held still this long opens the menu under it. */
 export const HOLD_MS = 500
 /** A finger that moves this far is not held. */
-const HOLD_SLOP_PX = 4
+export const HOLD_SLOP_PX = 4
 
 type Point = { x: number; y: number }
 interface Finger {

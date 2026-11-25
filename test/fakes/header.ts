@@ -1,4 +1,3 @@
-import type { TFile } from 'obsidian'
 import type { HeaderEnv } from '../../src/header/env'
 import type { MenuAt, MenuItem } from '../../src/ui/menu'
 import { FakeApp } from './obsidian'
@@ -8,10 +7,11 @@ export class HeaderFakeApp extends FakeApp {
   readonly renamed: { from: string; to: string }[] = []
 
   override readonly fileManager = {
-    renameFile: (file: TFile, to: string): Promise<void> => {
+    renameFile: (file: { path: string }, to: string): Promise<void> => {
       this.renamed.push({ from: file.path, to })
       return Promise.resolve()
-    }
+    },
+    trashFile: (): Promise<void> => Promise.resolve()
   }
 }
 

@@ -92,6 +92,11 @@ export class TAbstractFile {
   get name(): string {
     return this.path.slice(this.path.lastIndexOf('/') + 1)
   }
+  /** The folder, as `{ path }`; `/` at the vault root. */
+  get parent(): { path: string } | null {
+    const slash = this.path.lastIndexOf('/')
+    return { path: slash < 0 ? '/' : this.path.slice(0, slash) }
+  }
 }
 
 export class TFile extends TAbstractFile {
@@ -191,6 +196,7 @@ export class FakeApp {
     readBinary: (file: TFile): Promise<ArrayBuffer> => Promise.resolve(new TextEncoder().encode(this.text(file.path)).buffer),
     getMarkdownFiles: (): TFile[] => [...this.files.values()].filter((file) => file.extension === 'md'),
     getFileByPath: (path: string): TFile | null => this.files.get(path) ?? null,
+    getAbstractFileByPath: (path: string): TFile | null => this.files.get(path) ?? null,
     process: (file: TFile, fn: (data: string) => string): Promise<string> => {
       const next = fn(this.text(file.path))
       if (next !== this.text(file.path)) {
@@ -224,7 +230,28 @@ export class FakeApp {
     }
   })
 
-  readonly fileManager = {}
+  /** Renames move the file and its text; trashing removes it. Both fire the vault's events as Obsidian does. */
+  readonly fileManager = {
+    renameFile: (file: TFile, path: string): Promise<void> => {
+      const old = file.path
+      if ([...this.files.keys()].some((other) => other !== old && other.toLowerCase() === path.toLowerCase())) return Promise.reject(new Error('Destination file already exists!'))
+      const text = this.text(old)
+      this.files.delete(old)
+      this.texts.delete(old)
+      file.path = path
+      this.files.set(path, file)
+      this.texts.set(path, text)
+      this.vault.trigger('rename', file, old)
+      return Promise.resolve()
+    },
+    trashFile: (file: TFile): Promise<void> => {
+      this.files.delete(file.path)
+      this.texts.delete(file.path)
+      this.vault.trigger('delete', file)
+      this.metadataCache.trigger('deleted', file)
+      return Promise.resolve()
+    }
+  }
 
   /** Adds (or replaces) a note or attachment and returns its file. */
   addFile(path: string, text = ''): ObsidianTFile {

@@ -55,6 +55,7 @@ export function YearGrid({ calendar, host, year, byDay, selected, onSelect }: Ye
                         aria-expanded={selected?.slot === slot}
                         data-slot={slot}
                         data-renderer={first.entry.renderer}
+                        data-entry={here.length === 1 ? first.entry.file.path : undefined}
                         data-faint={!here.some(({ start }) => start) || undefined}
                         data-selected={here.some(({ entry }) => entry.file.path === selected?.path) || undefined}
                         onClick={(event) => {

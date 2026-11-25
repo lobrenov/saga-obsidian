@@ -72,6 +72,7 @@ export function MonthGrid({ calendar, host, year, month, days, selected, onSelec
                     const shared = {
                       className: 'saga-calview-bar',
                       'data-renderer': entry.renderer,
+                      'data-entry': path,
                       'data-selected': selected?.path === path || undefined,
                       'data-hover': hovered === path || undefined,
                       'data-join-start': bar.before || col > bar.first || undefined,
