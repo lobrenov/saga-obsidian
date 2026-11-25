@@ -7,8 +7,10 @@ A note whose `type` maps to a renderer other than `document` gets a React header
 - `controller.ts`: `createHeaderController(env, config)` with `sync(views)` and `dispose()`. One React root and one host element (`.saga-header-host`) per leaf key. `sync` resolves `config.rendererOf(frontmatterOf(app, file))`; leaves in Source mode, without a file, or resolving to `document` with `documentCard()` off and no banner (`bannerOf`) are unmounted. Its third argument, `repositionBanner(key)`, is the banner controller's `reposition`, passed to `NoteHeader` as `onRepositionBanner`. `NoteHeader` is keyed by the file path, so a file switch in the same leaf unmounts the old tree (pending text edits flush to their own note) and mounts a new one. A draw is skipped when its signature (path, frontmatter, resolution, config text, Properties state) is unchanged. A mode change remounts the leaf; the Properties state is kept.
 - `dom.ts`: all knowledge of Obsidian's markup (below), `placeHost`, `markActive`, `watchPlacement`, `isolatePointer`.
 - `NoteHeader.tsx`: the section for one note: bar, layout inside `LayoutBoundary`.
-- `registry.tsx`, `layouts.tsx`, `types.ts`: `defineRendererView(def, Layout)` validates the frontmatter (`readFrontmatter` with the config's key renames) and gives the layout `title` and `field(name, className)`, which is nothing for a field in the renderer's `hidden` config. `rendererRegistry` covers `character`, `location`, `faction`, `item`, `map` and `document`.
+- `registry.tsx`, `layouts.tsx`, `types.ts`: `defineRendererView(def, Layout)` validates the frontmatter (`readFrontmatter` with the config's key renames) and gives the layout `title` and `field(name, className)`, which is nothing for a field in the renderer's `hidden` config. `rendererRegistry` covers `character`, `location`, `faction`, `item`, `map`, `calendar`, `lore` and `document`; `calendar` has its own `CalendarLayout` (no field editors).
 - `FieldView.tsx`, `fieldEditors.tsx`: one field and one editor per kind.
+- `CalendarLayout.tsx`, `CommitInput.tsx`, `useReorder.ts`: the Calendar layout and its tables.
+- `DateEditor.tsx`, `noteCalendar.ts`, `LoreFooter.tsx`: the `date` editor, the calendar a note is on, and the Lore footer.
 - `NoteTitle.tsx`, `Icon.tsx`, `LayoutBoundary.tsx`, `header.css`.
 - `env.ts`, `host.ts`: `HeaderEnv` and its Obsidian implementation.
 
@@ -27,6 +29,8 @@ Each renderer has an accent and tint from the `--saga-<renderer>` and `--saga-<r
 - Faction: emblem beside the name and facts kind, leader, base, allies, rivals.
 - Item: image (emblem frame) beside the name and facts kind, rarity, owner, location.
 - Map: name.
+- Calendar: name, a summary (`2 months · 60 days a year · 7-day week · 2 eras`, empty parts left out), then Months (a table of name and days; drag the grip, its menu or Alt+Arrow to reorder; Add month), Week (weekday chips, reorderable, Add day) and "Year 1 began on" (a menu of the weekdays), and Eras (side, name, short name, start; the first era of each side shows Earliest or Year 1 in place of a start; Add era names it New era / NE, numbered past names in use) with the era strip, each era as wide as its span. Each control writes its whole key with `updateField` from the note's value at write time. Issues from `parseCalendar` show under their row or table, except for keys the note does not have; a short name an earlier era uses shows "Short names must be unique". Renaming an era renames `era` and `end-era` in the notes dated on this calendar, after a confirm when any use it.
+- Lore: name, then When, Ends, Calendar, Where and Who, then the footer: the notes on the same calendar just before and after this one by date, or "Nothing earlier" / "Nothing later".
 - Document: name.
 
 Location and Map draw their `image` as the note's banner (`docs/banner.md`), not inside the card.
@@ -44,10 +48,12 @@ Every image field keeps its frame in its real place. A set image fills the frame
 | links | link chips (remove on hover) and an add button that opens the suggester input in place | `updateField`: append unless a link with that target exists, or remove the first entry with that target |
 | image | frame with hover controls (change opens the image suggester input over the frame, remove), or the empty frame as the add button | `setField`, `[[file]]`; remove clears the key |
 | choice | menu select (placeholder only while empty) and a Clear button on hover | `setField`; Clear removes |
+| date | date chip (edit and remove on hover) or Set date / Add end; the popover picks Era, Year, Month or Day on the note's calendar | `setFields`: the keys of the date's precision under its prefix (`''` or `end-`), finer and era keys removed, in one write |
 
 - Text: the draft is committed 600 ms after the last keystroke (`COMMIT_DELAY_MS`), on blur, and on unmount. Enter blurs; Escape restores the last known saved text. `useDraft` keeps the user's draft while the field has focus when the cache delivers a value, and tracks the last written value so an unchanged value is not written twice.
 - List and links writes use `updateField`, which builds the new array from the note's text at write time, so successive edits before the metadata cache updates all land.
 - File inputs (`FileInput`) attach the suggester once per input; picking commits, and the Enter that chose a suggestion is not committed again. Link text typed without picking is committed on Enter or blur as `[[typed]]`. Image inputs take picks only.
+- Date: the calendar is the note's `calendar` link (key from the `lore` renames), else the vault's only calendar note, whose link is then written with the date; with neither, the popover asks for a calendar note first. Ends earlier than When, and When later than Ends, are refused at write time. Year input takes `-12`, `12 BL` or `12 AL`; there is no year 0. Esc or a pointer down outside closes the popover.
 - Values reach the header again through `metadataCache` `changed`, which triggers a sync.
 
 ## Title
