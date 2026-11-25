@@ -10,6 +10,7 @@ import { useHeader } from './env'
 import { RemoveButton } from './fieldEditors'
 import { Icon } from './Icon'
 import type { LayoutInput } from './types'
+import { loreCalendarKey } from './noteCalendar'
 import { useReorder } from './useReorder'
 
 const STRIP_OPEN_WEIGHT = 300
@@ -42,27 +43,27 @@ const locate = (items: unknown[], entry: unknown, drawn: number): number => {
   return at < 0 ? drawn : at
 }
 
-/** Whether `note`'s `calendar` link resolves to `file`. */
-const linksTo = (app: App, file: TFile, note: TFile, frontmatter: Readonly<Record<string, unknown>>): boolean => {
-  const link = frontmatter['calendar']
+/** Whether `note`'s link under `key` (Lore's `calendar` key) resolves to `file`. */
+const linksTo = (app: App, file: TFile, note: TFile, frontmatter: Readonly<Record<string, unknown>>, key = 'calendar'): boolean => {
+  const link = frontmatter[key]
   return typeof link === 'string' && resolveLink(app, link, note.path)?.path === file.path
 }
 
 /** The notes whose `calendar` link resolves to `file`, with their start and end dates. */
-export function loreOf(app: App, file: TFile): { path: string; start: CalendarDate; end: CalendarDate | undefined }[] {
+export function loreOf(app: App, file: TFile, key = 'calendar'): { path: string; start: CalendarDate; end: CalendarDate | undefined }[] {
   return app.vault.getMarkdownFiles().flatMap((note) => {
     const frontmatter = frontmatterOf(app, note)
-    if (!linksTo(app, file, note, frontmatter)) return []
+    if (!linksTo(app, file, note, frontmatter, key)) return []
     const start = readDate(frontmatter, '').value
     return start ? [{ path: note.path, start, end: readDate(frontmatter, 'end-').value }] : []
   })
 }
 
 /** The notes of `file`'s calendar whose `era` or `end-era` is `era`. */
-const notesInEra = (app: App, file: TFile, era: string): TFile[] =>
+const notesInEra = (app: App, file: TFile, era: string, key: string): TFile[] =>
   app.vault.getMarkdownFiles().filter((note) => {
     const frontmatter = frontmatterOf(app, note)
-    return linksTo(app, file, note, frontmatter) && (frontmatter['era'] === era || frontmatter['end-era'] === era)
+    return linksTo(app, file, note, frontmatter, key) && (frontmatter['era'] === era || frontmatter['end-era'] === era)
   })
 
 function Issues({ issues }: { issues: Issue[] }) {
@@ -181,8 +182,9 @@ function AddDay({ onAdd, onClose }: { onAdd: (name: string) => void; onClose: ()
 
 /** The calendar note's header body: months, week, eras, the era strip and a year at a glance. Each control writes one key's whole value, built from the value in the note at write time. */
 export function CalendarLayout({ title, frontmatter }: LayoutInput) {
-  const { env, file } = useHeader()
+  const { env, file, config } = useHeader()
   const { app } = env
+  const loreKey = loreCalendarKey(config)
   const [error, setError] = useState<string | null>(null)
   const [addingDay, setAddingDay] = useState(false)
   const lastValid = useRef<Calendar | undefined>(undefined)
@@ -217,7 +219,7 @@ export function CalendarLayout({ title, frontmatter }: LayoutInput) {
     const name = text.trim()
     const old = read(eras[index], 'name')
     if (name === old) return false
-    const notes = old && name ? notesInEra(app, file, old) : []
+    const notes = old && name ? notesInEra(app, file, old, loreKey) : []
     if (notes.length > 0 && !(await env.confirm('Rename era', `Rename ${old} to ${name} in ${plural(notes.length, 'note')}?`, 'Rename', 'Cancel'))) return false
     if (!(await editEntry('eras', eras, index, { name }))) return false
     const failed: string[] = []
@@ -462,10 +464,11 @@ function EraStrip({ calendar }: { calendar: Calendar }) {
 
 /** One year as a small grid per month, with the days that notes of this calendar are dated on marked. */
 function Glance({ calendar }: { calendar: Calendar }) {
-  const { env, file } = useHeader()
+  const { env, file, config } = useHeader()
   const { app } = env
+  const loreKey = loreCalendarKey(config)
   const [tick, reload] = useReducer((n: number) => n + 1, 0)
-  const lore = useMemo(() => loreOf(app, file), [app, file.path, tick])
+  const lore = useMemo(() => loreOf(app, file, loreKey), [app, file.path, tick, loreKey])
   const known = useRef(new Set<string>())
   known.current = new Set(lore.map((note) => note.path))
   const [year, setYear] = useState(() => lore.reduce<number | null>((first, { start }) => ('year' in start && (first === null || start.year < first) ? start.year : first), null) ?? 1)
@@ -473,7 +476,7 @@ function Glance({ calendar }: { calendar: Calendar }) {
   // Rescans when a note that is, or now is, dated on this calendar changes, is renamed or is deleted.
   useLayoutEffect(() => {
     let timer: number | undefined
-    const matters = (note: TFile): boolean => known.current.has(note.path) || linksTo(app, file, note, frontmatterOf(app, note))
+    const matters = (note: TFile): boolean => known.current.has(note.path) || linksTo(app, file, note, frontmatterOf(app, note), loreKey)
     const rescan = (): void => {
       window.clearTimeout(timer)
       timer = window.setTimeout(reload, RELOAD_DELAY_MS)
@@ -487,7 +490,7 @@ function Glance({ calendar }: { calendar: Calendar }) {
       app.metadataCache.offref(deleted)
       app.vault.offref(renamed)
     }
-  }, [app, file])
+  }, [app, file, loreKey])
 
   // Days of notes dated to the day, from start to end when both are days.
   const ranges = useMemo(

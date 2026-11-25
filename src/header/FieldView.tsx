@@ -6,7 +6,7 @@ import { convertRaw, toNoteValue } from '../shared/renderers/values'
 import type { Validated } from '../shared/result'
 import { useHeader } from './env'
 import { renderEditor } from './fieldEditors'
-import { linktextOf, noteCalendar } from './noteCalendar'
+import { noteCalendar } from './noteCalendar'
 
 export interface FieldViewProps {
   def: FieldDef
@@ -30,6 +30,7 @@ export function FieldView({ def, noteKey, raw, layer, frontmatter, className }: 
   const { env, file, config, renderer } = useHeader()
   const id = useId()
   const hint = useId()
+  const alertId = useId()
   const [error, setError] = useState<string | null>(null)
   const write = (value: unknown): void => {
     void setField(env.app, file, noteKey, value).then((result) => setError(result.ok ? null : `Could not update “${noteKey}”: ${result.error.message}`))
@@ -44,19 +45,21 @@ export function FieldView({ def, noteKey, raw, layer, frontmatter, className }: 
   const calendar = def.kind === 'date' ? noteCalendar(env.app, file, config, renderer, frontmatter) : undefined
   const issues = [...layer.issues, ...(def.kind === 'date' && calendar?.calendar && layer.value ? checkDate(calendar.calendar, layer.value as CalendarDate, def.prefix) : [])]
 
-  /** Writes the date's keys and removes the finer ones in one write; Ends earlier than When is refused. */
+  /** Writes the date's keys and removes the finer ones in one write; Ends earlier than When, and When later than Ends, are refused. */
   const writeDate = (value: CalendarDate | undefined): void => {
     if (def.kind !== 'date') return
     const { prefix, label } = def
     const range = calendar?.calendar
     void setFields(env.app, file, (current) => {
-      if (value && prefix !== '' && range) {
-        const when = readDate(current, '').value
-        if (when && dateRange(range, value).to < dateRange(range, when).from) return `${label} cannot be earlier than When`
+      const other = range && value ? readDate(current, prefix === '' ? 'end-' : '').value : undefined
+      if (range && value && other && checkDate(range, value).length === 0 && checkDate(range, other).length === 0) {
+        const [start, end] = prefix === '' ? [value, other] : [other, value]
+        if (dateRange(range, end).to < dateRange(range, start).from) return prefix === '' ? `${label} cannot be later than Ends` : `${label} cannot be earlier than When`
       }
       const { write, remove } = value ? dateKeys(value, prefix) : { write: {}, remove: dateKeyNames(prefix) }
-      const link = calendar?.file && calendar.implicit && current[calendar.key] === undefined ? { [calendar.key]: `[[${linktextOf(env.app, calendar.file, file.path)}]]` } : {}
-      return { ...write, ...Object.fromEntries(remove.map((key) => [key, undefined])), ...(value ? link : {}) }
+      const unlinked = current[calendar?.key ?? ''] == null || current[calendar?.key ?? ''] === ''
+      const link = value && calendar?.file && calendar.implicit && unlinked ? { [calendar.key]: `[[${env.app.metadataCache.fileToLinktext(calendar.file, file.path, true)}]]` } : {}
+      return { ...write, ...Object.fromEntries(remove.map((key) => [key, undefined])), ...link }
     }).then((result) => setError(result.ok ? null : result.error.kind === 'validation' ? result.error.message : `Could not update ${label.toLowerCase()}: ${result.error.message}`))
   }
 
@@ -65,8 +68,8 @@ export function FieldView({ def, noteKey, raw, layer, frontmatter, className }: 
 
   const editor = renderEditor(def, {
     id,
-    invalid,
-    describedBy: invalid ? hint : undefined,
+    invalid: invalid || error !== null,
+    describedBy: [invalid ? hint : undefined, error ? alertId : undefined].filter(Boolean).join(' ') || undefined,
     placeholder: def.kind === 'choice' ? `Choose ${def.label.toLowerCase()}…` : `Add ${def.label.toLowerCase()}…`,
     update,
     value: layer.value,
@@ -104,7 +107,7 @@ export function FieldView({ def, noteKey, raw, layer, frontmatter, className }: 
         </>
       )}
       {error ? (
-        <p role="alert" className="saga-header-hint">
+        <p id={alertId} role="alert" className="saga-header-hint">
           {error}
         </p>
       ) : null}

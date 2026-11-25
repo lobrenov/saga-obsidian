@@ -30,11 +30,11 @@ export function LoreFooter() {
   }, [app])
 
   const frontmatter = frontmatterOf(app, file)
-  const { calendar, file: calendarFile } = noteCalendar(app, file, config, renderer, frontmatter)
+  const { calendar, file: calendarFile, key } = noteCalendar(app, file, config, renderer, frontmatter)
   const here = readDate(frontmatter, '').value
   if (!calendar || !calendarFile || !here) return null
 
-  const notes = [...loreOf(app, calendarFile).filter((note) => note.path !== file.path), { path: file.path, start: here, end: undefined }].sort(
+  const notes = [...loreOf(app, calendarFile, key).filter((note) => note.path !== file.path), { path: file.path, start: here, end: undefined }].sort(
     (a, b) => compareDates(calendar, a.start, b.start) || a.path.localeCompare(b.path)
   )
   const at = notes.findIndex((note) => note.path === file.path)

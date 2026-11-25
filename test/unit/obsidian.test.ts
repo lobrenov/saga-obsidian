@@ -112,6 +112,22 @@ describe.each([['\n'], ['\r\n']])('setFields with %j line endings', (eol) => {
     expect(fake.text('Event.md')).toBe(dated(['year: 1312', 'month: 3']))
   })
 
+  it('removes the last key and leaves the note without frontmatter keys', async () => {
+    const fake = new FakeApp()
+    const f = fake.addFile('Event.md', `---${eol}year: 3${eol}---${eol}# Body${eol}`)
+    expect((await setFields(fake.asApp(), f, { year: undefined })).ok).toBe(true)
+    expect(parseFrontmatter(fake.text('Event.md')).data).toEqual({})
+    expect(fake.text('Event.md')).toContain('# Body')
+  })
+
+  it('writes into empty frontmatter', async () => {
+    const fake = new FakeApp()
+    const f = fake.addFile('Event.md', `---${eol}---${eol}# Body${eol}`)
+    expect((await setFields(fake.asApp(), f, { year: 3, month: 1 })).ok).toBe(true)
+    expect(parseFrontmatter(fake.text('Event.md')).data).toEqual({ year: 3, month: 1 })
+    expect(fake.text('Event.md').endsWith(`# Body${eol}`)).toBe(true)
+  })
+
   it('leaves a note with invalid frontmatter unchanged', async () => {
     const fake = new FakeApp()
     const broken = '---\nkey: [unclosed\n---\nbody\n'

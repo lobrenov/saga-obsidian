@@ -37,14 +37,11 @@ export function noteCalendar(app: App, file: TFile, config: Config, renderer: Re
   const key = config.renderers[renderer]?.keys['calendar'] ?? fields['calendar']?.key ?? 'calendar'
   const link = frontmatter[key]
   const linked = typeof link === 'string' ? resolveLink(app, link, file.path) : null
-  const only = link === undefined || link === null ? app.vault.getMarkdownFiles().filter(calendarFilter(app, config)) : []
+  const only = link === undefined || link === null || link === '' ? app.vault.getMarkdownFiles().filter(calendarFilter(app, config)) : []
   const target = linked ?? (only.length === 1 ? (only[0] ?? null) : null)
   const parsed = target ? parseCalendar(frontmatterOf(app, target)) : undefined
   return { key, file: target, implicit: linked === null && target !== null, calendar: parsed?.value, issues: parsed?.issues ?? [] }
 }
 
-/** The shortest link text that resolves to `target` from the note at `from`. */
-export function linktextOf(app: App, target: TFile, from: string): string {
-  const name = target.basename
-  return resolveLink(app, { target: name, embed: false }, from)?.path === target.path ? name : target.path.replace(/\.md$/, '')
-}
+/** The key Lore notes keep their calendar link under. */
+export const loreCalendarKey = (config: Config): string => config.renderers.lore?.keys['calendar'] ?? rendererDefs.lore.fields.calendar.key

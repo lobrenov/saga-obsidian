@@ -3,6 +3,7 @@ import type { PinLabels, PrefsStore } from '../obsidian/prefs'
 import { frontmatterOf, type ConfigStore } from '../obsidian/vault'
 import { PIN_COLORS, PIN_DEFAULTS, SHAPES, type ColorId, type PinLook, type ShapeId } from '../shared/pins/look'
 import { rendererDefs } from '../shared/renderers/definitions'
+import { defaultTypes } from '../shared/renderers/resolve'
 import type { Fields } from '../shared/renderers/fields'
 import type { Issue } from '../shared/result'
 import type { Config } from '../shared/schemas/config'
@@ -156,7 +157,7 @@ class SettingsTab extends PluginSettingTab {
       const summary = section.createEl('summary', { cls: 'setting-item' })
       const info = summary.createDiv({ cls: 'setting-item-info' })
       info.createDiv({ cls: 'setting-item-name', text: def.label })
-      const typesEl = info.createDiv({ cls: 'setting-item-description', text: this.draft.types[id] || id })
+      const typesEl = info.createDiv({ cls: 'setting-item-description', text: this.draft.types[id] || defaultTypes(id).join(', ') })
       setIcon(summary.createDiv({ cls: 'setting-item-control saga-settings-chevron' }), 'chevron-right')
       const readOnly = state.invalid.includes(id)
       if (readOnly) section.createDiv({ cls: 'setting-item saga-settings-issue', text: 'This entry in renderers.yaml could not be read; fix it in the file.' })
@@ -170,7 +171,7 @@ class SettingsTab extends PluginSettingTab {
             .setDisabled(readOnly)
             .onChange((value) => {
               this.draft.types[id] = value
-              typesEl.setText(value || id)
+              typesEl.setText(value || defaultTypes(id).join(', '))
               this.changed()
             })
         )

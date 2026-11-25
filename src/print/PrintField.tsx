@@ -1,5 +1,5 @@
 import { frontmatterOf, resolveLink, resourceUrl } from '../obsidian/vault'
-import { formatDate, type CalendarDate } from '../shared/calendars/dates'
+import { checkDate, formatDate, type CalendarDate } from '../shared/calendars/dates'
 import { rendererDefs } from '../shared/renderers/definitions'
 import { createRendererResolver } from '../shared/renderers/resolve'
 import type { WikiLink } from '../shared/wikilink'
@@ -68,7 +68,11 @@ function PrintValue({ def, value, frontmatter }: Pick<FieldViewProps, 'def' | 'f
 
 /** One field, read-only: label and value. Nothing for an empty value, one failing its schema, or an image that does not resolve. */
 export function PrintField({ def, noteKey, raw, layer, frontmatter, className }: FieldViewProps) {
-  const { env, file } = useHeader()
+  const { env, file, config, renderer } = useHeader()
+  if (def.kind === 'date' && layer.value) {
+    const { calendar } = noteCalendar(env.app, file, config, renderer, frontmatter)
+    if (calendar && checkDate(calendar, layer.value as CalendarDate, def.prefix).length > 0) return null
+  }
   if (isEmpty(raw) || layer.issues.length > 0 || isEmpty(layer.value)) return null
   if (def.kind === 'image' && !resolveLink(env.app, layer.value as WikiLink, file.path)) return null
   return (

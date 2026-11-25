@@ -15,7 +15,8 @@ export const typeOf = (config: Config, frontmatter: Readonly<Record<string, unkn
   return typeof raw === 'string' && raw.trim() ? raw.trim() : null
 }
 
-const defaultTypes = (id: RendererId): readonly string[] => (rendererDefs[id] as RendererDef).types ?? [id]
+/** The types that map to a renderer while the config lists none. */
+export const defaultTypes = (id: RendererId): readonly string[] => (rendererDefs[id] as RendererDef).types ?? [id]
 
 /**
  * Builds the type -> renderer lookup once per config (case-insensitive types, `document` fallback).
