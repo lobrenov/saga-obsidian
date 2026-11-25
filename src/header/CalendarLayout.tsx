@@ -187,7 +187,10 @@ export function CalendarLayout({ title, frontmatter }: LayoutInput) {
   const weekdays = list(frontmatter['weekdays'])
   const eras = list(frontmatter['eras'])
   const firstWeekday = read(frontmatter, 'first-weekday')
-  const { value: calendar, issues } = parseCalendar(frontmatter)
+  const parsed = parseCalendar(frontmatter)
+  const calendar = parsed.value
+  // Issues of the keys the note has.
+  const issues = parsed.issues.filter((issue) => frontmatter[issue.path.split('.')[0] ?? ''] != null)
   if (calendar) lastValid.current = calendar
   const issuesAt = (path: string): Issue[] => issues.filter((issue) => issue.path === path || issue.path.startsWith(`${path}.`))
   const invalidAt = (path: string): boolean => issues.some((issue) => issue.path === path)
