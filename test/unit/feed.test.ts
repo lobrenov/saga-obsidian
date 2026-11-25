@@ -54,3 +54,22 @@ test('entries without a valid start are problems, not rows', () => {
   expect(feed.rows).toEqual([])
   expect(feed.problems.map((e) => e.title)).toEqual(['bad'])
 })
+
+test('ties keep the base order in both orders', () => {
+  const same = { year: 7, month: 1, day: 1 }
+  const entries = [entry('a', same), entry('b', same), entry('c', same)]
+  const tied = (order: 'oldest' | 'newest'): string[] => names(buildFeed(calendar, entries, order).rows).filter((n) => !n.includes(':'))
+  expect(tied('oldest')).toEqual(['a', 'b', 'c'])
+  expect(tied('newest')).toEqual(['a', 'b', 'c'])
+})
+
+test('an era-only entry with an end reaches to the end for the gap after it', () => {
+  const entries = [entry('era', { era: 'Age of Lanterns' }, { year: 100 }), entry('next', { year: 110 })]
+  expect(names(buildFeed(calendar, entries, 'oldest').rows)).toEqual(['era:AL', 'era', 'gap:9', 'next'])
+  expect(names(buildFeed(calendar, entries, 'newest').rows)).toEqual(['era:AL', 'next', 'gap:9', 'era'])
+})
+
+test('no gap is drawn between tied entries even when the one before them reaches far', () => {
+  const entries = [entry('long', { year: 1 }, { year: 50 }), entry('p', { year: 60 }), entry('q', { year: 60 })]
+  expect(names(buildFeed(calendar, entries, 'newest').rows).filter((n) => n.startsWith('gap'))).toEqual(['gap:9'])
+})

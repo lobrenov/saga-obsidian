@@ -118,7 +118,7 @@ test('years are the columns at Decade and Century, and eras at All', async () =>
   scaleButton('Century').click()
   await settle()
   expect(title()).toBe('1301–1400 AL')
-  expect(labels().filter(Boolean)).toHaveLength(11)
+  expect(labels().filter(Boolean)).toHaveLength(10)
   expect(document.querySelectorAll('.saga-timeline-column-label')).toHaveLength(100)
   scaleButton('All').click()
   await settle()
@@ -133,7 +133,7 @@ test('years are the columns at Decade and Century, and eras at All', async () =>
 test('the overview window follows navigation and marks the visible range', async () => {
   await renderTimeline({ scale: 'decade' }, dated)
   const strip = document.querySelector('.saga-timeline-overview')!
-  expect(strip.getAttribute('aria-label')).toBe('Showing 1311–1320 AL')
+  expect(strip.getAttribute('aria-label')).toBe('Showing 1311–1320 AL of The Drowned Age, Age of Lanterns')
   expect(strip.querySelectorAll('.saga-timeline-tick').length).toBeGreaterThan(0)
   const first = windowLeft()
   await press('Next decade')
@@ -184,4 +184,105 @@ test('a row label opens the entry card', async () => {
   await settle()
   expect(document.querySelector('.saga-calview-card-title')?.textContent).toBe('Day')
   expect(label.getAttribute('aria-expanded')).toBe('true')
+})
+
+const box = (el: Element): DOMRect => el.getBoundingClientRect()
+
+test('the header labels sit over the grid columns, after a label column of the same width', async () => {
+  await renderTimeline({ scale: 'decade' }, dated)
+  const labels = [...document.querySelectorAll('.saga-timeline-column-label')]
+  const grid = [...document.querySelectorAll('.saga-timeline-column')]
+  expect(labels).toHaveLength(grid.length)
+  labels.forEach((label, i) => {
+    expect(box(label).left).toBeCloseTo(box(grid[i]!).left, 0)
+    expect(box(label).width).toBeCloseTo(box(grid[i]!).width, 0)
+  })
+  expect(box(document.querySelector('.saga-timeline-corner')!).width).toBe(240)
+  expect(box(document.querySelector('.saga-timeline-label')!).width).toBe(240)
+  expect(box(labels[0]!).left).toBeCloseTo(box(document.querySelector('.saga-timeline-track')!).left, 0)
+})
+
+test('at Century a mark sits at its year among the hundred', async () => {
+  await renderTimeline({ scale: 'century' }, (fake) => {
+    fake.addNote('Lore/Year.md', lore('year: 1312'))
+    fake.addNote('Lore/Midway.md', lore('year: 1351\nmonth: 1\nday: 1'))
+    fake.addNote('Lore/Span.md', lore('year: 1320\nend-year: 1329'))
+  })
+  near(prop(markOf('Year'), '--saga-timeline-left'), 11)
+  near(prop(markOf('Year'), '--saga-timeline-width'), 1)
+  near(prop(markOf('Midway'), '--saga-timeline-left'), 50.5)
+  near(prop(markOf('Span'), '--saga-timeline-left'), 19)
+  near(prop(markOf('Span'), '--saga-timeline-width'), 10)
+})
+
+test('a date text flips left of its mark only with room there, and sits inside a wide mark', async () => {
+  await renderTimeline({ scale: 'decade' }, (fake) => {
+    fake.addNote('Lore/Early.md', lore('year: 1311\nmonth: 1\nday: 1'))
+    fake.addNote('Lore/Late.md', lore('year: 1320\nmonth: 1\nday: 1'))
+    fake.addNote('Lore/Late bar.md', lore('year: 1311\nend-year: 1319'))
+    fake.addNote('Lore/Early span.md', lore('year: 1311\nend-year: 1312'))
+  })
+  const when = (name: string): HTMLElement => row(name).querySelector<HTMLElement>('.saga-timeline-when')!
+  expect(when('Early').hasAttribute('data-flip')).toBe(false)
+  expect(when('Late').hasAttribute('data-flip')).toBe(true)
+  expect(when('Late bar').hasAttribute('data-inside')).toBe(true)
+  expect(when('Early span').hasAttribute('data-flip')).toBe(false)
+})
+
+test('Page keys step the window but are left alone at All', async () => {
+  await renderTimeline({ scale: 'decade' }, dated)
+  const key = (name: string): KeyboardEvent => {
+    const event = new KeyboardEvent('keydown', { key: name, bubbles: true, cancelable: true })
+    document.querySelector('.saga-timeline-label')!.dispatchEvent(event)
+    return event
+  }
+  expect(key('PageDown').defaultPrevented).toBe(true)
+  await settle()
+  expect(title()).toBe('1321–1330 AL')
+  scaleButton('All').click()
+  await settle()
+  expect(key('PageDown').defaultPrevented).toBe(false)
+})
+
+test('a row opens its card from the mark or date as well, and only the label takes focus', async () => {
+  await renderTimeline({ scale: 'decade' }, dated)
+  const track = row('Another year').querySelector<HTMLElement>('.saga-timeline-track')!
+  track.click()
+  await settle()
+  expect(document.querySelector('.saga-calview-card')).not.toBeNull()
+  expect(row('Another year').querySelector('.saga-timeline-label')!.getAttribute('aria-expanded')).toBe('true')
+  expect(track.querySelector('[tabindex], button, a')).toBeNull()
+})
+
+test('open marks say they continue, the head is hidden from assistive technology and the list is named', async () => {
+  await renderTimeline({ scale: 'year' }, dated)
+  expect(row('Came before').querySelector('.saga-timeline-when')?.textContent).toContain('continues after')
+  await press('Next year')
+  expect(row('Came before').querySelector('.saga-timeline-when')?.textContent).toContain('continues before')
+  expect(document.querySelector('.saga-timeline-head')?.getAttribute('aria-hidden')).toBe('true')
+  expect(document.querySelector('ol[aria-label="Timeline"]')).not.toBeNull()
+  expect(document.querySelector('.saga-timeline-scroll')?.getAttribute('aria-label')).toBe('Timeline chart')
+  expect(document.querySelector('.saga-timeline-era[title]')).toBeNull()
+})
+
+test('the legend and rows are absent and the empty state names the calendar when nothing is dated', async () => {
+  await renderTimeline({ scale: 'year' }, () => undefined)
+  expect(document.querySelector('.saga-timeline-empty')?.textContent).toBe('No dated notes on The Tidereckoning.')
+  expect(document.querySelector('.saga-timeline-legend')).toBeNull()
+})
+
+test('a window with nothing in it says so', async () => {
+  await renderTimeline({ scale: 'year' }, (fake) => {
+    fake.addNote('Lore/Near.md', lore('year: 1311'))
+    fake.addNote('Lore/Far.md', lore('year: 1400'))
+  })
+  await press('Next year')
+  expect(document.querySelector('.saga-timeline-empty')?.textContent).toBe('Nothing is dated in 1312 AL.')
+})
+
+test('a date problem is a chip that opens its card', async () => {
+  await renderTimeline({ scale: 'decade' }, dated)
+  document.querySelector<HTMLElement>('.saga-calview-chip')!.click()
+  await settle()
+  expect(document.querySelector('.saga-calview-card-issues')).not.toBeNull()
 })

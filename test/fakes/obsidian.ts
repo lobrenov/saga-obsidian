@@ -95,6 +95,7 @@ export class TAbstractFile {
 }
 
 export class TFile extends TAbstractFile {
+  stat = { ctime: 0, mtime: 0, size: 0 }
   get extension(): string {
     const dot = this.name.lastIndexOf('.')
     return dot < 0 ? '' : this.name.slice(dot + 1)

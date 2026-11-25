@@ -102,6 +102,10 @@
   box-shadow: var(--shadow-s);
 }
 
+.saga-feed-card:hover {
+  border-color: var(--background-modifier-border-hover);
+}
+
 .saga-feed-card[data-precision='era'] {
   background: var(--saga-calview-tint);
 }
@@ -159,11 +163,33 @@
   text-decoration: underline;
 }
 
+/* The title link covers the card; its focus ring is the card's. */
+.saga-feed-title a.internal-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.saga-calview .saga-feed-title a.internal-link:focus-visible {
+  outline: none;
+}
+
+.saga-feed-title a.internal-link:focus-visible::after {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 1px;
+  border-radius: var(--radius-l);
+}
+
 .saga-feed-excerpt {
-  margin: var(--size-4-1) 0 0;
+  margin: 0;
   color: var(--text-muted);
   font-size: var(--font-ui-small);
   line-height: 1.45;
+}
+
+.saga-feed-excerpt:not(:empty) {
+  margin-top: var(--size-4-1);
 }
 
 /* Node by precision: day filled, month and year tinted, era hollow. */
@@ -218,33 +244,8 @@
   box-shadow: none;
 }
 
-/* Date problem */
-.saga-feed-problems h2 {
-  margin: 0 0 var(--size-4-1);
-  color: var(--text-muted);
-  font-size: var(--font-ui-smaller);
-}
-
-.saga-feed-problems ul {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.saga-feed-problems li {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 var(--size-4-3);
-  padding: var(--size-2-2) 0;
-}
-
-.saga-feed-issues {
-  color: var(--text-muted);
-  font-size: var(--font-ui-smaller);
-}
-
 /* Narrow: the spine moves to the left edge and cards stack on its right. */
-@container (max-width: 560px) {
+@container (max-width: 760px) {
   .saga-feed-list {
     --saga-feed-columns: 28px minmax(0, 1fr);
   }
@@ -271,9 +272,7 @@
 }
 
 @media (pointer: coarse) {
-  .saga-feed .saga-feed-title a.internal-link,
-  .saga-feed .saga-calview-on a.internal-link,
-  .saga-feed-problems a.internal-link {
+  .saga-feed .saga-calview-on a.internal-link {
     display: inline-flex;
     align-items: center;
     min-height: 36px;

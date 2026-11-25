@@ -60,6 +60,8 @@ export class CalendarFake {
 
   /** Adds a note; `inBase: false` keeps it out of the base's entries. */
   addNote(path: string, text: string, inBase = true): TFile {
+    const existing = this.app.vault.getFileByPath(path)
+    if (existing) existing.stat.mtime++
     const file = this.fake.addFile(path, text)
     if (inBase && !this.base.includes(path)) this.base.push(path)
     return file

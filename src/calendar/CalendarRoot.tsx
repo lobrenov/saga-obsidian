@@ -1,24 +1,20 @@
-import { useId, useMemo, useState } from 'react'
-import { addMonths, addYears, compareDates, dayNumber, daysInYear, formatDate, type CalendarDate } from '../shared/calendars/dates'
+import { useMemo, useState } from 'react'
+import { addMonths, addYears, dayNumber, daysInYear, formatDate, type CalendarDate } from '../shared/calendars/dates'
 import type { Calendar } from '../shared/calendars/schema'
+import { Chips } from './Chips'
 import { EntryCard } from './EntryCard'
 import type { CalendarEntry } from './entries'
 import { FeedDisplay } from './FeedDisplay'
 import { Glyph } from './Glyph'
 import { MonthGrid, type Selection } from './MonthGrid'
+import { NoteLink } from './NoteLink'
+import { opening } from './opening'
 import { place, type Placed } from './placement'
 import { TimelineDisplay } from './TimelineDisplay'
 import type { CalendarState, Range } from './types'
 import { YearGrid, type DayEntries } from './YearGrid'
 
 type Ready = Extract<CalendarState, { kind: 'calendar' }>
-
-/** The month the display opens on: the earliest dated entry's, else month 1 of year 1. */
-function opening(calendar: Calendar, entries: readonly CalendarEntry[]): { year: number; month: number } {
-  const dated = entries.flatMap(({ start }) => (start && 'year' in start ? [start] : []))
-  const first = dated.sort((a, b) => compareDates(calendar, a, b))[0]
-  return first && 'year' in first ? { year: first.year, month: first.month ?? 1 } : { year: 1, month: 1 }
-}
 
 /** What a month or year entry is dated to, for its chip; a month names its year when that is not the visible one. */
 const looseLabel = (calendar: Calendar, start: CalendarDate | undefined, visibleYear: number): string => {
@@ -28,46 +24,6 @@ const looseLabel = (calendar: Calendar, start: CalendarDate | undefined, visible
 }
 
 const overlaps = (placed: Placed, from: number, to: number): boolean => placed.from <= to && placed.to >= from
-
-interface ChipsProps {
-  label: string
-  items: { entry: CalendarEntry; text: string }[]
-  selected: Selection | null
-  onSelect: (entry: CalendarEntry, slot: string) => void
-}
-
-/** A labelled row of entries as chips. */
-function Chips({ label, items, selected, onSelect }: ChipsProps) {
-  const id = useId()
-  if (items.length === 0) return null
-  return (
-    <div role="group" aria-labelledby={id} className="saga-calview-chips">
-      <span id={id} className="saga-calview-chips-label">
-        {label}
-      </span>
-      {items.map(({ entry, text }) => {
-        const slot = `${label}|${entry.file.path}`
-        return (
-          <button
-            key={entry.file.path}
-            type="button"
-            className="saga-calview-chip"
-            aria-haspopup="dialog"
-            aria-expanded={selected?.slot === slot}
-            data-slot={slot}
-            data-renderer={entry.renderer}
-            data-problem={entry.start === undefined || undefined}
-            data-selected={selected?.path === entry.file.path || undefined}
-            onClick={() => onSelect(entry, slot)}
-          >
-            {text ? <span className="saga-calview-chip-when">{text}</span> : null}
-            {entry.title}
-          </button>
-        )
-      })}
-    </div>
-  )
-}
 
 /** The Calendar display: the range's title with the calendar's link, navigation and the Month/Year toggle, the entries with no day set, and the grid. */
 function CalendarDisplay({ state }: { state: Ready }) {
@@ -132,17 +88,9 @@ function CalendarDisplay({ state }: { state: Ready }) {
           </h2>
           <span className="saga-calview-on">
             on{' '}
-            <a
-              href={file.path}
-              className="internal-link"
-              onClick={(event) => {
-                event.preventDefault()
-                host.openNote(file, event.metaKey || event.ctrlKey)
-              }}
-              onMouseOver={(event) => host.hoverNote(event.nativeEvent, event.currentTarget, file)}
-            >
+            <NoteLink host={host} file={file}>
               {state.title}
-            </a>
+            </NoteLink>
           </span>
         </div>
         <div className="saga-calview-nav">
@@ -192,17 +140,9 @@ export function CalendarRoot({ state }: { state: CalendarState }) {
         <p>
           {state.link && state.message.startsWith(state.link.file.basename) ? (
             <>
-              <a
-                href={state.link.file.path}
-                className="internal-link"
-                onClick={(event) => {
-                  event.preventDefault()
-                  state.link?.host.openNote(state.link.file, event.metaKey || event.ctrlKey)
-                }}
-                onMouseOver={(event) => state.link?.host.hoverNote(event.nativeEvent, event.currentTarget, state.link.file)}
-              >
+              <NoteLink host={state.link.host} file={state.link.file}>
                 {state.link.file.basename}
-              </a>
+              </NoteLink>
               {state.message.slice(state.link.file.basename.length)}
             </>
           ) : (
