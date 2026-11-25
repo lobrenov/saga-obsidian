@@ -59,6 +59,9 @@ const press = async (name: string, times = 1) => {
 const next = (times = 1) => press('Next month', times)
 const prev = (times = 1) => press('Previous month', times)
 
+/** The name an element takes from its `aria-labelledby`. */
+const labelOf = (el: Element | null): string | undefined => (el ? el.ownerDocument.getElementById(el.getAttribute('aria-labelledby') ?? '')?.textContent ?? undefined : undefined)
+
 test('options hide by display', () => {
   const visible = (display: string | undefined): string[] => {
     const view = { get: (key: string) => (key === 'display' ? display : undefined) } as unknown as BasesViewConfig
@@ -159,7 +162,7 @@ test('the month opens on the earliest dated entry; weeks run on the calendar wee
   await renderCalendar()
   expect(title()).toBe('Highsun 1 AL')
   expect([...document.querySelectorAll('.saga-calview-weekday-full')].map((el) => el.textContent)).toEqual(['Moonday', 'Tideday', 'Netday', 'Saltday', 'Lampday', 'Restday'])
-  expect(document.querySelector('.saga-calview-grid')?.getAttribute('aria-label')).toBe('Highsun 1 AL')
+  expect(labelOf(document.querySelector('.saga-calview-grid'))).toBe('Highsun 1 AL')
   expect(cells(0)).toEqual(['25 Seedtide 1 AL', '26 Seedtide 1 AL', '27 Seedtide 1 AL', '28 Seedtide 1 AL', '1 Highsun 1 AL', '2 Highsun 1 AL'])
   expect(cells(5).slice(-2)).toEqual(['1 Thawmoon 2 AL', '2 Thawmoon 2 AL'])
   expect(document.querySelectorAll('.saga-calview-grid .saga-calview-week')).toHaveLength(7)
@@ -307,7 +310,7 @@ test('previous and next step by month and the range title follows, across year 1
   expect(title()).toBe('Thawmoon 1 AL')
   await prev()
   expect(title()).toBe('Highsun 1 BL')
-  expect(document.querySelector('.saga-calview-grid')?.getAttribute('aria-label')).toBe('Highsun 1 BL')
+  expect(labelOf(document.querySelector('.saga-calview-grid'))).toBe('Highsun 1 BL')
   expect(cells(0).every((label) => label.length > 0)).toBe(true)
   await prev()
   expect(title()).toBe('Seedtide 1 BL')

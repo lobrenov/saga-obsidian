@@ -13,6 +13,7 @@ import { place, type Placed } from './placement'
 import { TimelineDisplay } from './TimelineDisplay'
 import type { CalendarState, Range } from './types'
 import { YearGrid, type DayEntries } from './YearGrid'
+import { useHiddenLabel } from './hiddenLabel'
 
 type Ready = Extract<CalendarState, { kind: 'calendar' }>
 
@@ -28,6 +29,7 @@ const overlaps = (placed: Placed, from: number, to: number): boolean => placed.f
 /** The Calendar display: the range's title with the calendar's link, navigation and the Month/Year toggle, the entries with no day set, and the grid. */
 function CalendarDisplay({ state }: { state: Ready }) {
   const { calendar, entries, host, file } = state
+  const [rangeId, rangeLabel] = useHiddenLabel('Range')
   // The range the toggle chose, until the `opens` option shows it.
   const [pending, setPending] = useState<Range | null>(null)
   const [at, setAt] = useState(() => opening(calendar, entries))
@@ -101,7 +103,8 @@ function CalendarDisplay({ state }: { state: Ready }) {
             <Glyph name="chevron-right" />
           </button>
         </div>
-        <div role="group" aria-label="Range" className="saga-calview-range">
+        <div role="group" aria-labelledby={rangeId} className="saga-calview-range">
+          {rangeLabel}
           <button type="button" aria-pressed={range === 'month'} onClick={() => choose('month')}>
             Month
           </button>
@@ -133,6 +136,7 @@ function CalendarDisplay({ state }: { state: Ready }) {
 
 /** The Bases view's content: the chosen display of the calendar, or why there is no calendar. */
 export function CalendarRoot({ state }: { state: CalendarState }) {
+  const [problemsId, problemsLabel] = useHiddenLabel('Problems with the calendar')
   let body
   if (state.kind === 'empty')
     body = (
@@ -149,8 +153,9 @@ export function CalendarRoot({ state }: { state: CalendarState }) {
             state.message
           )}
         </p>
+        {state.issues.length > 0 ? problemsLabel : null}
         {state.issues.length > 0 ? (
-          <ul aria-label="Problems with the calendar">
+          <ul aria-labelledby={problemsId}>
             {state.issues.map((issue) => (
               <li key={issue}>{issue}</li>
             ))}

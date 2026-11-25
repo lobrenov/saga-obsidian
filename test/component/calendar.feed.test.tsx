@@ -52,21 +52,26 @@ const press = async (name: string) => {
   await settle()
 }
 
+/** The name an element takes from its `aria-labelledby`. */
+const labelOf = (el: Element | null): string | undefined => (el ? el.ownerDocument.getElementById(el.getAttribute('aria-labelledby') ?? '')?.textContent ?? undefined : undefined)
+/** The element matching `selector` named `name` by its `aria-labelledby`. */
+const named = (selector: string, name: string): HTMLElement | undefined => [...document.querySelectorAll<HTMLElement>(selector)].find((el) => labelOf(el) === name)
+
 test('Oldest first runs from the earliest date, Newest first reverses it, and the control writes the order option', async () => {
   const { fake } = await renderFeed()
   expect(entries()).toEqual(['Drowned Kings', 'Sundering', 'Lamp lit', 'Drowning', 'Charter', 'Lapse', 'Herring', 'Toll', 'Festival'])
   await press('Newest first')
   expect(fake.written).toEqual([['feed-order', 'newest']])
   expect(entries()).toEqual(['Festival', 'Toll', 'Herring', 'Lapse', 'Charter', 'Drowning', 'Lamp lit', 'Sundering', 'Drowned Kings'])
-  expect(document.querySelector('[aria-label="Order"] [aria-pressed="true"]')?.textContent).toBe('Newest first')
+  expect(named('[role="group"]', 'Order')?.querySelector('[aria-pressed="true"]')?.textContent).toBe('Newest first')
   await press('Oldest first')
   expect(fake.written.at(-1)).toEqual(['feed-order', 'oldest'])
 })
 
 test('the control shows its choice at once and the option changed after wins', async () => {
   const { fake } = await renderFeed()
-  const pressed = (): string | undefined => document.querySelector('[aria-label="Order"] [aria-pressed="true"]')?.textContent ?? undefined
-  document.querySelectorAll<HTMLElement>('[aria-label="Order"] button')[1]!.click()
+  const pressed = (): string | undefined => named('[role="group"]', 'Order')?.querySelector('[aria-pressed="true"]')?.textContent ?? undefined
+  named('[role="group"]', 'Order')!.querySelectorAll<HTMLElement>('button')[1]!.click()
   await settle()
   expect(pressed()).toBe('Newest first')
   fake.set('feed-order', 'oldest')
@@ -77,7 +82,7 @@ test('the control shows its choice at once and the option changed after wins', a
 
 test('the order option wins over the control', async () => {
   await renderFeed((fake) => fake.set('feed-order', 'newest'))
-  expect(document.querySelector('[aria-label="Order"] [aria-pressed="true"]')?.textContent).toBe('Newest first')
+  expect(named('[role="group"]', 'Order')?.querySelector('[aria-pressed="true"]')?.textContent).toBe('Newest first')
   expect(entries()[0]).toBe('Festival')
 })
 
@@ -180,7 +185,7 @@ test('a note with a date problem is a chip that opens its card with the issue', 
 
 test('the feed is an ordered list: era headers are level 2, entry titles level 3, year markers no heading', async () => {
   await renderFeed()
-  expect(document.querySelector('ol[aria-label="Feed"]')).not.toBeNull()
+  expect(named('ol', 'Feed')).not.toBeUndefined()
   expect(document.querySelector('.saga-feed-era')?.tagName).toBe('H2')
   expect(document.querySelector('.saga-feed-title')?.tagName).toBe('H3')
   expect(document.querySelector('.saga-feed-year')?.tagName).toBe('P')

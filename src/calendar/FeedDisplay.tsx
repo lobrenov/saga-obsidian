@@ -11,6 +11,7 @@ import { NoteLink } from "./NoteLink";
 import type { CalendarState } from "./types";
 import { useExcerpt } from "./useExcerpt";
 import "./feed.css";
+import { useHiddenLabel } from "./hiddenLabel";
 
 type Ready = Extract<CalendarState, { kind: "calendar" }>;
 
@@ -135,7 +136,9 @@ function FeedCard({
 /** The Feed display: the calendar's link and the Order control above a central spine of entries, with era headers, gap and year markers. */
 export function FeedDisplay({ state }: { state: Ready }) {
   const { calendar, entries, host, file } = state;
-  // The order the control chose, until the `order` option shows it.
+  const [orderId, orderLabel] = useHiddenLabel("Order");
+  const [feedId, feedLabel] = useHiddenLabel("Feed");
+  // The order the control chose, until the `feed-order` option shows it.
   const [pending, setPending] = useState<Order | null>(null);
   const [selected, setSelected] = useState<Selection | null>(null);
   const order = pending ?? state.order;
@@ -168,6 +171,8 @@ export function FeedDisplay({ state }: { state: Ready }) {
         }
       }}
     >
+      {orderLabel}
+      {feedLabel}
       <header className="saga-calview-header">
         <div className="saga-calview-heading">
           <span className="saga-calview-on">
@@ -177,7 +182,7 @@ export function FeedDisplay({ state }: { state: Ready }) {
             </NoteLink>
           </span>
         </div>
-        <div role="group" aria-label="Order" className="saga-calview-range">
+        <div role="group" aria-labelledby={orderId} className="saga-calview-range">
           <button
             type="button"
             aria-pressed={order === "oldest"}
@@ -220,7 +225,7 @@ export function FeedDisplay({ state }: { state: Ready }) {
               </p>
             ) : null
           ) : (
-            <ol className="saga-feed-list" aria-label="Feed">
+            <ol className="saga-feed-list" aria-labelledby={feedId}>
               {rows.map((row, index) => {
                 if (row.kind === "era")
                   return (

@@ -7,6 +7,7 @@ import type { CalendarEntry } from './entries'
 import { Glyph } from './Glyph'
 import type { CalendarHost } from './host'
 import type { Placed } from './placement'
+import { useHiddenLabel } from './hiddenLabel'
 
 export interface Selection {
   path: string
@@ -31,8 +32,10 @@ interface GridProps {
 export function MonthGrid({ calendar, host, year, month, days, selected, onSelect }: GridProps) {
   const [hovered, setHovered] = useState<string | null>(null)
   const short = shortNames(calendar.weekdays)
+  const [labelId, label] = useHiddenLabel(formatDate(calendar, { year, month }))
   return (
-    <div role="group" aria-label={formatDate(calendar, { year, month })} className="saga-calview-grid" ref={(el) => el?.setCssProps({ '--saga-calview-columns': String(calendar.weekdays.length) })}>
+    <div role="group" aria-labelledby={labelId} className="saga-calview-grid" ref={(el) => el?.setCssProps({ '--saga-calview-columns': String(calendar.weekdays.length) })}>
+      {label}
       <div className="saga-calview-week">
         {calendar.weekdays.map((weekday, i) => (
           <div key={weekday} className="saga-calview-weekday">
