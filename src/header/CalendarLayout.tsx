@@ -239,7 +239,12 @@ export function CalendarLayout({ title, frontmatter }: LayoutInput) {
         .filter((start) => !Number.isNaN(start) && start > 0)
         .at(-1)
       const start = sameSide.length === 0 ? undefined : side === 'after' ? (last ?? 1) + NEW_ERA_STEP : last ? Math.max(1, Math.floor(last / 2)) : NEW_ERA_STEP
-      return [...current, { name: 'New era', short: 'NE', side, ...(start !== undefined && { start }) }]
+      // The first number whose name and short name no era has: New era / NE, then New era 2 / NE2.
+      const taken = (key: string, value: string): boolean => current.some((era) => read(era, key) === value)
+      let n = 1
+      const suffix = (separator: string): string => (n === 1 ? '' : `${separator}${n}`)
+      while (taken('name', `New era${suffix(' ')}`) || taken('short', `NE${suffix('')}`)) n++
+      return [...current, { name: `New era${suffix(' ')}`, short: `NE${suffix('')}`, side, ...(start !== undefined && { start }) }]
     })
 
   const monthOrder = useReorder(moveEntry('months', months))
