@@ -1,0 +1,502 @@
+/* Saga calendar view: Obsidian's variables for colour, type and radii; renderer colours from `--saga-<renderer>`. */
+.saga-calview-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 0;
+}
+
+.saga-calview-view {
+  flex: 1;
+  min-height: 0;
+}
+
+.saga-calview {
+  --saga-calview-bar-height: 22px;
+  --saga-calview-pad: var(--size-4-2);
+  --saga-calview-line: var(--background-modifier-border);
+
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  color: var(--text-normal);
+  font-size: var(--font-ui-small);
+}
+
+.saga-calview-state {
+  margin: auto;
+  max-width: 420px;
+  padding: var(--size-4-6);
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.saga-calview-state ul {
+  text-align: left;
+}
+
+/* Renderer colours of bars, chips, marks and the card. */
+.saga-calview [data-renderer='character'] {
+  --saga-calview-accent: var(--saga-character, var(--color-red));
+  --saga-calview-tint: var(--saga-character-tint, var(--background-secondary));
+}
+.saga-calview [data-renderer='location'] {
+  --saga-calview-accent: var(--saga-location, var(--color-green));
+  --saga-calview-tint: var(--saga-location-tint, var(--background-secondary));
+}
+.saga-calview [data-renderer='faction'] {
+  --saga-calview-accent: var(--saga-faction, var(--color-blue));
+  --saga-calview-tint: var(--saga-faction-tint, var(--background-secondary));
+}
+.saga-calview [data-renderer='item'] {
+  --saga-calview-accent: var(--saga-item, var(--color-orange));
+  --saga-calview-tint: var(--saga-item-tint, var(--background-secondary));
+}
+.saga-calview [data-renderer='map'] {
+  --saga-calview-accent: var(--saga-map, var(--color-green));
+  --saga-calview-tint: var(--saga-map-tint, var(--background-secondary));
+}
+.saga-calview [data-renderer='calendar'] {
+  --saga-calview-accent: var(--saga-calendar, var(--color-blue));
+  --saga-calview-tint: var(--saga-calendar-tint, var(--background-secondary));
+}
+.saga-calview [data-renderer='lore'] {
+  --saga-calview-accent: var(--saga-lore, var(--color-purple));
+  --saga-calview-tint: var(--saga-lore-tint, var(--background-secondary));
+}
+.saga-calview [data-renderer='document'] {
+  --saga-calview-accent: var(--saga-document, var(--text-muted));
+  --saga-calview-tint: var(--saga-document-tint, var(--background-secondary));
+}
+
+.saga-calview-glyph {
+  display: inline-flex;
+  flex: none;
+}
+
+.saga-calview-glyph svg {
+  width: var(--icon-xs, 12px);
+  height: var(--icon-xs, 12px);
+}
+
+/* Display: a column whose body scrolls; its width decides the narrow layout. */
+.saga-calview-display {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  container-type: inline-size;
+}
+
+.saga-calview-header {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--size-4-2) var(--size-4-4);
+  padding: var(--size-4-3) var(--size-4-4) 0;
+}
+
+.saga-calview-heading {
+  display: flex;
+  flex: 1 1 200px;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--size-2-2) var(--size-4-3);
+  min-width: 0;
+}
+
+.saga-calview-title {
+  margin: 0;
+  font-size: calc(var(--font-ui-large) * 1.5);
+  font-weight: var(--font-semibold);
+}
+
+.saga-calview-title-year {
+  font-weight: normal;
+  color: var(--text-muted);
+}
+
+.saga-calview-on {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+}
+
+.saga-calview-nav {
+  display: flex;
+  gap: var(--size-2-2);
+}
+
+.saga-calview .saga-calview-step {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  background: var(--background-primary);
+  box-shadow: none;
+  color: var(--text-normal);
+}
+
+.saga-calview-range {
+  display: flex;
+  padding: var(--size-2-2);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  background: var(--background-secondary);
+}
+
+.saga-calview-range button {
+  height: 28px;
+  padding: 0 var(--size-4-3);
+  border: 0;
+  border-radius: var(--radius-s);
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-muted);
+}
+
+.saga-calview-range button[aria-pressed='true'] {
+  background: var(--background-primary);
+  box-shadow: var(--shadow-s);
+  color: var(--text-normal);
+  font-weight: var(--font-semibold);
+}
+
+.saga-calview-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.saga-calview-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-4-3);
+  padding: var(--size-4-3) var(--size-4-4) var(--size-4-6);
+}
+
+/* No day set, Date problem */
+.saga-calview-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--size-4-2);
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+}
+
+.saga-calview-chips-label {
+  font-weight: var(--font-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.saga-calview .saga-calview-chip {
+  display: flex;
+  align-items: center;
+  gap: var(--size-2-3);
+  height: 26px;
+  padding: 0 var(--size-4-3);
+  border: 1px dashed color-mix(in srgb, var(--saga-calview-accent) 50%, transparent);
+  border-radius: 13px;
+  background: var(--saga-calview-tint);
+  box-shadow: none;
+  color: var(--saga-calview-accent);
+  font-size: var(--font-ui-smaller);
+}
+
+.saga-calview .saga-calview-chip[data-problem] {
+  border-color: var(--text-error);
+}
+
+.saga-calview-chip-when {
+  font-family: var(--font-monospace);
+}
+
+.saga-calview .saga-calview-chip[data-selected] {
+  border-style: solid;
+  background: var(--text-normal);
+  color: var(--background-primary);
+}
+
+/* Month grid */
+.saga-calview-grid {
+  border-top: 1px solid var(--saga-calview-line);
+  border-left: 1px solid var(--saga-calview-line);
+}
+
+.saga-calview-week {
+  display: grid;
+  grid-template-columns: repeat(var(--saga-calview-columns), minmax(0, 1fr));
+}
+
+.saga-calview-weekday {
+  overflow: hidden;
+  padding: var(--size-4-2) var(--size-4-3);
+  border-right: 1px solid var(--saga-calview-line);
+  border-bottom: 1px solid var(--saga-calview-line);
+  background: var(--background-secondary);
+  font-size: var(--font-ui-smaller);
+  font-weight: var(--font-semibold);
+  letter-spacing: 0.08em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--text-muted);
+}
+
+.saga-calview-day {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  min-height: 7rem;
+  padding: var(--saga-calview-pad);
+  border-right: 1px solid var(--saga-calview-line);
+  border-bottom: 1px solid var(--saga-calview-line);
+}
+
+.saga-calview-day[data-outside] {
+  background: var(--background-secondary);
+}
+
+.saga-calview-daynum {
+  display: flex;
+  align-items: center;
+  align-self: flex-start;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 var(--size-4-2);
+  font-size: var(--font-ui-small);
+  font-weight: 500;
+}
+
+.saga-calview-day[data-outside] .saga-calview-daynum {
+  font-weight: normal;
+  color: var(--text-faint);
+}
+
+/* Bars: one per entry per week; the cells it continues through join edge to edge. */
+.saga-calview .saga-calview-bar {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--size-2-3);
+  min-width: 0;
+  height: var(--saga-calview-bar-height);
+  margin: 0;
+  padding: 0 var(--size-4-2);
+  border: 0;
+  border-radius: var(--radius-s);
+  background: var(--saga-calview-tint);
+  box-shadow: none;
+  color: var(--saga-calview-accent);
+  font-size: var(--font-ui-smaller);
+  text-align: left;
+}
+
+.saga-calview .saga-calview-bar[data-span] {
+  background: color-mix(in srgb, var(--saga-calview-accent) 18%, var(--saga-calview-tint));
+}
+
+.saga-calview .saga-calview-bar[data-selected] {
+  background: var(--text-normal);
+  color: var(--background-primary);
+}
+
+.saga-calview .saga-calview-bar[data-spacer] {
+  visibility: hidden;
+}
+
+.saga-calview .saga-calview-bar[data-join-start] {
+  margin-left: calc(-1 * var(--saga-calview-pad));
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.saga-calview .saga-calview-bar[data-join-end] {
+  margin-right: calc(-1 * var(--saga-calview-pad) - 1px);
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.saga-calview-bar-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Year: small months */
+.saga-calview-year {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+  gap: var(--size-4-4) var(--size-4-6);
+}
+
+.saga-calview-mini-title {
+  margin: 0 0 var(--size-2-2);
+  font-size: var(--font-ui-small);
+  font-weight: var(--font-semibold);
+}
+
+.saga-calview-mini-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.saga-calview-mini-grid .saga-calview-weekday {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 10px;
+  letter-spacing: 0;
+  text-align: center;
+}
+
+.saga-calview-mini-day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+}
+
+.saga-calview .saga-calview-mini-mark {
+  width: 100%;
+  height: 100%;
+  min-height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-s);
+  background: var(--saga-calview-tint);
+  box-shadow: none;
+  color: var(--saga-calview-accent);
+  font-size: var(--font-ui-smaller);
+  font-weight: var(--font-semibold);
+}
+
+.saga-calview .saga-calview-mini-mark[data-selected] {
+  background: var(--text-normal);
+  color: var(--background-primary);
+}
+
+/* Card */
+.saga-calview-card {
+  position: absolute;
+  z-index: 5;
+  top: var(--saga-calview-card-top, 0);
+  left: var(--saga-calview-card-left, 0);
+  width: 300px;
+  padding: var(--size-4-4);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-l);
+  background: var(--background-primary);
+  box-shadow: var(--shadow-l);
+}
+
+.saga-calview-card-close {
+  position: absolute;
+  top: var(--size-4-2);
+  right: var(--size-4-2);
+}
+
+.saga-calview-card-kind {
+  display: flex;
+  align-items: center;
+  gap: var(--size-2-3);
+  margin: 0;
+  color: var(--saga-calview-accent);
+  font-size: var(--font-ui-smaller);
+  font-weight: var(--font-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.saga-calview-card-title {
+  margin: var(--size-2-1) 0 0;
+  padding-right: var(--size-4-6);
+  font-size: var(--font-ui-large);
+}
+
+.saga-calview-card-date {
+  margin: var(--size-2-3) 0 0;
+  color: var(--saga-calview-accent);
+}
+
+.saga-calview-card-excerpt {
+  margin: var(--size-4-2) 0 0;
+  color: var(--text-muted);
+}
+
+.saga-calview-card-issues {
+  margin: var(--size-4-2) 0 0;
+  padding-left: var(--size-4-4);
+  color: var(--text-error);
+  font-size: var(--font-ui-smaller);
+}
+
+/* Narrow: tighter cells, and the card runs the width of the view below the entry it opened from. */
+@container (max-width: 560px) {
+  .saga-calview-header {
+    padding-inline: var(--size-4-2);
+  }
+  .saga-calview-content {
+    padding-inline: var(--size-4-2);
+  }
+  .saga-calview-display {
+    --saga-calview-pad: var(--size-2-2);
+  }
+  .saga-calview-day {
+    min-height: 4.5rem;
+  }
+  .saga-calview-weekday {
+    padding: var(--size-2-2);
+    font-size: 10px;
+    letter-spacing: 0;
+  }
+  .saga-calview-daynum {
+    min-width: 20px;
+    height: 20px;
+    padding: 0 var(--size-2-2);
+    font-size: var(--font-ui-smaller);
+  }
+  .saga-calview-card {
+    top: var(--saga-calview-card-below, 0);
+    right: var(--size-4-2);
+    left: var(--size-4-2);
+    width: auto;
+  }
+}
+
+/* Touch targets */
+@media (pointer: coarse) {
+  .saga-calview {
+    --saga-calview-bar-height: 36px;
+  }
+  .saga-calview .saga-calview-step {
+    width: 44px;
+    height: 44px;
+  }
+  .saga-calview-range button {
+    height: 36px;
+  }
+  .saga-calview .saga-calview-chip {
+    height: 36px;
+    border-radius: 18px;
+  }
+  .saga-calview-mini-day,
+  .saga-calview .saga-calview-mini-mark {
+    min-height: 36px;
+  }
+}
