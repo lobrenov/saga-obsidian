@@ -131,7 +131,7 @@ export function addMonths(calendar: Calendar, at: { year: number; month: number 
 export const dayNumber = (calendar: Calendar, year: number, month: number, day: number): number =>
   yearIndex(year) * daysInYear(calendar) + dayOfYear(calendar, month, day) - 1
 
-function fromDayNumber(calendar: Calendar, n: number): Omit<GridDay, 'inMonth'> {
+export function fromDayNumber(calendar: Calendar, n: number): Omit<GridDay, 'inMonth'> {
   const length = daysInYear(calendar)
   const index = Math.floor(n / length)
   let rest = n - index * length

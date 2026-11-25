@@ -25,6 +25,16 @@ async function setup(text: string | null = FILE) {
 }
 
 describe('settings draft', () => {
+  it('clearing the types of a renderer with default types restores all of them', async () => {
+    const { store } = await setup(null)
+    const draft = draftOf(store.state().config)
+    expect(draft.types['lore']).toBe('lore, event')
+    draft.types['lore'] = 'saga'
+    expect(configOf(draft, store.state().config).renderers.lore?.types).toEqual(['saga'])
+    draft.types['lore'] = ''
+    expect(configOf(draft, store.state().config).renderers.lore?.types ?? []).toEqual([])
+  })
+
   it('saves over the file text, keeping comments, unknown keys and templates, and round-trips through parseConfig', async () => {
     const { app, store } = await setup()
     const draft = draftOf(store.state().config)

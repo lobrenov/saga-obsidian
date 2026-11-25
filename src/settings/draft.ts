@@ -2,7 +2,7 @@ import { PIN_DEFAULTS, rendererLook, type PinLook } from '../shared/pins/look'
 import { rendererDefs } from '../shared/renderers/definitions'
 import type { Fields } from '../shared/renderers/fields'
 import { RENDERER_IDS, type RendererId } from '../shared/renderers/ids'
-import { typesOf } from '../shared/renderers/resolve'
+import { defaultTypes, typesOf } from '../shared/renderers/resolve'
 import type { Result } from '../shared/result'
 import { parseConfig, type Config, type RendererConfig } from '../shared/schemas/config'
 import { buildConfigText } from '../shared/schemas/configWrite'
@@ -54,7 +54,7 @@ function pinOf(draft: Draft, base: Config, id: RendererId): RendererConfig['pin'
 function entryOf(draft: Draft, base: Config, id: RendererId): RendererConfig | undefined {
   const before = base.renderers[id]
   const listed = (draft.types[id] ?? '').split(',').map((type) => type.trim()).filter(Boolean)
-  const types = listed.length > 0 ? listed : [id]
+  const types = listed.length > 0 ? listed : [...defaultTypes(id)]
   const typesChanged = !same(types, typesOf(base, id))
   const keys: Record<string, string> = {}
   for (const [field, def] of Object.entries(fieldsOf(id))) {

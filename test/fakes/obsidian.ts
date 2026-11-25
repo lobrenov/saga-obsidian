@@ -206,7 +206,12 @@ export class FakeApp {
       const parsed = parseFrontmatter(this.text(file.path))
       return Object.keys(parsed.data).length > 0 ? { frontmatter: { ...parsed.data, position: {} } } : {}
     },
-    getFirstLinkpathDest: (linkpath: string): TFile | null => resolvePath(this.files.values(), linkpath)
+    getFirstLinkpathDest: (linkpath: string): TFile | null => resolvePath(this.files.values(), linkpath),
+    fileToLinktext: (file: TFile, _from: string, omitMdExtension = true): string => {
+      const unique = [...this.files.values()].filter((other) => other.basename === file.basename).length === 1
+      const name = unique ? file.basename : file.path.replace(/\.md$/, '')
+      return omitMdExtension || file.extension !== 'md' ? name : `${name}.md`
+    }
   })
 
   readonly workspace = Object.assign(new Events(), {
