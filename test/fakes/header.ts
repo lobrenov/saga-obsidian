@@ -29,12 +29,19 @@ export function testEnv(app: HeaderFakeApp): {
   suggesters: Suggester[]
   hovered: string[]
   menus: { at: MenuAt; items: MenuItem[] }[]
+  confirms: { title: string; message: string; action: string; cancel: string }[]
+  notices: string[]
+  /** What the next confirmations answer. */
+  answer: { confirm: boolean }
   /** Chooses an item of the newest menu by title, as a click would. */
   choose: (title: string) => void
 } {
   const suggesters: Suggester[] = []
   const hovered: string[] = []
   const menus: { at: MenuAt; items: MenuItem[] }[] = []
+  const confirms: { title: string; message: string; action: string; cancel: string }[] = []
+  const notices: string[] = []
+  const answer = { confirm: true }
   const env: HeaderEnv = {
     app: app.asApp(),
     openLink: (target, from, event) => void app.workspace.openLinkText(target, from, event.metaKey || event.ctrlKey),
@@ -43,6 +50,11 @@ export function testEnv(app: HeaderFakeApp): {
       el.dataset.icon = name
     },
     showMenu: (at, items) => void menus.push({ at, items }),
+    confirm: (title, message, action, cancel) => {
+      confirms.push({ title, message, action, cancel })
+      return Promise.resolve(answer.confirm)
+    },
+    notify: (message) => void notices.push(message),
     suggest(input, kind, from, onPick) {
       const suggester: Suggester = {
         input,
@@ -63,5 +75,5 @@ export function testEnv(app: HeaderFakeApp): {
     if (!item) throw new Error(`no menu item ${title}`)
     item.onClick()
   }
-  return { env, suggesters, hovered, menus, choose }
+  return { env, suggesters, hovered, menus, confirms, notices, answer, choose }
 }

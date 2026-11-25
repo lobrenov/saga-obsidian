@@ -70,6 +70,7 @@ class ConfirmModal extends Modal {
     private readonly title: string,
     private readonly message: string,
     private readonly action: string,
+    private readonly cancel: string,
     private readonly done: (confirmed: boolean) => void
   ) {
     super(app)
@@ -83,7 +84,7 @@ class ConfirmModal extends Modal {
       this.done(true)
       this.close()
     })
-    buttons.createEl('button', { text: 'Keep' }).addEventListener('click', () => this.close())
+    buttons.createEl('button', { text: this.cancel }).addEventListener('click', () => this.close())
   }
 
   override onClose(): void {
@@ -92,5 +93,6 @@ class ConfirmModal extends Modal {
   }
 }
 
-/** Asks before a destructive action; false when dismissed. */
-export const confirm = (app: App, title: string, message: string, action: string): Promise<boolean> => new Promise((resolve) => new ConfirmModal(app, title, message, action, resolve).open())
+/** Asks before an action; false when dismissed. */
+export const confirm = (app: App, title: string, message: string, action: string, cancel = 'Keep'): Promise<boolean> =>
+  new Promise((resolve) => new ConfirmModal(app, title, message, action, cancel, resolve).open())

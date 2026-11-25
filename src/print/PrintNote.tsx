@@ -38,7 +38,7 @@ export function PrintNote({ app, setIcon, file, frontmatter, config, documentCar
   const tall = (Array.isArray(classes) ? classes : typeof classes === 'string' ? classes.split(/[\s,]+/) : []).includes('banner-tall')
   const card = renderer !== 'document' || documentCard || banner.link !== null
   const { PrintLayout } = rendererRegistry[renderer]
-  const env: HeaderEnv = { app, setIcon, openLink: refuse('openLink'), hover: refuse('hover'), showMenu: refuse('showMenu'), suggest: refuse('suggest') }
+  const env: HeaderEnv = { app, setIcon, openLink: refuse('openLink'), hover: refuse('hover'), showMenu: refuse('showMenu'), suggest: refuse('suggest'), confirm: refuse('confirm'), notify: refuse('notify') }
   const title = <h1 className="saga-header-title">{file.basename}</h1>
 
   return (
