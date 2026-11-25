@@ -71,7 +71,7 @@ Step 1 comes first. Steps 2, 3 and 4 can then run in parallel (separate files). 
 - **Done:** component tests: each editor writes the expected YAML and only its key; invalid entries show their issue; the strip follows the data; an era rename updates `era` and `end-era` in linked notes only, asks only when notes use it, and Cancel writes nothing. `typecheck`, `lint`, `test` pass.
 
 ### 3. Lore renderer and date editor (`lore`)
-- `RENDERER_IDS`, `rendererDefs` (fields: `calendar` link, `where` link, `who` links; the date fields below), `PIN_DEFAULTS`, `--saga-lore` and `-tint` (plum), config default `types: [lore, event]`, explorer icon `scroll-text`.
+- `RENDERER_IDS`, `rendererDefs` (fields: `calendar` link, `where` link, `who` links; the date fields below), `PIN_DEFAULTS`, `--saga-lore` and `-tint` (plum), config default `types: [Lore, Event]`, explorer icon `scroll-text`.
 - New field kind `date` with a key prefix (`''` for When, `end-` for Ends). `FieldView` reads it with `readDate` and writes it with a new adapter function `setFields(app, file, entries)`: one `vault.process` that sets and removes several keys, changing only their text.
 - Date editor: the box shows `formatDate`; the popover has the precision switch (Era / Year / Month / Day), an era list grouped Before / From year 1 (Era), a year input with era label (Year), month list (Month), month grid with month and year navigation (Day). Choosing writes the keys for that precision and removes finer ones. Ends is empty until added and is refused when earlier than When.
 - Footer: the previous and next Lore note on the same calendar (by `compareDates`).

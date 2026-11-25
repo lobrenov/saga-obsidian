@@ -1,6 +1,7 @@
 import { afterEach, beforeAll, expect, test, vi } from 'vitest'
 import bannerCss from '../../src/banner/banner.css?inline'
 import headerCss from '../../src/header/header.css?inline'
+import './mapVars.css'
 import { createBannerController } from '../../src/banner/controller'
 import { createHeaderController, type LeafView } from '../../src/header/controller'
 import { createConfigStore } from '../../src/obsidian/vault'
@@ -60,9 +61,9 @@ test('the Document card lists every configured type and choosing one writes type
   const { containerEl, bar, menus, choose, text } = await setup(DOCUMENT)
   await vi.waitFor(() => expect(button(bar(), 'Set type')).not.toBeNull())
   button(bar(), 'Set type')?.click()
-  expect(menus.at(-1)?.items.map((item) => item.title)).toEqual(['character', 'location', 'faction', 'item', 'map', 'calendar', 'lore', 'event'])
-  choose('location')
-  await vi.waitFor(() => expect(text()).toBe(DOCUMENT.replace('type: note', 'type: location')))
+  expect(menus.at(-1)?.items.map((item) => item.title)).toEqual(['Character', 'Location', 'Faction', 'Item', 'Map', 'Calendar', 'Lore', 'Event'])
+  choose('Location')
+  await vi.waitFor(() => expect(text()).toBe(DOCUMENT.replace('type: note', 'type: Location')))
   await vi.waitFor(() => expect(containerEl.querySelector('.saga-header[data-renderer="location"]')).not.toBeNull())
 })
 

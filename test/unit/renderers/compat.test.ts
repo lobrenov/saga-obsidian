@@ -19,21 +19,21 @@ describe('compatibility', () => {
 
 describe('renderer resolution and values', () => {
   const config: Config = { typeKey: 'kind', renderers: { character: { types: ['NPC'], keys: {}, templates: [] }, location: { types: [], keys: {}, templates: [] } } }
-  it('resolves case-insensitively through the configured type key, with the id as default type', () => {
+  it('resolves case-insensitively through the configured type key, with the label as default type', () => {
     const resolve = createRendererResolver(config)
     expect(resolve({ kind: 'npc' })).toEqual({ type: 'npc', renderer: 'character' })
     expect(resolve({ kind: ' Location ' })).toEqual({ type: 'Location', renderer: 'location' })
     expect(resolve({ kind: 'character' })).toEqual({ type: 'character', renderer: 'document' })
     expect(resolve({ type: 'NPC' })).toEqual({ type: null, renderer: 'document' })
     expect(typesOf(config, 'character')).toEqual(['NPC'])
-    expect(typesOf(config, 'location')).toEqual(['location'])
+    expect(typesOf(config, 'location')).toEqual(['Location'])
   })
 
   it('maps lore and event to Lore by default; configured types replace them', () => {
     const resolve = createRendererResolver({ typeKey: 'type', renderers: {} })
     expect(resolve({ type: 'lore' }).renderer).toBe('lore')
     expect(resolve({ type: 'Event' }).renderer).toBe('lore')
-    expect(typesOf({ typeKey: 'type', renderers: {} }, 'lore')).toEqual(['lore', 'event'])
+    expect(typesOf({ typeKey: 'type', renderers: {} }, 'lore')).toEqual(['Lore', 'Event'])
     const configured: Config = { typeKey: 'type', renderers: { lore: { types: ['saga'], keys: {}, templates: [] } } }
     expect(createRendererResolver(configured)({ type: 'event' }).renderer).toBe('document')
     expect(createRendererResolver(configured)({ type: 'saga' }).renderer).toBe('lore')

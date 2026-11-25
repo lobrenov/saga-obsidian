@@ -83,7 +83,7 @@ export const lore = defineRenderer({
   label: 'Lore',
   icon: 'scroll-text',
   color: 'lore',
-  types: ['lore', 'event'],
+  types: ['Lore', 'Event'],
   fields: {
     when: { kind: 'date', key: 'when', prefix: '', label: 'When' },
     end: { kind: 'date', key: 'end', prefix: 'end-', label: 'Ends' },

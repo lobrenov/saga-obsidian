@@ -18,11 +18,11 @@ export interface MenuAt {
   overlap?: boolean
 }
 
-/** Opens a menu; `onHide` runs when it closes. */
-export type ShowMenu = (at: MenuAt, items: MenuItem[], onHide?: () => void) => void
+/** Opens a menu; `parent` has the `has-active-menu` class while it is open. */
+export type ShowMenu = (at: MenuAt, items: MenuItem[], parent?: HTMLElement) => void
 
 /** Opens an Obsidian menu, which Obsidian draws natively when its native menus setting is on. */
-export const showMenu: ShowMenu = (at, items, onHide) => {
+export const showMenu: ShowMenu = (at, items, parent) => {
   const menu = new Menu()
   for (const entry of items) {
     menu.addItem((item) => {
@@ -32,6 +32,6 @@ export const showMenu: ShowMenu = (at, items, onHide) => {
       if (entry.warning) item.setWarning(true)
     })
   }
-  if (onHide) menu.onHide(onHide)
+  if (parent) menu.setParentElement(parent)
   menu.showAtPosition(at)
 }

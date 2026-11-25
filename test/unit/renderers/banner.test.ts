@@ -44,8 +44,8 @@ describe('bannerOf', () => {
 })
 
 describe('allTypes', () => {
-  it("lists every renderer's types but document's, ids for unconfigured renderers", () => {
+  it("lists every renderer's types but document's, labels for unconfigured renderers", () => {
     const config: Config = { typeKey: 'type', renderers: { character: { types: ['NPC', 'PC'], keys: {}, templates: [] } } }
-    expect(allTypes(config)).toEqual(['NPC', 'PC', 'location', 'faction', 'item', 'map', 'calendar', 'lore', 'event'])
+    expect(allTypes(config)).toEqual(['NPC', 'PC', 'Location', 'Faction', 'Item', 'Map', 'Calendar', 'Lore', 'Event'])
   })
 })
