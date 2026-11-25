@@ -575,7 +575,7 @@ describe('a renamed calendar key', () => {
   const config = parseConfig({ renderers: { lore: { keys: { calendar: 'chronicle' } } } }).config
   const dated = (extra: string): string => `---\ntype: event\nchronicle: ${link}\n${extra}---\n`
 
-  test('dates, the footer, the glance and an era rename use it', async () => {
+  test('dates, the footer and an era rename use it', async () => {
     const { screen, text, app } = await renderHeader(path, dated('year: 1312\nmonth: 2\n'), {
       config,
       files: { ...CALENDARS, 'Lore/Early.md': dated('year: 1312\nmonth: 1\nday: 3\n'), 'Lore/Plain.md': lore('year: 1313\n') }
@@ -587,8 +587,6 @@ describe('a renamed calendar key', () => {
       config,
       files: { 'Lore/Early.md': dated('year: 1312\nmonth: 1\nday: 3\n'), 'Lore/Era.md': dated('era: Age of Lanterns\n') }
     })
-    await expect.element(cal.screen.getByRole('heading', { name: '1312 AL at a glance' })).toBeVisible()
-    expect(document.querySelectorAll('.saga-calendar-cells [data-lore]')).toHaveLength(1)
     await cal.screen.getByRole('textbox', { name: 'Age of Lanterns name' }).fill('Age of Lamps')
     ;(cal.screen.getByRole('textbox', { name: 'Age of Lanterns name' }).element() as HTMLElement).blur()
     await vi.waitFor(() => expect(cal.app.text('Lore/Era.md')).toBe(dated('era: Age of Lamps\n')))

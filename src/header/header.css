@@ -914,28 +914,6 @@
   color: var(--text-muted);
 }
 
-.saga-calendar-glance {
-  flex: 1 1 300px;
-  min-width: 0;
-  align-self: flex-start;
-  padding: var(--size-4-4);
-  border: 1px solid var(--background-modifier-border);
-  border-radius: var(--radius-l);
-  background: var(--background-secondary);
-}
-
-.saga-calendar-glance-head {
-  display: flex;
-  align-items: center;
-  gap: var(--size-4-2);
-  margin-bottom: var(--size-4-3);
-}
-
-.saga-calendar-glance-head h2 {
-  flex: 1;
-  margin: 0;
-}
-
 .saga-header .saga-calendar-step {
   display: flex;
   align-items: center;
@@ -946,62 +924,6 @@
   border: 0;
   background: transparent;
   box-shadow: none;
-  color: var(--text-muted);
-}
-
-.saga-calendar-months {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--size-4-3) var(--size-4-4);
-}
-
-.saga-calendar-month-head {
-  display: flex;
-  justify-content: space-between;
-  margin: 0 0 var(--size-2-2);
-  font-size: var(--font-ui-smaller);
-}
-
-.saga-calendar-month-head span:first-child {
-  font-weight: var(--font-semibold);
-}
-
-.saga-calendar-month-head span:last-child {
-  color: var(--text-muted);
-}
-
-.saga-calendar-cells {
-  display: grid;
-  grid-template-columns: repeat(var(--saga-calendar-week, 7), minmax(0, 14px));
-  gap: 2px;
-}
-
-.saga-calendar-day {
-  display: inline-block;
-  min-width: 0;
-  height: 10px;
-  border-radius: 2px;
-  background: var(--background-modifier-border);
-}
-
-.saga-calendar-legend .saga-calendar-day {
-  width: 14px;
-}
-
-.saga-calendar-day[data-blank] {
-  background: transparent;
-}
-
-.saga-calendar-day[data-lore] {
-  background: var(--saga-lore, var(--color-purple));
-}
-
-.saga-calendar-legend {
-  display: flex;
-  align-items: center;
-  gap: var(--size-2-3);
-  margin: var(--size-4-3) 0 0;
-  font-size: var(--font-ui-smaller);
   color: var(--text-muted);
 }
 

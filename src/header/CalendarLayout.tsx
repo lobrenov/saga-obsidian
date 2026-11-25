@@ -1,7 +1,7 @@
-import { useId, useLayoutEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react'
-import { TFile, type App } from 'obsidian'
+import { useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import type { App, TFile } from 'obsidian'
 import { frontmatterOf, linksTo, setField, updateField } from '../obsidian/vault'
-import { addYears, checkDate, dateRange, dayNumber, eraSpan, formatDate, readDate, weekdayOf, type CalendarDate } from '../shared/calendars/dates'
+import { eraSpan, readDate, type CalendarDate } from '../shared/calendars/dates'
 import { parseCalendar, type Calendar } from '../shared/calendars/schema'
 import type { Issue } from '../shared/result'
 import { MenuSelect } from '../ui/MenuSelect'
@@ -15,7 +15,6 @@ import { useReorder } from './useReorder'
 
 const STRIP_OPEN_WEIGHT = 300
 const NEW_ERA_STEP = 100
-const RELOAD_DELAY_MS = 250
 const SIDES = [
   { value: 'before', label: 'Before' },
   { value: 'after', label: 'After' }
@@ -176,14 +175,13 @@ function AddDay({ onAdd, onClose }: { onAdd: (name: string) => void; onClose: ()
   )
 }
 
-/** The calendar note's header body: months, week, eras, the era strip and a year at a glance. Each control writes one key's whole value, built from the value in the note at write time. */
+/** The calendar note's header body: months, week, eras, and the era strip. Each control writes one key's whole value, built from the value in the note at write time. */
 export function CalendarLayout({ title, frontmatter }: LayoutInput) {
   const { env, file, config } = useHeader()
   const { app } = env
   const loreKey = loreCalendarKey(config)
   const [error, setError] = useState<string | null>(null)
   const [addingDay, setAddingDay] = useState(false)
-  const lastValid = useRef<Calendar | undefined>(undefined)
 
   const months = list(frontmatter['months'])
   const weekdays = list(frontmatter['weekdays'])
@@ -193,7 +191,6 @@ export function CalendarLayout({ title, frontmatter }: LayoutInput) {
   const calendar = parsed.value
   // Issues of the keys the note has.
   const issues = parsed.issues.filter((issue) => frontmatter[issue.path.split('.')[0] ?? ''] != null)
-  if (calendar) lastValid.current = calendar
   const issuesAt = (path: string): Issue[] => issues.filter((issue) => issue.path === path || issue.path.startsWith(`${path}.`))
   const invalidAt = (path: string): boolean => issues.some((issue) => issue.path === path)
 
@@ -258,7 +255,6 @@ export function CalendarLayout({ title, frontmatter }: LayoutInput) {
     weekdays.length > 0 && `${weekdays.length}-day week`,
     eras.length > 0 && plural(eras.length, 'era')
   ].filter(Boolean)
-  const glance = calendar ?? lastValid.current
 
   return (
     <>
@@ -421,7 +417,6 @@ export function CalendarLayout({ title, frontmatter }: LayoutInput) {
             </p>
           ) : null}
         </div>
-        {glance ? <Glance calendar={glance} /> : null}
       </div>
     </>
   )
@@ -458,98 +453,5 @@ function EraStrip({ calendar }: { calendar: Calendar }) {
         {after.length > 0 ? <span>counting up →</span> : null}
       </div>
     </div>
-  )
-}
-
-/** One year as a small grid per month, with the days that notes of this calendar are dated on marked. */
-function Glance({ calendar }: { calendar: Calendar }) {
-  const { env, file, config } = useHeader()
-  const { app } = env
-  const loreKey = loreCalendarKey(config)
-  const [tick, reload] = useReducer((n: number) => n + 1, 0)
-  const lore = useMemo(() => loreOf(app, file, loreKey), [app, file.path, tick, loreKey])
-  const known = useRef(new Set<string>())
-  known.current = new Set(lore.map((note) => note.path))
-  const [year, setYear] = useState(() => lore.reduce<number | null>((first, { start }) => ('year' in start && (first === null || start.year < first) ? start.year : first), null) ?? 1)
-
-  // Rescans when a note that is, or now is, dated on this calendar changes, is renamed or is deleted.
-  useLayoutEffect(() => {
-    let timer: number | undefined
-    const matters = (note: TFile): boolean => known.current.has(note.path) || linksTo(app, file, note, frontmatterOf(app, note), loreKey)
-    const rescan = (): void => {
-      window.clearTimeout(timer)
-      timer = window.setTimeout(reload, RELOAD_DELAY_MS)
-    }
-    const changed = app.metadataCache.on('changed', (note) => matters(note) && rescan())
-    const deleted = app.metadataCache.on('deleted', (note) => known.current.has(note.path) && rescan())
-    const renamed = app.vault.on('rename', (note, oldPath) => (known.current.has(oldPath) || (note instanceof TFile && matters(note))) && rescan())
-    return () => {
-      window.clearTimeout(timer)
-      app.metadataCache.offref(changed)
-      app.metadataCache.offref(deleted)
-      app.vault.offref(renamed)
-    }
-  }, [app, file, loreKey])
-
-  // Days of notes dated to the day, from start to end when both are days.
-  const ranges = useMemo(
-    () =>
-      lore.flatMap(({ start, end }) => {
-        const dayDate = (date: CalendarDate | undefined): date is { year: number; month: number; day: number } =>
-          date !== undefined && 'year' in date && date.month !== undefined && date.day !== undefined && checkDate(calendar, date).length === 0
-        if (!dayDate(start)) return []
-        const from = dateRange(calendar, start).from
-        return [{ from, to: dayDate(end) ? Math.max(from, dateRange(calendar, end).to) : from }]
-      }),
-    [lore, calendar]
-  )
-  const id = useId()
-  return (
-    <aside aria-labelledby={id} className="saga-calendar-glance">
-      <div className="saga-calendar-glance-head">
-        <h2 id={id} className="saga-header-label">
-          {formatDate(calendar, { year })} at a glance
-        </h2>
-        <button type="button" className="saga-calendar-step" aria-label="Previous year" onClick={() => setYear(addYears(year, -1))}>
-          <Icon name="chevron-left" />
-        </button>
-        <button type="button" className="saga-calendar-step" aria-label="Next year" onClick={() => setYear(addYears(year, 1))}>
-          <Icon name="chevron-right" />
-        </button>
-      </div>
-      <div className="saga-calendar-months">
-        {calendar.months.map((month, m) => {
-          const marked = Array.from({ length: month.days }, (_, d) => d + 1).filter((day) => {
-            const n = dayNumber(calendar, year, m + 1, day)
-            return ranges.some((range) => range.from <= n && n <= range.to)
-          })
-          return (
-            <div key={m} className="saga-calendar-month">
-              <p className="saga-calendar-month-head">
-                <span>{month.name}</span>
-                <span>{month.days}</span>
-              </p>
-              <div
-                className="saga-calendar-cells"
-                role="img"
-                aria-label={`${month.name}: ${marked.length > 0 ? `days with lore: ${marked.join(', ')}` : 'no days with lore'}`}
-                ref={(el) => el?.setCssProps({ '--saga-calendar-week': String(calendar.weekdays.length) })}
-              >
-                {Array.from({ length: weekdayOf(calendar, year, m + 1, 1) }, (_, i) => (
-                  <span key={`lead-${i}`} className="saga-calendar-day" data-blank="" />
-                ))}
-                {Array.from({ length: month.days }, (_, d) => (
-                  <span key={d} className="saga-calendar-day" data-day={d + 1} data-lore={marked.includes(d + 1) || undefined} />
-                ))}
-              </div>
-            </div>
-          )
-        })}
-      </div>
-      <p className="saga-calendar-legend">
-        <span className="saga-calendar-day" data-lore="" aria-hidden="true" />
-        Days with lore
-      </p>
-    </aside>
   )
 }
