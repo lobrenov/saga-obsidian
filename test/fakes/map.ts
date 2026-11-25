@@ -40,7 +40,7 @@ export class MapFake {
   /** Whether Obsidian runs on a phone or tablet. */
   mobile = false
   /** Menus the view opened, newest last. */
-  readonly menus: { at: MenuAt; items: MenuItem[]; onHide?: (() => void) | undefined }[] = []
+  readonly menus: { at: MenuAt; items: MenuItem[]; parent?: HTMLElement | undefined }[] = []
   readonly notices: string[] = []
   readonly hovered: string[] = []
   readonly prompts: string[] = []
@@ -123,7 +123,10 @@ export class MapFake {
         },
         notify: (message) => void this.notices.push(message),
         hoverNote: (_event, _target, file) => void this.hovered.push(file.path),
-        showMenu: (at, items, onHide) => void this.menus.push({ at, items, onHide })
+        showMenu: (at, items, parent) => {
+          parent?.classList.add('has-active-menu')
+          this.menus.push({ at, items, parent })
+        }
     }
   }
 
@@ -141,7 +144,7 @@ export class MapFake {
     const item = menu?.items.find((candidate) => candidate.title === title)
     if (!item) throw new Error(`no menu item ${title}`)
     item.onClick()
-    menu?.onHide?.()
+    menu?.parent?.classList.remove('has-active-menu')
   }
 
   /** Holds every write until the returned function is called. */

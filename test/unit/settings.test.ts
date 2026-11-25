@@ -28,7 +28,7 @@ describe('settings draft', () => {
   it('clearing the types of a renderer with default types restores all of them', async () => {
     const { store } = await setup(null)
     const draft = draftOf(store.state().config)
-    expect(draft.types['lore']).toBe('lore, event')
+    expect(draft.types['lore']).toBe('Lore, Event')
     draft.types['lore'] = 'saga'
     expect(configOf(draft, store.state().config).renderers.lore?.types).toEqual(['saga'])
     draft.types['lore'] = ''

@@ -15,12 +15,15 @@ export const typeOf = (config: Config, frontmatter: Readonly<Record<string, unkn
   return typeof raw === 'string' && raw.trim() ? raw.trim() : null
 }
 
-/** The types that map to a renderer while the config lists none. */
-export const defaultTypes = (id: RendererId): readonly string[] => (rendererDefs[id] as RendererDef).types ?? [id]
+/** The types that map to a renderer while the config lists none: the definition's, else its label. */
+export const defaultTypes = (id: RendererId): readonly string[] => {
+  const def = rendererDefs[id] as RendererDef
+  return def.types ?? [def.label]
+}
 
 /**
  * Builds the type -> renderer lookup once per config (case-insensitive types, `document` fallback).
- * A renderer without configured `types` matches its default types (its id unless the definition lists others); configured types replace them.
+ * A renderer without configured `types` matches its default types (its label unless the definition lists others); configured types replace them.
  */
 export function createRendererResolver(config: Config): (frontmatter: Readonly<Record<string, unknown>>) => RendererResolution {
   const byType = new Map<string, RendererId>()

@@ -73,7 +73,7 @@ test('type lore and event draw the Lore header with the dates, calendar, where a
 test('the type selector lists lore and event', async () => {
   const { screen, menus } = await renderHeader(path, lore('', link, 'lore'), { files: CALENDARS })
   await screen.getByRole('button', { name: 'Type' }).click()
-  expect(menus.at(-1)?.items.map((item) => item.title)).toEqual(['lore', 'event'])
+  expect(menus.at(-1)?.items.map((item) => item.title)).toEqual(['Lore', 'Event'])
 })
 
 test('an empty When and Ends are quiet buttons', async () => {

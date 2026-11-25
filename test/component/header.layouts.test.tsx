@@ -69,5 +69,5 @@ test('the renderer label and the type selector', async () => {
   const { screen } = await renderHeader('Characters/Ada Lovelace.md', '---\ntype: character\nlocation: "[[Waterdeep]]"\n---\n')
   expect(document.querySelector('.saga-header-badge')?.textContent).toBe('Character')
   expect(document.querySelector('.saga-header-badge [data-icon="user"]')).not.toBeNull()
-  await expect.element(screen.getByRole('button', { name: 'Type' })).toHaveTextContent('character')
+  await expect.element(screen.getByRole('button', { name: 'Type' })).toHaveTextContent('Character')
 })
