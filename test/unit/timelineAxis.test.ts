@@ -123,6 +123,7 @@ describe('rows', () => {
     file: { path: `${title}.md`, basename: title } as TFile,
     title,
     renderer: 'lore',
+    type: null,
     start,
     end,
     issues: [],

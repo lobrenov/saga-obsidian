@@ -29,6 +29,7 @@ export function Chips({ label, items, selected, onSelect }: ChipsProps) {
             aria-expanded={selected?.slot === slot}
             data-slot={slot}
             data-renderer={entry.renderer}
+            data-entry={entry.file.path}
             data-problem={entry.start === undefined || undefined}
             data-selected={selected?.path === entry.file.path || undefined}
             onClick={() => onSelect(entry, slot)}

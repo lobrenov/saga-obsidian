@@ -630,3 +630,43 @@
     height: 36px;
   }
 }
+
+/* The Edit dialog lets its date picker run past its edges. */
+.saga-entry-edit-modal,
+.saga-entry-edit-modal .modal-content {
+  overflow: visible;
+}
+
+/* The Edit dialog: the header's controls in rows of label and control, without the header card around them. */
+.saga-header.saga-entry-edit {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-4-3);
+  margin: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.saga-entry-edit-row {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--size-4-3);
+}
+
+.saga-entry-edit-row .saga-header-input {
+  width: 100%;
+}
+
+.saga-entry-edit .saga-header-hint {
+  margin: 0;
+  color: var(--text-error);
+}
+
+.saga-entry-edit .saga-entry-edit-save {
+  width: 100%;
+  margin-top: var(--size-4-2);
+}

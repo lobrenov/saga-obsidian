@@ -1,5 +1,6 @@
 import type { App, TFile } from 'obsidian'
 import { calendarStateOf } from '../../src/calendar/calendarState'
+import type { CalendarEntry } from '../../src/calendar/entries'
 import { createHost, type CalendarHost } from '../../src/calendar/host'
 import type { CalendarState } from '../../src/calendar/types'
 import { CONFIG_PATH, createConfigStore, type ConfigStore } from '../../src/obsidian/vault'
@@ -29,6 +30,8 @@ export class CalendarFake {
   readonly options: Record<string, unknown> = { calendar: CAL }
   /** Option writes of the view's controls, in order. */
   readonly written: [string, string][] = []
+  /** Edit and Delete calls on entries, in order. */
+  readonly actions: ['edit' | 'delete', string][] = []
   readonly menus: { at: MenuAt; items: MenuItem[]; parent?: HTMLElement | undefined }[] = []
   readonly hovered: string[] = []
   private cached: { path: string; host: CalendarHost } | null = null
@@ -77,7 +80,9 @@ export class CalendarFake {
           const ui = { showMenu: (at: MenuAt, items: MenuItem[], parent?: HTMLElement) => {
             parent?.classList.add('has-active-menu')
             this.menus.push({ at, items, parent })
-          }, hoverNote: (_event: MouseEvent, _target: HTMLElement, file: TFile) => void this.hovered.push(file.path) }
+          }, hoverNote: (_event: MouseEvent, _target: HTMLElement, file: TFile) => void this.hovered.push(file.path),
+            editEntry: (entry: CalendarEntry) => void this.actions.push(['edit', entry.file.path]),
+            deleteEntry: (entry: CalendarEntry) => void this.actions.push(['delete', entry.file.path]) }
           this.cached = { path: calendar.path, host: createHost(this.app, calendar, ui) }
         }
         return this.cached.host

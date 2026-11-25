@@ -14,6 +14,8 @@ export interface CalendarEntry {
   /** The note's file name without extension. */
   title: string
   renderer: RendererId
+  /** The note's type as written; null without one. */
+  type: string | null
   /** Undefined when the note's start date is invalid for the calendar. */
   start: CalendarDate | undefined
   /** Undefined without an end, or when the end is invalid or before the start. */
@@ -32,7 +34,7 @@ export function collectEntries(app: App, config: ConfigStore, files: readonly TF
   for (const note of files) {
     if (note.extension !== 'md' || note.path === file.path) continue
     const frontmatter = frontmatterOf(app, note)
-    const { renderer } = config.rendererOf(frontmatter)
+    const { renderer, type } = config.rendererOf(frontmatter)
     if (!linksTo(app, file, note, frontmatter, key)) continue
 
     const read = readDate(frontmatter, '')
@@ -61,7 +63,7 @@ export function collectEntries(app: App, config: ConfigStore, files: readonly TF
     if (!start && issues.length === 0) continue
     const banner = bannerOf(rendererDefs[renderer], config.state().config.renderers[renderer]?.keys ?? {}, frontmatter)
     const image = banner.link ? resolveLink(app, banner.link, note.path) : null
-    entries.push({ file: note, title: note.basename, renderer, start, end: start ? end : undefined, issues: describe(issues), banner: image ? { url: resourceUrl(app, image), y: banner.y } : undefined })
+    entries.push({ file: note, title: note.basename, renderer, type, start, end: start ? end : undefined, issues: describe(issues), banner: image ? { url: resourceUrl(app, image), y: banner.y } : undefined })
   }
   return entries
 }

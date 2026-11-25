@@ -110,6 +110,7 @@ function FeedCard({
       className="saga-feed-card"
       aria-labelledby={id}
       data-renderer={entry.renderer}
+      data-entry={entry.file.path}
       data-precision={item.precision}
     >
       {banners && entry.banner ? <Banner {...entry.banner} /> : null}

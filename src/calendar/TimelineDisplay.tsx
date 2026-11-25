@@ -142,6 +142,7 @@ function RowItem({ calendar, row, mark, selected, onSelect }: RowItemProps) {
         aria-haspopup="dialog"
         aria-expanded={selected?.slot === slot}
         data-slot={slot}
+        data-entry={entry.file.path}
         onClick={() => onSelect(entry, slot)}
       >
         <Glyph name={rendererDefs[entry.renderer].icon} />
@@ -150,6 +151,7 @@ function RowItem({ calendar, row, mark, selected, onSelect }: RowItemProps) {
       <div
         className="saga-timeline-track"
         data-opens-card=""
+        data-entry={entry.file.path}
         onClick={() => onSelect(entry, slot)}
       >
         <span

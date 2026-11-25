@@ -23,6 +23,7 @@ const entry = (title: string, start: CalendarDate | undefined, end?: CalendarDat
   file: { path: `${title}.md`, basename: title } as TFile,
   title,
   renderer: 'lore',
+  type: null,
   start,
   end,
   issues: start ? [] : ['year: bad'],

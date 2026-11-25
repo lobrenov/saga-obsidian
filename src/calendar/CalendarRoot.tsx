@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { addMonths, addYears, dayNumber, daysInYear, formatDate, type CalendarDate } from '../shared/calendars/dates'
 import type { Calendar } from '../shared/calendars/schema'
 import { Chips } from './Chips'
@@ -14,6 +14,8 @@ import { TimelineDisplay } from './TimelineDisplay'
 import type { CalendarState, Range } from './types'
 import { YearGrid, type DayEntries } from './YearGrid'
 import { useHiddenLabel } from '../ui/hiddenLabel'
+import { entryNoun } from './entryActions'
+import { HOLD_MS, HOLD_SLOP_PX } from '../map/touch'
 
 type Ready = Extract<CalendarState, { kind: 'calendar' }>
 
@@ -166,5 +168,61 @@ export function CalendarRoot({ state }: { state: CalendarState }) {
   else if (state.display === 'calendar') body = <CalendarDisplay key={state.file.path} state={state} />
   else if (state.display === 'feed') body = <FeedDisplay key={state.file.path} state={state} />
   else body = <TimelineDisplay key={state.file.path} state={state} />
-  return <div className="saga-calview">{body}</div>
+  // A right-click, the menu key or a held touch on an element of one entry offers to edit or delete its note.
+  const hold = useRef<{ timer: number; x: number; y: number; fired: boolean } | null>(null)
+  const openMenu = (el: HTMLElement, at: { x: number; y: number } | null): boolean => {
+    if (state.kind !== 'calendar') return false
+    const entry = state.entries.find((candidate) => candidate.file.path === el.dataset['entry'])
+    if (!entry) return false
+    const noun = entryNoun(entry)
+    const box = el.getBoundingClientRect()
+    state.host.showMenu(at ?? { x: box.left, y: box.bottom }, [
+      { title: `Edit ${noun}…`, icon: 'pencil', onClick: () => state.host.editEntry(entry) },
+      { title: `Delete ${noun}`, icon: 'trash-2', warning: true, onClick: () => state.host.deleteEntry(entry) }
+    ])
+    return true
+  }
+  const entryAt = (target: EventTarget | null): HTMLElement | null => (target as Element | null)?.closest<HTMLElement>('[data-entry]') ?? null
+  const stopHold = (): void => {
+    if (hold.current) window.clearTimeout(hold.current.timer)
+  }
+  return (
+    <div
+      className="saga-calview"
+      onContextMenu={(event) => {
+        const el = entryAt(event.target)
+        if (!el) return
+        event.preventDefault()
+        stopHold()
+        // A held touch has opened the menu already; the browser's own contextmenu for it adds none.
+        if (hold.current?.fired) return
+        openMenu(el, event.clientX || event.clientY ? { x: event.clientX, y: event.clientY } : null)
+      }}
+      onPointerDown={(event) => {
+        stopHold()
+        hold.current = null
+        const el = entryAt(event.target)
+        if (event.pointerType !== 'touch' || !el) return
+        const { clientX: x, clientY: y } = event
+        const timer = window.setTimeout(() => {
+          if (hold.current) hold.current.fired = openMenu(el, { x, y })
+        }, HOLD_MS)
+        hold.current = { timer, x, y, fired: false }
+      }}
+      onPointerMove={(event) => {
+        if (hold.current && Math.hypot(event.clientX - hold.current.x, event.clientY - hold.current.y) >= HOLD_SLOP_PX) stopHold()
+      }}
+      onPointerUp={stopHold}
+      onPointerCancel={stopHold}
+      onClickCapture={(event) => {
+        // The click that ends a held touch does not also open the card.
+        if (!hold.current?.fired) return
+        event.preventDefault()
+        event.stopPropagation()
+        hold.current = null
+      }}
+    >
+      {body}
+    </div>
+  )
 }
