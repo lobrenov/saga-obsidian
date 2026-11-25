@@ -14,7 +14,7 @@ export const eraSchema = z.object({
   name,
   short: name,
   side: z.enum(['before', 'after']),
-  start: z.number().int().positive().optional()
+  start: z.number().int().optional()
 })
 export type Era = z.output<typeof eraSchema>
 
@@ -27,51 +27,27 @@ export const calendarSchema = z
     eras: z.array(eraSchema).default([])
   })
   .superRefine((calendar, ctx) => {
-    if (!calendar.weekdays.includes(calendar['first-weekday'])) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['first-weekday'],
-        message: 'Not one of the weekdays'
-      })
-    }
+    const issue = (path: (string | number)[], message: string) => ctx.addIssue({ code: 'custom', path, message })
+    if (!calendar.weekdays.includes(calendar['first-weekday'])) issue(['first-weekday'], 'Not one of the weekdays')
+    calendar.weekdays.forEach((weekday, index) => {
+      if (calendar.weekdays.indexOf(weekday) !== index) issue(['weekdays', index], 'Weekday names must be unique')
+    })
     // `start` counts years away from year 1; before eras run earliest first, so their starts fall and after eras' rise.
     const last = { before: Infinity, after: 1 }
     const seen = { before: false, after: false }
-    let afterSeen = false
     calendar.eras.forEach((era, index) => {
       const at = (key: string) => ['eras', index, key]
-      if (era.side === 'after') afterSeen = true
-      else if (afterSeen)
-        ctx.addIssue({
-          code: 'custom',
-          path: at('side'),
-          message: 'Before eras come first'
-        })
+      if (calendar.eras.findIndex((e) => e.name === era.name) !== index) issue(at('name'), 'Era names must be unique')
+      if (era.side === 'before' && seen.after) issue(at('side'), 'Before eras come first')
       if (!seen[era.side]) {
         seen[era.side] = true
-        if (era.start !== undefined)
-          ctx.addIssue({
-            code: 'custom',
-            path: at('start'),
-            message: `The first ${era.side} era has no start`
-          })
+        if (era.start !== undefined) issue(at('start'), `The first ${era.side} era has no start`)
         return
       }
-      if (era.start === undefined) {
-        ctx.addIssue({
-          code: 'custom',
-          path: at('start'),
-          message: 'Needs a start'
-        })
-        return
-      }
+      if (era.start === undefined) return issue(at('start'), 'Needs a start')
+      if (era.start < 1) return issue(at('start'), 'Starts count from 1')
       const ordered = era.side === 'before' ? era.start < last.before : era.start > last.after
-      if (!ordered)
-        ctx.addIssue({
-          code: 'custom',
-          path: at('start'),
-          message: 'Starts must increase in time'
-        })
+      if (!ordered) issue(at('start'), 'Starts must increase in time')
       last[era.side] = era.start
     })
   })
@@ -101,7 +77,7 @@ export const dateKeysSchema = z
         ctx.addIssue({
           code: 'custom',
           path: [key],
-          message: `${key} needs a ${coarser}`
+          message: `${key === 'month' ? 'Month' : 'Day'} needs a ${coarser}`
         })
     }
     need('month', 'year')
@@ -110,7 +86,7 @@ export const dateKeysSchema = z
       ctx.addIssue({
         code: 'custom',
         path: ['era'],
-        message: 'era is for a date with no year'
+        message: 'Era is for a date with no year'
       })
     }
   })
