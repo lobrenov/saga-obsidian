@@ -1,4 +1,4 @@
-import { useId, useLayoutEffect, useRef } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef } from 'react'
 import type { Calendar } from '../shared/calendars/schema'
 import { rendererDefs } from '../shared/renderers/definitions'
 import { dateText } from './entryDate'
@@ -39,6 +39,17 @@ export function EntryCard({ host, calendar, entry, slot, onClose }: EntryCardPro
       if (lost && before?.instanceOf(HTMLElement) && before.isConnected) before.focus({ preventScroll: true })
     }
   }, [entry.file.path])
+
+  // A pointer down outside the card closes it, except on an element that opens a card, which selects its own.
+  useEffect(() => {
+    const doc = root.current?.ownerDocument
+    const away = (event: PointerEvent): void => {
+      const target = event.target as Node | null
+      if (target?.instanceOf(Element) && !root.current?.contains(target) && !target.closest('[data-slot], [data-opens-card]')) onClose()
+    }
+    doc?.addEventListener('pointerdown', away, true)
+    return () => doc?.removeEventListener('pointerdown', away, true)
+  }, [onClose])
 
   // The card sits beside its anchor, on the side with room; in a narrow view the style puts it below the anchor, full width.
   useLayoutEffect(() => {

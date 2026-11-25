@@ -811,7 +811,7 @@
   gap: var(--size-2-3);
 }
 
-.saga-header :is(.saga-calendar-row, .saga-calendar-chip, .saga-lore-date) .saga-header-chip-remove {
+.saga-header :is(.saga-calendar-row, .saga-calendar-chip) .saga-header-chip-remove {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -825,7 +825,7 @@
   cursor: pointer;
 }
 
-.saga-header :is(.saga-calendar-row, .saga-calendar-chip, .saga-lore-date) .saga-header-chip-remove:hover {
+.saga-header :is(.saga-calendar-row, .saga-calendar-chip) .saga-header-chip-remove:hover {
   color: var(--text-error);
 }
 
@@ -979,41 +979,16 @@
   max-width: 100%;
 }
 
-.saga-header .saga-lore-date-button {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--size-2-3);
-  min-height: 36px;
-  max-width: 100%;
-  padding: 0 var(--size-4-3);
-  border: 1px solid var(--background-modifier-border);
-  border-radius: var(--radius-m);
-  background: var(--background-primary);
-  box-shadow: none;
-  color: var(--text-normal);
-  font-size: var(--font-ui-medium);
-  text-align: left;
-  white-space: normal;
-  cursor: pointer;
+.saga-lore-date-chip {
+  --saga-chip-accent: var(--saga-header-accent);
 }
 
-.saga-header .saga-lore-date-button .svg-icon {
-  color: var(--saga-header-accent);
-}
-
-.saga-header .saga-lore-date-button[aria-expanded='true'] {
+.saga-lore-date-chip[data-open] {
   border-color: var(--saga-header-accent);
 }
 
-.saga-header .saga-lore-date-button[aria-invalid='true'] {
+.saga-lore-date-chip[data-invalid] {
   border-color: var(--text-error);
-}
-
-.saga-header .saga-lore-date[data-empty] .saga-lore-date-button {
-  border-style: dashed;
-  background: transparent;
-  color: var(--saga-header-accent);
-  font-size: var(--font-ui-small);
 }
 
 .saga-lore-popover {

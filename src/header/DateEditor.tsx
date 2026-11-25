@@ -4,7 +4,7 @@ import { addMonths, addYears, dayNumber, eraOf, eraSpan, formatDate, fromDayNumb
 import type { Calendar, Era } from '../shared/calendars/schema'
 import type { EditorProps } from '../shared/renderers/define'
 import { useHeader } from './env'
-import { FileInput, RemoveButton, type EditorCtx } from './fieldEditors'
+import { FileInput, type EditorCtx } from './fieldEditors'
 import { Icon } from './Icon'
 import { calendarFilter, NO_CALENDAR, type NoteCalendar } from './noteCalendar'
 
@@ -378,15 +378,58 @@ export function DateEditor({ field, value, onChange, id, invalid, describedBy, c
     onChange(date)
     close()
   }
+  const toggle = (): void => {
+    if (!open) setPrecision(precisionOf(value))
+    setOpen(!open)
+  }
   const titled = precision === 'Month' || precision === 'Day'
   const picker: PickerProps | undefined = range ? { calendar: range, value, onPick: pick, titleId } : undefined
   const target = calendar.file ? env.app.metadataCache.fileToLinktext(calendar.file, file.path, true) : ''
+
+  const popoverEl = open ? (
+    <div
+      ref={popover}
+      role="dialog"
+      aria-label={picker && titled ? undefined : `${field.label} date`}
+      aria-labelledby={picker && titled ? titleId : undefined}
+      className="saga-lore-popover"
+    >
+      {picker ? (
+        <>
+          <div role="group" aria-label="Precision" className="saga-lore-precision">
+            {PRECISIONS.map((name) => (
+              <button key={name} type="button" aria-pressed={precision === name} onClick={() => setPrecision(name)}>
+                {name}
+              </button>
+            ))}
+          </div>
+          <div className="saga-lore-pane">
+            {precision === 'Era' ? <EraList {...picker} /> : precision === 'Year' ? <YearPicker {...picker} /> : precision === 'Month' ? <MonthPicker {...picker} /> : <DayPicker {...picker} />}
+          </div>
+          {calendar.file ? (
+            <p className="saga-lore-on">
+              On{' '}
+              <button
+                type="button"
+                className="saga-lore-link"
+                onClick={(event) => env.openLink(target, file.path, event)}
+                onMouseOver={(event) => env.hover(event.nativeEvent, event.currentTarget, target, file.path)}
+              >
+                {calendar.file.basename}
+              </button>
+            </p>
+          ) : null}
+        </>
+      ) : (
+        <CalendarChooser calendar={calendar} />
+      )}
+    </div>
+  ) : null
 
   return (
     <span
       ref={root}
       className="saga-lore-date"
-      data-empty={value ? undefined : ''}
       onKeyDown={(event) => {
         if (event.key !== 'Escape' || !open) return
         event.preventDefault()
@@ -398,71 +441,57 @@ export function DateEditor({ field, value, onChange, id, invalid, describedBy, c
         if (next?.instanceOf(Element) && !root.current?.contains(next) && !next.closest('.suggestion-container')) setOpen(false)
       }}
     >
-      <button
-        ref={trigger}
-        id={id}
-        type="button"
-        className="saga-lore-date-button"
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        aria-invalid={invalid || undefined}
-        aria-describedby={describedBy}
-        onClick={() => {
-          if (!open) setPrecision(precisionOf(value))
-          setOpen(!open)
-        }}
-      >
-        <Icon name={value ? 'calendar' : 'plus'} />
-        {value ? formatDate(range ?? NO_CALENDAR, value) : field.prefix === '' ? 'Set date' : 'Add end'}
-      </button>
-      {open ? (
-        <div
-          ref={popover}
-          role="dialog"
-          aria-label={picker && titled ? undefined : `${field.label} date`}
-          aria-labelledby={picker && titled ? titleId : undefined}
-          className="saga-lore-popover"
-        >
-          {picker ? (
-            <>
-              <div role="group" aria-label="Precision" className="saga-lore-precision">
-                {PRECISIONS.map((name) => (
-                  <button key={name} type="button" aria-pressed={precision === name} onClick={() => setPrecision(name)}>
-                    {name}
-                  </button>
-                ))}
-              </div>
-              <div className="saga-lore-pane">
-                {precision === 'Era' ? <EraList {...picker} /> : precision === 'Year' ? <YearPicker {...picker} /> : precision === 'Month' ? <MonthPicker {...picker} /> : <DayPicker {...picker} />}
-              </div>
-              {calendar.file ? (
-                <p className="saga-lore-on">
-                  On{' '}
-                  <button
-                    type="button"
-                    className="saga-lore-link"
-                    onClick={(event) => env.openLink(target, file.path, event)}
-                    onMouseOver={(event) => env.hover(event.nativeEvent, event.currentTarget, target, file.path)}
-                  >
-                    {calendar.file.basename}
-                  </button>
-                </p>
-              ) : null}
-            </>
-          ) : (
-            <CalendarChooser calendar={calendar} />
-          )}
-        </div>
-      ) : null}
       {value ? (
-        <RemoveButton
-          label={field.label}
-          onClick={() => {
-            setOpen(false)
-            onChange(undefined)
-          }}
-        />
-      ) : null}
+        <span className="saga-header-chip saga-lore-date-chip" data-invalid={invalid || undefined} data-open={open || undefined}>
+          <button
+            ref={trigger}
+            id={id}
+            type="button"
+            className="saga-header-chip-link"
+            aria-haspopup="dialog"
+            aria-expanded={open}
+            aria-invalid={invalid || undefined}
+            aria-describedby={describedBy}
+            onClick={toggle}
+          >
+            <Icon name="calendar" />
+            {formatDate(range ?? NO_CALENDAR, value)}
+          </button>
+          {popoverEl}
+          <button type="button" className="saga-header-chip-action" aria-label={`Edit ${field.label}`} onClick={toggle}>
+            <Icon name="pencil" />
+          </button>
+          <button
+            type="button"
+            className="saga-header-chip-action"
+            aria-label={`Remove ${field.label}`}
+            onClick={() => {
+              setOpen(false)
+              onChange(undefined)
+            }}
+          >
+            <Icon name="x" />
+          </button>
+        </span>
+      ) : (
+        <>
+          <button
+            ref={trigger}
+            id={id}
+            type="button"
+            className="saga-header-add"
+            aria-haspopup="dialog"
+            aria-expanded={open}
+            aria-invalid={invalid || undefined}
+            aria-describedby={describedBy}
+            onClick={toggle}
+          >
+            <Icon name="plus" />
+            {field.prefix === '' ? 'Set date' : 'Add end'}
+          </button>
+          {popoverEl}
+        </>
+      )}
     </span>
   )
 }
