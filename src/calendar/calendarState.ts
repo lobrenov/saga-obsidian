@@ -1,6 +1,7 @@
 import type { App, TFile } from 'obsidian'
 import { frontmatterOf, isRendererNote, resolveLink, type ConfigStore } from '../obsidian/vault'
 import { parseCalendar } from '../shared/calendars/schema'
+import type { Issue } from '../shared/result'
 import { collectEntries } from './entries'
 import type { CalendarHost } from './host'
 import type { CalendarState, Display, Scale } from './types'
@@ -28,8 +29,10 @@ export function calendarStateOf(app: App, settings: ConfigStore, input: Calendar
   const file = app.vault.getFileByPath(path) ?? resolveLink(app, path.startsWith('[[') ? path : `[[${path}]]`, '')
   if (!file) return empty(`${path} is not in the vault.`)
   if (!isCalendarNote(app, settings, file)) return empty(`${file.basename} is not a calendar note.`, [], file)
-  const parsed = parseCalendar(frontmatterOf(app, file))
-  if (!parsed.value) return empty(`${file.basename} is not a valid calendar.`, parsed.issues.map((issue) => `${issue.path}: ${issue.message}`), file)
+  const frontmatter = frontmatterOf(app, file)
+  const parsed = parseCalendar(frontmatter)
+  const describe = (issue: Issue): string => `${issue.path}: ${frontmatter[issue.path.split('.')[0] ?? ''] == null ? 'Not set' : issue.message}`
+  if (!parsed.value) return empty(`${file.basename} is not a valid calendar.`, parsed.issues.map(describe), file)
   const display = input.option('display')
   return {
     kind: 'calendar',
