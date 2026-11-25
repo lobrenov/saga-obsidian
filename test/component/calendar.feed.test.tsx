@@ -56,11 +56,11 @@ test('Oldest first runs from the earliest date, Newest first reverses it, and th
   const { fake } = await renderFeed()
   expect(entries()).toEqual(['Drowned Kings', 'Sundering', 'Lamp lit', 'Drowning', 'Charter', 'Lapse', 'Herring', 'Toll', 'Festival'])
   await press('Newest first')
-  expect(fake.written).toEqual([['order', 'newest']])
+  expect(fake.written).toEqual([['feed-order', 'newest']])
   expect(entries()).toEqual(['Festival', 'Toll', 'Herring', 'Lapse', 'Charter', 'Drowning', 'Lamp lit', 'Sundering', 'Drowned Kings'])
   expect(document.querySelector('[aria-label="Order"] [aria-pressed="true"]')?.textContent).toBe('Newest first')
   await press('Oldest first')
-  expect(fake.written.at(-1)).toEqual(['order', 'oldest'])
+  expect(fake.written.at(-1)).toEqual(['feed-order', 'oldest'])
 })
 
 test('the control shows its choice at once and the option changed after wins', async () => {
@@ -69,14 +69,14 @@ test('the control shows its choice at once and the option changed after wins', a
   document.querySelectorAll<HTMLElement>('[aria-label="Order"] button')[1]!.click()
   await settle()
   expect(pressed()).toBe('Newest first')
-  fake.set('order', 'oldest')
+  fake.set('feed-order', 'oldest')
   await settle()
   expect(pressed()).toBe('Oldest first')
   expect(entries()[0]).toBe('Drowned Kings')
 })
 
 test('the order option wins over the control', async () => {
-  await renderFeed((fake) => fake.set('order', 'newest'))
+  await renderFeed((fake) => fake.set('feed-order', 'newest'))
   expect(document.querySelector('[aria-label="Order"] [aria-pressed="true"]')?.textContent).toBe('Newest first')
   expect(entries()[0]).toBe('Festival')
 })
@@ -103,7 +103,7 @@ test('era headers open each era and gaps give whole years between entries more t
 })
 
 test('gap markers follow the feed order', async () => {
-  await renderFeed((fake) => fake.set('order', 'newest'))
+  await renderFeed((fake) => fake.set('feed-order', 'newest'))
   const all = labels()
   expect(all[all.indexOf('Lapse') + 1]).toBe('21 years')
   expect(all[all.indexOf('Charter') + 1]).toBe('185 years')

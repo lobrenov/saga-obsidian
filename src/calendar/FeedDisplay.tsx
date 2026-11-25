@@ -151,7 +151,7 @@ export function FeedDisplay({ state }: { state: Ready }) {
   const Title = rows.some((row) => row.kind === "era") ? "h3" : "h2";
   const choose = (next: Order): void => {
     setPending(next);
-    state.setOption("order", next);
+    state.setOption("feed-order", next);
   };
   const onSelect = (entry: CalendarEntry, slot: string): void =>
     setSelected(
