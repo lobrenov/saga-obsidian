@@ -129,6 +129,7 @@ test('without a calendar, with a missing or non-calendar note, or with an invali
   const fake = await CalendarFake.create()
   fixture(fake)
   fake.addNote('Worlds/Broken.md', '---\ntype: calendar\nmonths: []\nweekdays: [A]\nfirst-weekday: B\n---\n')
+  fake.addNote('Worlds/Empty.md', '---\ntype: calendar\n---\n')
   const message = (options: Record<string, unknown>): string => {
     Object.keys(fake.options).forEach((key) => delete fake.options[key])
     Object.assign(fake.options, options)
@@ -139,6 +140,7 @@ test('without a calendar, with a missing or non-calendar note, or with an invali
   expect(message({ calendar: 'Worlds/Nope.md' })).toBe('Worlds/Nope.md is not in the vault.')
   expect(message({ calendar: 'Lore/Chain toll raised.md' })).toBe('Chain toll raised is not a calendar note.')
   expect(message({ calendar: 'Worlds/Broken.md' })).toContain('Broken is not a valid calendar. | ')
+  expect(message({ calendar: 'Worlds/Empty.md' })).toBe('Empty is not a valid calendar. | months: Not set | weekdays: Not set | first-weekday: Not set')
   expect(message({ calendar: 'The Tidereckoning' })).toBe('calendar')
 
   fake.options['calendar'] = 'Worlds/Broken.md'
