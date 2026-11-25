@@ -23,7 +23,7 @@ import {
 import { timelineRows, type TimelineRow } from "./timelineRows";
 import type { CalendarState, Scale } from "./types";
 import "./timeline.css";
-import { useHiddenLabel } from "./hiddenLabel";
+import { useHiddenLabel } from "../ui/hiddenLabel";
 
 type Ready = Extract<CalendarState, { kind: "calendar" }>;
 

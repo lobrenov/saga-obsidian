@@ -7,6 +7,7 @@ import { useHeader } from './env'
 import { FileInput, type EditorCtx } from './fieldEditors'
 import { Icon } from './Icon'
 import { calendarFilter, NO_CALENDAR, type NoteCalendar } from './noteCalendar'
+import { useHiddenLabel } from '../ui/hiddenLabel'
 
 const POPOVER_WIDTH = 320
 const EDGE = 8
@@ -70,9 +71,11 @@ function spanText(calendar: Calendar, era: Era): string {
 }
 
 function EraList({ calendar, value, onPick }: PickerProps) {
+  const [labelId, label] = useHiddenLabel('Era')
   if (calendar.eras.length === 0) return <p className="saga-lore-note">This calendar has no eras</p>
   return (
-    <div role="group" aria-label="Era" className="saga-lore-eras">
+    <div role="group" aria-labelledby={labelId} className="saga-lore-eras">
+      {label}
       {(
         [
           ['Before year 1', 'before'],
@@ -333,6 +336,8 @@ export function DateEditor({ field, value, onChange, id, invalid, describedBy, c
   const trigger = useRef<HTMLButtonElement>(null)
   const popover = useRef<HTMLDivElement>(null)
   const titleId = useId()
+  const [dateId, dateLabel] = useHiddenLabel(`${field.label} date`)
+  const [precisionId, precisionLabel] = useHiddenLabel('Precision')
   const hasCalendar = calendar?.calendar !== undefined
 
   // The popover keeps to the card and the window: it is narrowed to fit and moved in from either edge.
@@ -390,13 +395,14 @@ export function DateEditor({ field, value, onChange, id, invalid, describedBy, c
     <div
       ref={popover}
       role="dialog"
-      aria-label={picker && titled ? undefined : `${field.label} date`}
-      aria-labelledby={picker && titled ? titleId : undefined}
+      aria-labelledby={picker && titled ? titleId : dateId}
       className="saga-lore-popover"
     >
+      {dateLabel}
       {picker ? (
         <>
-          <div role="group" aria-label="Precision" className="saga-lore-precision">
+          <div role="group" aria-labelledby={precisionId} className="saga-lore-precision">
+            {precisionLabel}
             {PRECISIONS.map((name) => (
               <button key={name} type="button" aria-pressed={precision === name} onClick={() => setPrecision(name)}>
                 {name}

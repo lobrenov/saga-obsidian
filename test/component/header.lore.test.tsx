@@ -227,6 +227,8 @@ test('Era: eras are grouped Before year 1 and From year 1; choosing one writes e
   const { screen, text, app } = await renderHeader(path, lore('year: 1312\nmonth: 1\nday: 3\n'), { files: CALENDARS })
   await open(screen, 'When')
   await precision(screen, 'Era').click()
+  // Obsidian draws an aria-label as a tooltip: only controls have one.
+  expect([...document.querySelectorAll('.saga-header [aria-label]')].filter((el) => !el.matches('button, input'))).toEqual([])
   expect([...document.querySelectorAll('.saga-lore-group')].map((el) => el.textContent)).toEqual(['Before year 1', 'From year 1'])
   expect([...document.querySelectorAll('.saga-lore-era')].map((el) => el.textContent)).toEqual([
     'The Drowned AgeUntil 601 DADA',
