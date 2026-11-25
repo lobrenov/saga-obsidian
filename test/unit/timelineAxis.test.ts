@@ -55,7 +55,7 @@ describe('axes', () => {
     expect(position(decade, dayNumber(calendar, 1313, 1, 1))).toBeCloseTo(0.2)
     const century = axisFor(calendar, 'century', 1312)
     expect(century.columns).toHaveLength(100)
-    expect(century.columns.filter((c) => c.label !== '').map((c) => c.label)).toEqual(['1301', '1310', '1320', '1330', '1340', '1350', '1360', '1370', '1380', '1390', '1400'])
+    expect(century.columns.filter((c) => c.label !== '').map((c) => c.label)).toEqual(['1301', '1311', '1321', '1331', '1341', '1351', '1361', '1371', '1381', '1391'])
     expect(position(century, dayNumber(calendar, 1351, 1, 1))).toBeCloseTo(0.5)
   })
 

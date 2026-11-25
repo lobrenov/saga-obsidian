@@ -1,25 +1,16 @@
-import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
-import { formatDate, weekdayOf } from '../shared/calendars/dates'
+import { useId, useLayoutEffect, useRef } from 'react'
 import type { Calendar } from '../shared/calendars/schema'
 import { rendererDefs } from '../shared/renderers/definitions'
-import { toExcerpt } from '../shared/markdown/excerpt'
+import { dateText } from './entryDate'
 import type { CalendarEntry } from './entries'
 import { Glyph } from './Glyph'
 import type { CalendarHost } from './host'
+import { NoteLink } from './NoteLink'
+import { useExcerpt } from './useExcerpt'
 
 const WIDTH = 300
 const GAP = 6
 const EXCERPT_CHARS = 140
-
-/** The date as the card shows it: a single day with its weekday, an end after a dash. */
-function dateText(calendar: Calendar, entry: CalendarEntry): string {
-  const { start, end } = entry
-  if (!start) return ''
-  const text = formatDate(calendar, start)
-  if (end) return `${text} – ${formatDate(calendar, end)}`
-  if ('year' in start && start.month !== undefined && start.day !== undefined) return `${calendar.weekdays[weekdayOf(calendar, start.year, start.month, start.day)]}, ${text}`
-  return text
-}
 
 interface EntryCardProps {
   host: CalendarHost
@@ -34,7 +25,7 @@ interface EntryCardProps {
 export function EntryCard({ host, calendar, entry, slot, onClose }: EntryCardProps) {
   const id = useId()
   const root = useRef<HTMLElement>(null)
-  const [excerpt, setExcerpt] = useState('')
+  const excerpt = useExcerpt(host, entry.file, EXCERPT_CHARS)
   const date = dateText(calendar, entry)
 
   // Focus moves into the card and goes back to where it was when the card closes.
@@ -76,15 +67,6 @@ export function EntryCard({ host, calendar, entry, slot, onClose }: EntryCardPro
     return () => observer.disconnect()
   }, [slot])
 
-  useEffect(() => {
-    let live = true
-    setExcerpt('')
-    void host.excerpt(entry.file).then((text) => live && setExcerpt(toExcerpt(text, EXCERPT_CHARS)))
-    return () => {
-      live = false
-    }
-  }, [host, entry.file])
-
   return (
     <section
       ref={root}
@@ -109,18 +91,9 @@ export function EntryCard({ host, calendar, entry, slot, onClose }: EntryCardPro
         {rendererDefs[entry.renderer].label}
       </p>
       <h3 id={id} className="saga-calview-card-title">
-        <a
-          href={entry.file.path}
-          className="internal-link"
-          data-autofocus
-          onClick={(event) => {
-            event.preventDefault()
-            host.openNote(entry.file, event.metaKey || event.ctrlKey)
-          }}
-          onMouseOver={(event) => host.hoverNote(event.nativeEvent, event.currentTarget, entry.file)}
-        >
+        <NoteLink host={host} file={entry.file} data-autofocus>
           {entry.title}
-        </a>
+        </NoteLink>
       </h3>
       {date ? <p className="saga-calview-card-date">{date}</p> : null}
       {excerpt ? <p className="saga-calview-card-excerpt">{excerpt}</p> : null}

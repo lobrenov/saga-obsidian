@@ -1,9 +1,10 @@
 import { useLayoutEffect, useReducer } from 'react'
-import { expect, test } from 'vitest'
+import { expect, test, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
 import '../../src/calendar/calendar.css'
 import { CalendarRoot } from '../../src/calendar/CalendarRoot'
-import { CalendarFake, lore } from '../fakes/calendar'
+import { CONFIG_PATH } from '../../src/obsidian/vault'
+import { CONFIG_YAML, CalendarFake, lore } from '../fakes/calendar'
 import '../../src/styles.css'
 import './mapVars.css'
 
@@ -28,10 +29,10 @@ const fixture = (fake: CalendarFake): void => {
   fake.addNote('Lore/Bad.md', lore('year: 5\nmonth: 9'))
 }
 
-async function renderFeed(setup?: (fake: CalendarFake) => void, width = 1100) {
+async function renderFeed(setup?: (fake: CalendarFake) => void | Promise<void>, width = 1100) {
   const fake = await CalendarFake.create()
   fixture(fake)
-  setup?.(fake)
+  await setup?.(fake)
   const screen = await render(
     <div className="saga-calview-view" style={{ width, height: 800 }}>
       <Live fake={fake} />
@@ -60,6 +61,18 @@ test('Oldest first runs from the earliest date, Newest first reverses it, and th
   expect(document.querySelector('[aria-label="Order"] [aria-pressed="true"]')?.textContent).toBe('Newest first')
   await press('Oldest first')
   expect(fake.written.at(-1)).toEqual(['order', 'oldest'])
+})
+
+test('the control shows its choice at once and the option changed after wins', async () => {
+  const { fake } = await renderFeed()
+  const pressed = (): string | undefined => document.querySelector('[aria-label="Order"] [aria-pressed="true"]')?.textContent ?? undefined
+  document.querySelectorAll<HTMLElement>('[aria-label="Order"] button')[1]!.click()
+  await settle()
+  expect(pressed()).toBe('Newest first')
+  fake.set('order', 'oldest')
+  await settle()
+  expect(pressed()).toBe('Oldest first')
+  expect(entries()[0]).toBe('Drowned Kings')
 })
 
 test('the order option wins over the control', async () => {
@@ -133,6 +146,16 @@ test('no banners show when the banners option is off', async () => {
   expect(document.querySelectorAll('.saga-feed-banner')).toHaveLength(0)
 })
 
+test('a banner follows a renamed image key and its banner-y reaches the image', async () => {
+  await renderFeed(async (fake) => {
+    fake.fake.setRaw(CONFIG_PATH, `${CONFIG_YAML}  location:\n    types: [location]\n    keys: { image: picture }\n`)
+    await fake.settings.reload()
+    fake.addNote('Places/Saltmere.md', '---\ntype: location\ncalendar: "[[The Tidereckoning]]"\nyear: 1312\npicture: "[[sea.png]]"\nbanner-y: 20\n---\n')
+  })
+  const card = [...document.querySelectorAll('.saga-feed-card')].find((el) => el.querySelector('.saga-feed-title')?.textContent === 'Saltmere')!
+  expect(card.querySelector<HTMLImageElement>('.saga-feed-banner img')?.style.getPropertyValue('--saga-feed-banner-y')).toBe('20%')
+})
+
 test('titles and the calendar link open the note with hover preview', async () => {
   const { fake } = await renderFeed()
   const link = [...document.querySelectorAll<HTMLElement>('.saga-feed-title a')].find((a) => a.textContent === 'Toll')!
@@ -144,18 +167,69 @@ test('titles and the calendar link open the note with hover preview', async () =
   expect(fake.opened.map((opened) => opened.linktext)).toEqual(['Lore/Toll.md', 'Worlds/The Tidereckoning.md'])
 })
 
-test('a note with a date problem is listed apart with its issue', async () => {
+test('a note with a date problem is a chip that opens its card with the issue', async () => {
   await renderFeed()
-  const problems = document.querySelector('.saga-feed-problems')!
-  expect(problems.querySelector('h2')?.textContent).toBe('Date problem')
-  expect(problems.textContent).toContain('Bad')
+  const chip = document.querySelector<HTMLElement>('.saga-calview-chip')!
+  expect(document.querySelector('.saga-calview-chips-label')?.textContent).toBe('Date problem')
+  expect(chip.textContent).toBe('Bad')
   expect(entries()).not.toContain('Bad')
+  chip.click()
+  await settle()
+  expect(document.querySelector('.saga-calview-card-issues')?.textContent).toContain('Month 9')
 })
 
-test('the feed is an ordered list with the era at heading level 2', async () => {
+test('the feed is an ordered list: era headers are level 2, entry titles level 3, year markers no heading', async () => {
   await renderFeed()
   expect(document.querySelector('ol[aria-label="Feed"]')).not.toBeNull()
   expect(document.querySelector('.saga-feed-era')?.tagName).toBe('H2')
+  expect(document.querySelector('.saga-feed-title')?.tagName).toBe('H3')
+  expect(document.querySelector('.saga-feed-year')?.tagName).toBe('P')
+  const card = document.querySelector('.saga-feed-card')!
+  expect(document.getElementById(card.getAttribute('aria-labelledby')!)).toBe(card.querySelector('.saga-feed-title'))
+})
+
+test('an empty feed says so and has no legend', async () => {
+  const fake = await CalendarFake.create()
+  fake.options['display'] = 'feed'
+  await render(
+    <div className="saga-calview-view" style={{ width: 800, height: 600 }}>
+      <Live fake={fake} />
+    </div>
+  )
+  expect(document.querySelector('.saga-calview-state')?.textContent).toBe('No dated notes on The Tidereckoning.')
+  expect(document.querySelector('.saga-feed-legend')).toBeNull()
+})
+
+test('an excerpt is read again after the note changes', async () => {
+  const { fake } = await renderFeed()
+  const excerpt = (title: string): string | undefined =>
+    [...document.querySelectorAll('.saga-feed-card')].find((el) => el.querySelector('.saga-feed-title')?.textContent === title)?.querySelector('.saga-feed-excerpt')?.textContent ?? undefined
+  await vi.waitFor(() => expect(excerpt('Drowned Kings')).toBe('Barrow-lords of the reefs.'))
+  fake.addNote('Lore/Drowned Kings.md', lore('era: The Drowned Age', 'Lords of the drowned reefs.\n'))
+  await vi.waitFor(() => expect(excerpt('Drowned Kings')).toBe('Lords of the drowned reefs.'))
+})
+
+test('excerpts are read as cards near the viewport, not all on mount', async () => {
+  const reads: string[] = []
+  await renderFeed((fake) => {
+    for (let i = 0; i < 60; i++) fake.addNote(`Lore/Late ${i}.md`, lore(`year: ${2000 + i * 5}`, `Late ${i}.\n`))
+    const read = fake.app.vault.cachedRead.bind(fake.app.vault)
+    fake.app.vault.cachedRead = (file) => {
+      reads.push(file.path)
+      return read(file)
+    }
+  })
+  await vi.waitFor(() => expect(reads.length).toBeGreaterThan(0))
+  expect(reads.length).toBeLessThan(40)
+  expect(reads).not.toContain('Lore/Late 59.md')
+  document.querySelector('.saga-calview-body')!.scrollTop = 1e6
+  await vi.waitFor(() => expect(reads).toContain('Lore/Late 59.md'))
+})
+
+test('below 760px the spine moves to the left edge', async () => {
+  await renderFeed(undefined, 700)
+  const cards = [...document.querySelectorAll('.saga-feed-card')].map((card) => Math.round(card.getBoundingClientRect().left))
+  expect(new Set(cards).size).toBe(1)
 })
 
 test('at phone width the spine is at the left edge and cards stack on one side', async () => {

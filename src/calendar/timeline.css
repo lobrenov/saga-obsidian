@@ -31,12 +31,18 @@
   display: flex;
   flex: var(--saga-timeline-weight, 1) 1 0;
   align-items: center;
+  box-sizing: border-box;
   min-width: 0;
-  padding: 0 var(--size-4-2);
   overflow: hidden;
   background: var(--background-secondary);
   color: var(--text-muted);
   white-space: nowrap;
+}
+
+.saga-timeline-era-text {
+  min-width: 0;
+  padding: 0 var(--size-4-2);
+  overflow: hidden;
   text-overflow: ellipsis;
 }
 
@@ -54,7 +60,7 @@
   left: var(--saga-timeline-left);
   width: 2px;
   height: 14px;
-  background: var(--saga-lore, var(--color-purple));
+  background: var(--saga-calview-accent, var(--text-muted));
 }
 
 .saga-timeline-window {
@@ -94,11 +100,23 @@
   left: var(--saga-timeline-label);
 }
 
+/* The same box on both, with no padding, so the labels sit over the grid's columns. */
 .saga-timeline-column,
 .saga-timeline-column-label {
   flex: var(--saga-timeline-weight, 1) 1 0;
+  box-sizing: border-box;
   min-width: 0;
   border-left: 1px solid var(--background-modifier-border);
+}
+
+/* Century: a rule every ten years, and a label that runs over the cells after it. */
+.saga-timeline[data-scale='century'] .saga-timeline-column:not(:nth-child(10n + 1)),
+.saga-timeline[data-scale='century'] .saga-timeline-column-label:not(:nth-child(10n + 1)) {
+  border-left-color: transparent;
+}
+
+.saga-timeline[data-scale='century'] .saga-timeline-column-label {
+  overflow: visible;
 }
 
 .saga-timeline-head {
@@ -116,6 +134,7 @@
   display: flex;
   flex: none;
   align-items: center;
+  box-sizing: border-box;
   width: var(--saga-timeline-label);
   padding: 0 var(--size-4-3);
   border-right: 1px solid var(--background-modifier-border);
@@ -134,12 +153,20 @@
 .saga-timeline-column-label {
   display: flex;
   align-items: center;
-  padding: 0 var(--size-2-3);
   overflow: hidden;
   color: var(--text-muted);
   font-size: var(--font-ui-smaller);
   font-weight: var(--font-semibold);
   white-space: nowrap;
+}
+
+.saga-timeline-column-text {
+  min-width: 0;
+  padding: 0 var(--size-2-3);
+}
+
+.saga-timeline[data-scale='century'] .saga-timeline-column-text {
+  padding: 0 0 0 var(--size-2-3);
 }
 
 .saga-timeline-rows {
@@ -155,8 +182,13 @@
   border-bottom: 1px solid var(--background-modifier-border);
 }
 
+/* The selected and hovered row's tint is opaque, so the sticky label hides what scrolls beneath it. */
+.saga-timeline {
+  --saga-timeline-tint: color-mix(in srgb, var(--text-normal) 8%, var(--background-primary));
+}
+
 .saga-timeline-row[data-selected] {
-  background: var(--background-modifier-hover);
+  background: var(--saga-timeline-tint);
 }
 
 .saga-calview .saga-timeline-label {
@@ -167,6 +199,7 @@
   flex: none;
   align-items: center;
   gap: var(--size-4-2);
+  box-sizing: border-box;
   width: var(--saga-timeline-label);
   height: 100%;
   margin: 0;
@@ -193,11 +226,12 @@
 
 .saga-calview button.saga-timeline-label:hover,
 .saga-timeline-row[data-selected] button.saga-timeline-label {
-  background: var(--background-modifier-hover);
+  background: var(--saga-timeline-tint);
 }
 
 .saga-timeline-track {
   position: relative;
+  cursor: pointer;
   flex: 1;
   min-width: 0;
 }
@@ -262,10 +296,14 @@
   padding: 0 var(--size-2-3);
   border-radius: var(--radius-s);
   background: color-mix(in srgb, var(--background-primary) 90%, transparent);
-  color: var(--text-muted);
+  color: var(--text-normal);
   font-size: var(--font-ui-smaller);
   line-height: 20px;
   white-space: nowrap;
+}
+
+.saga-timeline-when[data-inside] {
+  margin-left: var(--size-4-2);
 }
 
 .saga-timeline-when[data-flip] {
@@ -282,6 +320,9 @@
 }
 
 .saga-timeline-legend {
+  --saga-calview-accent: var(--text-muted);
+  --saga-calview-tint: var(--background-modifier-hover);
+
   display: flex;
   flex-wrap: wrap;
   gap: var(--size-2-3) var(--size-4-5);
@@ -299,14 +340,14 @@
 .saga-timeline-swatch {
   display: inline-block;
   box-sizing: border-box;
-  border: 1px solid var(--saga-lore, var(--color-purple));
-  background: color-mix(in srgb, var(--saga-lore, var(--color-purple)) 14%, var(--background-primary));
+  border: 1px solid var(--saga-calview-accent);
+  background: color-mix(in srgb, var(--saga-calview-accent) 14%, var(--background-primary));
 }
 
 .saga-timeline-swatch[data-kind='point'] {
   width: 10px;
   height: 10px;
-  background: var(--saga-lore, var(--color-purple));
+  background: var(--saga-calview-accent);
   transform: rotate(45deg);
 }
 

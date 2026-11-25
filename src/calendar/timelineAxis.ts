@@ -35,6 +35,17 @@ const axisOf = (columns: Column[]): Axis => ({
   total: columns.reduce((sum, column) => sum + column.weight, 0)
 })
 
+/** The lowest and highest of `years` and `bound`, without spreading the years. */
+function extent(years: readonly number[], bound: number): { low: number; high: number } {
+  let low = bound
+  let high = bound
+  for (const year of years) {
+    if (year < low) low = year
+    if (year > high) high = year
+  }
+  return { low, high }
+}
+
 /** The years an entry's dates fall in. */
 export function yearsOf(...dates: (CalendarDate | undefined)[]): number[] {
   return dates.flatMap((date) => (date && 'year' in date ? [date.year] : []))
@@ -74,7 +85,7 @@ function yearsAxis(calendar: Calendar, scale: Exclude<Scale, 'all'>, year: numbe
       const at = addYears(first, i)
       const from = dayNumber(calendar, at, 1, 1)
       const named = String(Math.abs(at))
-      return { label: scale === 'decade' || (i + 1) % 10 === 0 || i === 0 ? named : '', title: formatDate(calendar, { year: at }), from, to: from + length - 1, weight: 1 }
+      return { label: scale === 'decade' || i % 10 === 0 ? named : '', title: formatDate(calendar, { year: at }), from, to: from + length - 1, weight: 1 }
     })
   )
 }
@@ -83,8 +94,7 @@ function yearsAxis(calendar: Calendar, scale: Exclude<Scale, 'all'>, year: numbe
 function erasAxis(calendar: Calendar, years: readonly number[]): Axis {
   const length = daysInYear(calendar)
   if (calendar.eras.length === 0) {
-    const first = Math.min(1, ...years)
-    const last = Math.max(1, ...years)
+    const { low: first, high: last } = extent(years, 1)
     const count = index(last) - index(first) + 1
     const from = dayNumber(calendar, first, 1, 1)
     return axisOf([{ label: 'All', title: 'All', from, to: from + count * length - 1, weight: count }])
@@ -93,8 +103,8 @@ function erasAxis(calendar: Calendar, years: readonly number[]): Axis {
     calendar.eras.map((era) => {
       const span = eraSpan(calendar, era)
       let { from, to } = span
-      if (!Number.isFinite(from)) from = addYears(to, 1 - Math.max(OPEN_ERA_YEARS, index(to) - index(Math.min(to, ...years)) + 1))
-      if (!Number.isFinite(to)) to = addYears(from, Math.max(OPEN_ERA_YEARS, index(Math.max(from, ...years)) - index(from) + 1) - 1)
+      if (!Number.isFinite(from)) from = addYears(to, 1 - Math.max(OPEN_ERA_YEARS, index(to) - index(extent(years, to).low) + 1))
+      if (!Number.isFinite(to)) to = addYears(from, Math.max(OPEN_ERA_YEARS, index(extent(years, from).high) - index(from) + 1) - 1)
       const count = index(to) - index(from) + 1
       return { label: `${era.name} · ${era.short}`, title: era.name, from: dayNumber(calendar, from, 1, 1), to: dayNumber(calendar, to, 1, 1) + length - 1, weight: count }
     })
