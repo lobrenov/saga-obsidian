@@ -44,7 +44,7 @@ export function calendarStateOf(app: App, settings: ConfigStore, input: Calendar
     display: DISPLAYS.find((id) => id === display) ?? 'calendar',
     opens: input.option('opens') === 'year' ? 'year' : 'month',
     scale: SCALES.find((id) => id === input.option('scale')) ?? 'all',
-    order: input.option('order') === 'newest' ? 'newest' : 'oldest',
+    order: input.option('feed-order') === 'newest' ? 'newest' : 'oldest',
     banners: input.option('banners') !== false,
     setOption: input.setOption
   }

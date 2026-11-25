@@ -68,8 +68,14 @@ test('options hide by display', () => {
   }
   expect(visible('calendar')).toEqual(['calendar', 'display', 'opens'])
   expect(visible(undefined)).toEqual(['calendar', 'display', 'opens'])
-  expect(visible('feed')).toEqual(['calendar', 'display', 'order', 'banners'])
+  expect(visible('feed')).toEqual(['calendar', 'display', 'feed-order', 'banners'])
   expect(visible('timeline')).toEqual(['calendar', 'display', 'scale'])
+})
+
+test('no option uses a key Bases keeps for its own view settings', () => {
+  const view = { get: () => undefined } as unknown as BasesViewConfig
+  const keys = calendarOptions({} as App, {} as ConfigStore, view).map((option) => ('key' in option ? option.key : ''))
+  for (const own of ['type', 'name', 'filters', 'order', 'sort', 'limit', 'groupBy', 'summaries']) expect(keys).not.toContain(own)
 })
 
 test('the calendar option accepts calendar notes only', async () => {
