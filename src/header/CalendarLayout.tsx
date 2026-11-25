@@ -1,22 +1,25 @@
-import { useId, useLayoutEffect, useMemo, useReducer, useState, type ReactNode } from 'react'
-import type { App, TFile } from 'obsidian'
-import { frontmatterOf, resolveLink, setField } from '../obsidian/vault'
-import { addYears, dateRange, dayNumber, eraSpan, formatDate, readDate, weekdayOf, type CalendarDate } from '../shared/calendars/dates'
+import { useId, useLayoutEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react'
+import { TFile, type App } from 'obsidian'
+import { frontmatterOf, resolveLink, setField, updateField } from '../obsidian/vault'
+import { addYears, checkDate, dateRange, dayNumber, eraSpan, formatDate, readDate, weekdayOf, type CalendarDate } from '../shared/calendars/dates'
 import { parseCalendar, type Calendar } from '../shared/calendars/schema'
 import type { Issue } from '../shared/result'
 import { MenuSelect } from '../ui/MenuSelect'
 import { CommitInput } from './CommitInput'
 import { useHeader } from './env'
+import { RemoveButton } from './fieldEditors'
 import { Icon } from './Icon'
 import type { LayoutInput } from './types'
 import { useReorder } from './useReorder'
 
 const STRIP_OPEN_WEIGHT = 300
 const NEW_ERA_STEP = 100
+const RELOAD_DELAY_MS = 250
 const SIDES = [
   { value: 'before', label: 'Before' },
   { value: 'after', label: 'After' }
 ]
+const ATTACHED = /^(months|weekdays|first-weekday|eras)(\.|$)/
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value)
 const list = (value: unknown): unknown[] => (Array.isArray(value) ? value : [])
@@ -32,25 +35,26 @@ const moved = <T,>(items: readonly T[], from: number, to: number): T[] => {
 }
 const plural = (count: number, word: string): string => `${count} ${word}${count === 1 ? '' : 's'}`
 
-/** The first era of each side has no start. */
-const withoutFirstStarts = (eras: unknown[]): unknown[] => {
-  const seen = new Set<string>()
-  return eras.map((era) => {
-    const side = read(era, 'side')
-    if (seen.has(side)) return era
-    seen.add(side)
-    return isRecord(era) && 'start' in era ? { ...era, start: undefined } : era
-  })
+/** Where `entry` (as drawn) is in `items` as written now; its drawn index when it was edited meanwhile. */
+const locate = (items: unknown[], entry: unknown, drawn: number): number => {
+  const text = JSON.stringify(entry)
+  const at = items.findIndex((item) => JSON.stringify(item) === text)
+  return at < 0 ? drawn : at
+}
+
+/** Whether `note`'s `calendar` link resolves to `file`. */
+const linksTo = (app: App, file: TFile, note: TFile, frontmatter: Readonly<Record<string, unknown>>): boolean => {
+  const link = frontmatter['calendar']
+  return typeof link === 'string' && resolveLink(app, link, note.path)?.path === file.path
 }
 
 /** The notes whose `calendar` link resolves to `file`, with their start and end dates. */
-function loreOf(app: App, file: TFile): { start: CalendarDate; end: CalendarDate | undefined }[] {
+function loreOf(app: App, file: TFile): { path: string; start: CalendarDate; end: CalendarDate | undefined }[] {
   return app.vault.getMarkdownFiles().flatMap((note) => {
     const frontmatter = frontmatterOf(app, note)
-    const link = frontmatter['calendar']
-    if (typeof link !== 'string' || resolveLink(app, link, note.path)?.path !== file.path) return []
+    if (!linksTo(app, file, note, frontmatter)) return []
     const start = readDate(frontmatter, '').value
-    return start ? [{ start, end: readDate(frontmatter, 'end-').value }] : []
+    return start ? [{ path: note.path, start, end: readDate(frontmatter, 'end-').value }] : []
   })
 }
 
@@ -58,8 +62,7 @@ function loreOf(app: App, file: TFile): { start: CalendarDate; end: CalendarDate
 const notesInEra = (app: App, file: TFile, era: string): TFile[] =>
   app.vault.getMarkdownFiles().filter((note) => {
     const frontmatter = frontmatterOf(app, note)
-    const link = frontmatter['calendar']
-    return typeof link === 'string' && resolveLink(app, link, note.path)?.path === file.path && (frontmatter['era'] === era || frontmatter['end-era'] === era)
+    return linksTo(app, file, note, frontmatter) && (frontmatter['era'] === era || frontmatter['end-era'] === era)
   })
 
 function Issues({ issues }: { issues: Issue[] }) {
@@ -98,35 +101,116 @@ function AddRow({ label, onClick }: { label: string; onClick: () => void }) {
   )
 }
 
-function RemoveButton({ label, onClick }: { label: string; onClick: () => void }) {
+/** The handle of a reorderable row: drag it, open its menu, or press Alt+ArrowUp or Alt+ArrowDown. */
+function Grip({ name, index, count, order, onMove }: { name: string; index: number; count: number; order: ReturnType<typeof useReorder>; onMove: (from: number, to: number) => void }) {
+  const { env } = useHeader()
+  const button = useRef<HTMLButtonElement>(null)
+  useLayoutEffect(() => {
+    if (order.focus !== index) return
+    button.current?.focus()
+    order.focusAt(null)
+  })
   return (
-    <button type="button" className="saga-calendar-remove" aria-label={label} onClick={onClick}>
-      <Icon name="x" />
+    <button
+      ref={button}
+      type="button"
+      className="saga-calendar-grip"
+      aria-label={`Move ${name}`}
+      aria-haspopup="menu"
+      {...order.grip(index)}
+      onClick={(event) => {
+        const box = event.currentTarget.getBoundingClientRect()
+        const items = [
+          ...(index > 0 ? [{ title: 'Move up', icon: 'arrow-up', onClick: () => onMove(index, index - 1) }] : []),
+          ...(index < count - 1 ? [{ title: 'Move down', icon: 'arrow-down', onClick: () => onMove(index, index + 1) }] : [])
+        ]
+        if (items.length > 0) env.showMenu({ x: box.left, y: box.bottom }, items)
+      }}
+      onKeyDown={(event) => {
+        if (!event.altKey || (event.key !== 'ArrowUp' && event.key !== 'ArrowDown')) return
+        event.preventDefault()
+        const to = index + (event.key === 'ArrowUp' ? -1 : 1)
+        if (to < 0 || to >= count) return
+        order.focusAt(to)
+        onMove(index, to)
+      }}
+    >
+      <Icon name="grip-vertical" />
     </button>
   )
 }
 
-/** The calendar note's header body: months, week, eras, the era strip and a year at a glance. Each control writes one key's whole value. */
+/** The input that adds a weekday: Enter adds and stays open for the next, Escape or an empty blur closes it. */
+function AddDay({ onAdd, onClose }: { onAdd: (name: string) => void; onClose: () => void }) {
+  const [draft, setDraft] = useState('')
+  const input = useRef<HTMLInputElement>(null)
+  useLayoutEffect(() => input.current?.focus(), [])
+  const add = (): void => {
+    const name = draft.trim()
+    setDraft('')
+    if (name !== '') onAdd(name)
+  }
+  return (
+    <input
+      ref={input}
+      type="text"
+      className="saga-header-input"
+      aria-label="Weekday name"
+      placeholder="Day name"
+      autoComplete="off"
+      spellCheck={false}
+      value={draft}
+      onChange={(event) => setDraft(event.currentTarget.value)}
+      onBlur={() => {
+        add()
+        onClose()
+      }}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault()
+          add()
+        } else if (event.key === 'Escape') {
+          event.preventDefault()
+          setDraft('')
+          onClose()
+        }
+      }}
+    />
+  )
+}
+
+/** The calendar note's header body: months, week, eras, the era strip and a year at a glance. Each control writes one key's whole value, built from the value in the note at write time. */
 export function CalendarLayout({ title, frontmatter }: LayoutInput) {
   const { env, file } = useHeader()
   const { app } = env
   const [error, setError] = useState<string | null>(null)
   const [addingDay, setAddingDay] = useState(false)
+  const lastValid = useRef<Calendar | undefined>(undefined)
 
   const months = list(frontmatter['months'])
   const weekdays = list(frontmatter['weekdays'])
   const eras = list(frontmatter['eras'])
   const firstWeekday = read(frontmatter, 'first-weekday')
   const { value: calendar, issues } = parseCalendar(frontmatter)
+  if (calendar) lastValid.current = calendar
   const issuesAt = (path: string): Issue[] => issues.filter((issue) => issue.path === path || issue.path.startsWith(`${path}.`))
   const invalidAt = (path: string): boolean => issues.some((issue) => issue.path === path)
 
-  const write = async (key: string, value: unknown): Promise<boolean> => {
-    const result = await setField(app, file, key, value)
+  const report = (key: string, result: { ok: true } | { ok: false; error: { message: string } }): boolean => {
     setError(result.ok ? null : `Could not update “${key}”: ${result.error.message}`)
     return result.ok
   }
-  const writeEras = (next: unknown[]): Promise<boolean> => write('eras', withoutFirstStarts(next))
+  /** Replaces the key's list with `change` of the list as written now. */
+  const edit = async (key: string, change: (items: unknown[]) => unknown[]): Promise<boolean> => report(key, await updateField(app, file, key, (current) => change(list(current))))
+  /** Applies `changes` to the entry (as drawn at `index`) as written now. */
+  const editEntry = (key: string, items: unknown[], index: number, changes: Record<string, unknown>): Promise<boolean> =>
+    edit(key, (current) => {
+      const at = locate(current, items[index], index)
+      return replaceAt(current, at, patch(current[at], changes))
+    })
+  const removeEntry = (key: string, items: unknown[], index: number): Promise<boolean> => edit(key, (current) => withoutAt(current, locate(current, items[index], index)))
+  const moveEntry = (key: string, items: unknown[]) => (from: number, to: number): void =>
+    void edit(key, (current) => moved(current, locate(current, items[from], from), locate(current, items[to], to)))
   const number = (text: string): number | null => (text.trim() === '' || Number.isNaN(Number(text)) ? null : Number(text))
 
   const renameEra = async (index: number, text: string): Promise<boolean> => {
@@ -135,13 +219,12 @@ export function CalendarLayout({ title, frontmatter }: LayoutInput) {
     if (name === old) return false
     const notes = old && name ? notesInEra(app, file, old) : []
     if (notes.length > 0 && !(await env.confirm('Rename era', `Rename ${old} to ${name} in ${plural(notes.length, 'note')}?`, 'Rename', 'Cancel'))) return false
-    await writeEras(replaceAt(eras, index, patch(eras[index], { name })))
+    if (!(await editEntry('eras', eras, index, { name }))) return false
     const failed: string[] = []
     for (const note of notes) {
       const current = frontmatterOf(app, note)
-      for (const key of ['era', 'end-era']) {
-        if (current[key] !== old) continue
-        const result = await setField(app, note, key, name)
+      for (const key of ['era', 'end-era'].filter((key) => current[key] === old)) {
+        const result = await updateField(app, note, key, (value) => (value === old ? name : value))
         if (!result.ok && !failed.includes(note.basename)) failed.push(note.basename)
       }
     }
@@ -149,30 +232,39 @@ export function CalendarLayout({ title, frontmatter }: LayoutInput) {
     return true
   }
 
-  const addEra = (): Promise<boolean> => {
-    const side = read(eras.at(-1), 'side') === 'before' ? 'before' : 'after'
-    const starts = eras.filter((era) => read(era, 'side') === side).map((era) => Number(read(era, 'start')))
-    const last = starts.filter((start) => !Number.isNaN(start) && start > 0).at(-1)
-    const first = starts.length === 0
-    const start = first ? undefined : side === 'after' ? (last ?? 1) + NEW_ERA_STEP : last ? Math.max(1, Math.floor(last / 2)) : NEW_ERA_STEP
-    return writeEras([...eras, { name: 'New era', short: 'NE', side, ...(start !== undefined && { start }) }])
-  }
+  const addEra = (): Promise<boolean> =>
+    edit('eras', (current) => {
+      const side = read(current.at(-1), 'side') === 'before' ? 'before' : 'after'
+      const sameSide = current.filter((era) => read(era, 'side') === side)
+      const last = sameSide
+        .map((era) => Number(read(era, 'start')))
+        .filter((start) => !Number.isNaN(start) && start > 0)
+        .at(-1)
+      const start = sameSide.length === 0 ? undefined : side === 'after' ? (last ?? 1) + NEW_ERA_STEP : last ? Math.max(1, Math.floor(last / 2)) : NEW_ERA_STEP
+      return [...current, { name: 'New era', short: 'NE', side, ...(start !== undefined && { start }) }]
+    })
 
-  const monthOrder = useReorder((from, to) => void write('months', moved(months, from, to)))
-  const weekdayOrder = useReorder((from, to) => void write('weekdays', moved(weekdays, from, to)))
-  const eraOrder = useReorder((from, to) => void writeEras(moved(eras, from, to)))
+  const monthOrder = useReorder(moveEntry('months', months))
+  const weekdayOrder = useReorder(moveEntry('weekdays', weekdays))
+  const eraOrder = useReorder(moveEntry('eras', eras))
 
   const days = months.reduce<number>((total, month) => total + (Number(read(month, 'days')) || 0), 0)
   const firstOfSide = eras.map((era, i) => !eras.slice(0, i).some((earlier) => read(earlier, 'side') === read(era, 'side')))
   const weekdayId = useId()
+  const summary = [
+    months.length > 0 && plural(months.length, 'month'),
+    days > 0 && `${plural(days, 'day')} a year`,
+    weekdays.length > 0 && `${weekdays.length}-day week`,
+    eras.length > 0 && plural(eras.length, 'era')
+  ].filter(Boolean)
+  const glance = calendar ?? lastValid.current
 
   return (
     <>
       <div className="saga-header-identity">
         {title}
-        <p className="saga-calendar-summary">
-          {[plural(months.length, 'month'), `${plural(days, 'day')} a year`, `${weekdays.length}-day week`, plural(eras.length, 'era')].join(' · ')}
-        </p>
+        {months.length > 0 ? <p className="saga-calendar-summary">{summary.join(' · ')}</p> : null}
+        <Issues issues={issues.filter((issue) => !ATTACHED.test(issue.path))} />
       </div>
       <div className="saga-calendar-body">
         <div className="saga-calendar-main">
@@ -187,19 +279,16 @@ export function CalendarLayout({ title, frontmatter }: LayoutInput) {
               </div>
               {months.map((month, i) => {
                 const name = read(month, 'name') || `month ${i + 1}`
-                const rowIssues = issuesAt(`months.${i}`)
                 return (
                   <div key={i} className="saga-calendar-row" data-over={monthOrder.over === i || undefined} {...monthOrder.row(i)}>
-                    <span className="saga-calendar-grip" aria-hidden="true" {...monthOrder.grip(i)}>
-                      <Icon name="grip-vertical" />
-                    </span>
+                    <Grip name={name} index={i} count={months.length} order={monthOrder} onMove={moveEntry('months', months)} />
                     <span className="saga-calendar-number">{i + 1}</span>
                     <CommitInput
                       className="saga-calendar-quiet"
-                      aria-label={`Month ${i + 1} name`}
+                      aria-label={`${name} name`}
                       aria-invalid={invalidAt(`months.${i}.name`) || undefined}
                       value={read(month, 'name')}
-                      onCommit={(text) => write('months', replaceAt(months, i, patch(month, { name: text.trim() })))}
+                      onCommit={(text) => editEntry('months', months, i, { name: text.trim() })}
                     />
                     <CommitInput
                       type="number"
@@ -208,16 +297,16 @@ export function CalendarLayout({ title, frontmatter }: LayoutInput) {
                       aria-invalid={invalidAt(`months.${i}.days`) || undefined}
                       value={read(month, 'days')}
                       onCommit={(text) => {
-                        const days = number(text)
-                        return days === null ? false : write('months', replaceAt(months, i, patch(month, { days })))
+                        const value = number(text)
+                        return value === null ? false : editEntry('months', months, i, { days: value })
                       }}
                     />
-                    <RemoveButton label={`Remove ${name}`} onClick={() => void write('months', withoutAt(months, i))} />
-                    <Issues issues={rowIssues} />
+                    <RemoveButton label={name} onClick={() => void removeEntry('months', months, i)} />
+                    <Issues issues={issuesAt(`months.${i}`)} />
                   </div>
                 )
               })}
-              <AddRow label="Add month" onClick={() => void write('months', [...months, { name: 'New month', days: 30 }])} />
+              <AddRow label="Add month" onClick={() => void edit('months', (current) => [...current, { name: 'New month', days: 30 }])} />
             </div>
             <Issues issues={issues.filter((issue) => issue.path === 'months')} />
           </Section>
@@ -225,24 +314,15 @@ export function CalendarLayout({ title, frontmatter }: LayoutInput) {
           <Section title="Week">
             <ul className="saga-header-chips">
               {weekdays.map((weekday, i) => (
-                <li key={i} className="saga-header-chip saga-calendar-chip" data-over={weekdayOrder.over === i || undefined} {...weekdayOrder.row(i)} {...weekdayOrder.grip(i)}>
+                <li key={i} className="saga-header-chip saga-calendar-chip" data-over={weekdayOrder.over === i || undefined} {...weekdayOrder.row(i)}>
+                  <Grip name={shown(weekday)} index={i} count={weekdays.length} order={weekdayOrder} onMove={moveEntry('weekdays', weekdays)} />
                   <span className="saga-calendar-chip-name">{shown(weekday)}</span>
-                  <button type="button" className="saga-header-chip-action" aria-label={`Remove ${shown(weekday)}`} onClick={() => void write('weekdays', withoutAt(weekdays, i))}>
-                    <Icon name="x" />
-                  </button>
+                  <RemoveButton label={shown(weekday)} onClick={() => void removeEntry('weekdays', weekdays, i)} />
                 </li>
               ))}
               <li>
                 {addingDay ? (
-                  <CommitInput
-                    className="saga-header-input"
-                    aria-label="Weekday name"
-                    placeholder="Day name"
-                    value=""
-                    autoFocus
-                    onBlur={() => setAddingDay(false)}
-                    onCommit={(text) => (text.trim() === '' ? undefined : write('weekdays', [...weekdays, text.trim()]))}
-                  />
+                  <AddDay onAdd={(name) => void edit('weekdays', (current) => [...current, name])} onClose={() => setAddingDay(false)} />
                 ) : (
                   <button type="button" className="saga-header-add" onClick={() => setAddingDay(true)}>
                     <Icon name="plus" />
@@ -261,7 +341,7 @@ export function CalendarLayout({ title, frontmatter }: LayoutInput) {
                 invalid={invalidAt('first-weekday')}
                 options={weekdays.map((weekday) => ({ value: shown(weekday), label: shown(weekday) }))}
                 showMenu={env.showMenu}
-                onChange={(value) => void write('first-weekday', value)}
+                onChange={(value) => void setField(app, file, 'first-weekday', value).then((result) => report('first-weekday', result))}
               />
             </p>
             <Issues issues={issuesAt('first-weekday')} />
@@ -282,9 +362,7 @@ export function CalendarLayout({ title, frontmatter }: LayoutInput) {
                 const side = read(era, 'side')
                 return (
                   <div key={i} className="saga-calendar-row" data-side={side} data-over={eraOrder.over === i || undefined} {...eraOrder.row(i)}>
-                    <span className="saga-calendar-grip" aria-hidden="true" {...eraOrder.grip(i)}>
-                      <Icon name="grip-vertical" />
-                    </span>
+                    <Grip name={name} index={i} count={eras.length} order={eraOrder} onMove={moveEntry('eras', eras)} />
                     <MenuSelect
                       label={`${name} side`}
                       value={side}
@@ -292,11 +370,11 @@ export function CalendarLayout({ title, frontmatter }: LayoutInput) {
                       invalid={invalidAt(`eras.${i}.side`)}
                       options={SIDES}
                       showMenu={env.showMenu}
-                      onChange={(value) => void writeEras(replaceAt(eras, i, patch(era, { side: value })))}
+                      onChange={(value) => void editEntry('eras', eras, i, { side: value })}
                     />
                     <CommitInput
                       className="saga-calendar-field"
-                      aria-label={`Era ${i + 1} name`}
+                      aria-label={`${name} name`}
                       aria-invalid={invalidAt(`eras.${i}.name`) || undefined}
                       value={read(era, 'name')}
                       onCommit={(text) => renameEra(i, text)}
@@ -306,7 +384,7 @@ export function CalendarLayout({ title, frontmatter }: LayoutInput) {
                       aria-label={`${name} short name`}
                       aria-invalid={invalidAt(`eras.${i}.short`) || undefined}
                       value={read(era, 'short')}
-                      onCommit={(text) => writeEras(replaceAt(eras, i, patch(era, { short: text.trim() })))}
+                      onCommit={(text) => editEntry('eras', eras, i, { short: text.trim() })}
                     />
                     {firstOfSide[i] && (side === 'before' || side === 'after') ? (
                       <span className="saga-calendar-fixed">{side === 'before' ? 'Earliest' : 'Year 1'}</span>
@@ -320,13 +398,13 @@ export function CalendarLayout({ title, frontmatter }: LayoutInput) {
                           value={read(era, 'start')}
                           onCommit={(text) => {
                             const start = number(text)
-                            return start === null ? false : writeEras(replaceAt(eras, i, patch(era, { start })))
+                            return start === null ? false : editEntry('eras', eras, i, { start })
                           }}
                         />
                         <span className="saga-calendar-number">{read(era, 'short')}</span>
                       </span>
                     )}
-                    <RemoveButton label={`Remove ${name}`} onClick={() => void writeEras(withoutAt(eras, i))} />
+                    <RemoveButton label={name} onClick={() => void removeEntry('eras', eras, i)} />
                     <Issues issues={issuesAt(`eras.${i}`)} />
                   </div>
                 )
@@ -342,7 +420,7 @@ export function CalendarLayout({ title, frontmatter }: LayoutInput) {
             </p>
           ) : null}
         </div>
-        {calendar ? <Glance calendar={calendar} /> : null}
+        {glance ? <Glance calendar={glance} /> : null}
       </div>
     </>
   )
@@ -363,6 +441,7 @@ function EraStrip({ calendar }: { calendar: Calendar }) {
             <span
               key={i}
               className="saga-calendar-era"
+              title={era.name}
               data-side={era.side}
               data-year-one={from === 1 || undefined}
               ref={(el) => el?.setCssProps({ '--saga-calendar-weight': String(weight) })}
@@ -373,9 +452,9 @@ function EraStrip({ calendar }: { calendar: Calendar }) {
         })}
       </div>
       <div className="saga-calendar-strip-caption" aria-hidden="true">
-        <span>← counting back</span>
+        {before.length > 0 ? <span>← counting back</span> : null}
         <span>year 1</span>
-        <span>counting up →</span>
+        {after.length > 0 ? <span>counting up →</span> : null}
       </div>
     </div>
   )
@@ -387,28 +466,38 @@ function Glance({ calendar }: { calendar: Calendar }) {
   const { app } = env
   const [tick, reload] = useReducer((n: number) => n + 1, 0)
   const lore = useMemo(() => loreOf(app, file), [app, file.path, tick])
+  const known = useRef(new Set<string>())
+  known.current = new Set(lore.map((note) => note.path))
   const [year, setYear] = useState(() => lore.reduce<number | null>((first, { start }) => ('year' in start && (first === null || start.year < first) ? start.year : first), null) ?? 1)
 
+  // Rescans when a note that is, or now is, dated on this calendar changes, is renamed or is deleted.
   useLayoutEffect(() => {
     let timer: number | undefined
-    const ref = app.metadataCache.on('changed', () => {
+    const matters = (note: TFile): boolean => known.current.has(note.path) || linksTo(app, file, note, frontmatterOf(app, note))
+    const rescan = (): void => {
       window.clearTimeout(timer)
-      timer = window.setTimeout(reload, 250)
-    })
+      timer = window.setTimeout(reload, RELOAD_DELAY_MS)
+    }
+    const changed = app.metadataCache.on('changed', (note) => matters(note) && rescan())
+    const deleted = app.metadataCache.on('deleted', (note) => known.current.has(note.path) && rescan())
+    const renamed = app.vault.on('rename', (note, oldPath) => (known.current.has(oldPath) || (note instanceof TFile && matters(note))) && rescan())
     return () => {
       window.clearTimeout(timer)
-      app.metadataCache.offref(ref)
+      app.metadataCache.offref(changed)
+      app.metadataCache.offref(deleted)
+      app.vault.offref(renamed)
     }
-  }, [app])
+  }, [app, file])
 
   // Days of notes dated to the day, from start to end when both are days.
   const ranges = useMemo(
     () =>
       lore.flatMap(({ start, end }) => {
-        if (!('year' in start) || start.day === undefined) return []
+        const dayDate = (date: CalendarDate | undefined): date is { year: number; month: number; day: number } =>
+          date !== undefined && 'year' in date && date.month !== undefined && date.day !== undefined && checkDate(calendar, date).length === 0
+        if (!dayDate(start)) return []
         const from = dateRange(calendar, start).from
-        const last = end && 'year' in end && end.day !== undefined ? dateRange(calendar, end).to : from
-        return [{ from, to: Math.max(from, last) }]
+        return [{ from, to: dayDate(end) ? Math.max(from, dateRange(calendar, end).to) : from }]
       }),
     [lore, calendar]
   )
@@ -427,24 +516,33 @@ function Glance({ calendar }: { calendar: Calendar }) {
         </button>
       </div>
       <div className="saga-calendar-months">
-        {calendar.months.map((month, m) => (
-          <div key={m} className="saga-calendar-month">
-            <p className="saga-calendar-month-head">
-              <span>{month.name}</span>
-              <span>{month.days}</span>
-            </p>
-            <div className="saga-calendar-cells" aria-hidden="true" ref={(el) => el?.setCssProps({ '--saga-calendar-week': String(calendar.weekdays.length) })}>
-              {Array.from({ length: weekdayOf(calendar, year, m + 1, 1) }, (_, i) => (
-                <span key={`lead-${i}`} className="saga-calendar-day" data-blank="" />
-              ))}
-              {Array.from({ length: month.days }, (_, d) => {
-                const n = dayNumber(calendar, year, m + 1, d + 1)
-                const marked = ranges.some((range) => range.from <= n && n <= range.to)
-                return <span key={d} className="saga-calendar-day" data-day={d + 1} data-lore={marked || undefined} />
-              })}
+        {calendar.months.map((month, m) => {
+          const marked = Array.from({ length: month.days }, (_, d) => d + 1).filter((day) => {
+            const n = dayNumber(calendar, year, m + 1, day)
+            return ranges.some((range) => range.from <= n && n <= range.to)
+          })
+          return (
+            <div key={m} className="saga-calendar-month">
+              <p className="saga-calendar-month-head">
+                <span>{month.name}</span>
+                <span>{month.days}</span>
+              </p>
+              <div
+                className="saga-calendar-cells"
+                role="img"
+                aria-label={`${month.name}: ${marked.length > 0 ? `days with lore: ${marked.join(', ')}` : 'no days with lore'}`}
+                ref={(el) => el?.setCssProps({ '--saga-calendar-week': String(calendar.weekdays.length) })}
+              >
+                {Array.from({ length: weekdayOf(calendar, year, m + 1, 1) }, (_, i) => (
+                  <span key={`lead-${i}`} className="saga-calendar-day" data-blank="" />
+                ))}
+                {Array.from({ length: month.days }, (_, d) => (
+                  <span key={d} className="saga-calendar-day" data-day={d + 1} data-lore={marked.includes(d + 1) || undefined} />
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
       <p className="saga-calendar-legend">
         <span className="saga-calendar-day" data-lore="" aria-hidden="true" />
