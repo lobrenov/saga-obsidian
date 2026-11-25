@@ -679,6 +679,7 @@
 
 .saga-calendar-section-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   gap: var(--size-4-2);
   margin-bottom: var(--size-2-3);
@@ -694,6 +695,7 @@
 }
 
 .saga-calendar-table {
+  container-type: inline-size;
   overflow: hidden;
   border: 1px solid var(--background-modifier-border);
   border-radius: var(--radius-m);
@@ -744,12 +746,22 @@
   grid-column: 2 / -1;
 }
 
-.saga-calendar-grip {
+.saga-header .saga-calendar-grip {
   display: flex;
-  min-height: 14px;
+  align-items: center;
   justify-content: center;
+  min-width: 24px;
+  min-height: 28px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
   color: var(--text-faint);
   cursor: grab;
+}
+
+.saga-header .saga-calendar-grip:hover {
+  color: var(--text-normal);
 }
 
 .saga-calendar-grip .svg-icon {
@@ -773,7 +785,7 @@
   box-shadow: none;
 }
 
-.saga-header .saga-calendar-row input.saga-calendar-quiet:not(:hover, :focus) {
+.saga-header .saga-calendar-row input.saga-calendar-quiet:not([aria-invalid='true'], :hover, :focus) {
   border-color: transparent;
   background: transparent;
 }
@@ -792,7 +804,7 @@
   gap: var(--size-2-3);
 }
 
-.saga-header .saga-calendar-remove {
+.saga-header :is(.saga-calendar-row, .saga-calendar-chip) .saga-header-chip-remove {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -806,7 +818,7 @@
   cursor: pointer;
 }
 
-.saga-header .saga-calendar-remove:hover {
+.saga-header :is(.saga-calendar-row, .saga-calendar-chip) .saga-header-chip-remove:hover {
   color: var(--text-error);
 }
 
@@ -832,17 +844,22 @@
 }
 
 .saga-calendar-chip {
-  cursor: grab;
+  align-items: center;
+}
+
+.saga-header .saga-calendar-chip .saga-calendar-grip {
+  min-width: 20px;
+  min-height: 28px;
+  padding-left: var(--size-2-2);
 }
 
 .saga-calendar-chip-name {
-  padding: 0 var(--size-4-2) 0 10px;
+  padding: 0 var(--size-2-2);
 }
 
-.saga-header .saga-calendar-chip .saga-header-chip-action {
-  width: 20px;
-  margin-right: 4px;
-  opacity: 1;
+.saga-header .saga-calendar-chip .saga-header-chip-remove {
+  width: 28px;
+  height: 28px;
 }
 
 .saga-calendar-first {
@@ -907,7 +924,6 @@
 .saga-calendar-glance {
   flex: 1 1 300px;
   min-width: 0;
-  max-width: 380px;
   align-self: flex-start;
   padding: var(--size-4-4);
   border: 1px solid var(--background-modifier-border);
@@ -931,8 +947,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   padding: 0;
   border: 0;
   background: transparent;
@@ -963,16 +979,20 @@
 
 .saga-calendar-cells {
   display: grid;
-  grid-template-columns: repeat(var(--saga-calendar-week, 7), 14px);
+  grid-template-columns: repeat(var(--saga-calendar-week, 7), minmax(0, 14px));
   gap: 2px;
 }
 
 .saga-calendar-day {
   display: inline-block;
-  width: 14px;
+  min-width: 0;
   height: 10px;
   border-radius: 2px;
   background: var(--background-modifier-border);
+}
+
+.saga-calendar-legend .saga-calendar-day {
+  width: 14px;
 }
 
 .saga-calendar-day[data-blank] {
@@ -990,4 +1010,40 @@
   margin: var(--size-4-3) 0 0;
   font-size: var(--font-ui-smaller);
   color: var(--text-muted);
+}
+
+/* Eras reflow to two lines in a narrow table: grip, name and remove, then side, short name and start. */
+@container (max-width: 480px) {
+  .saga-calendar-table[data-columns='eras'] .saga-calendar-row {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .saga-calendar-table[data-columns='eras'] .saga-calendar-head {
+    display: none;
+  }
+  .saga-calendar-table[data-columns='eras'] .saga-calendar-row > :nth-child(1) {
+    order: 1;
+  }
+  .saga-calendar-table[data-columns='eras'] .saga-calendar-row > :nth-child(3) {
+    flex: 1 1 140px;
+    order: 2;
+  }
+  .saga-calendar-table[data-columns='eras'] .saga-calendar-row > :nth-child(6) {
+    order: 3;
+  }
+  .saga-calendar-table[data-columns='eras'] .saga-calendar-row > :nth-child(2) {
+    order: 4;
+    width: 104px;
+  }
+  .saga-calendar-table[data-columns='eras'] .saga-calendar-row > :nth-child(4) {
+    order: 5;
+    width: 70px;
+  }
+  .saga-calendar-table[data-columns='eras'] .saga-calendar-row > :nth-child(5) {
+    order: 6;
+  }
+  .saga-calendar-table[data-columns='eras'] .saga-calendar-row > .saga-calendar-issue {
+    order: 7;
+    flex-basis: 100%;
+  }
 }

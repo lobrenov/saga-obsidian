@@ -32,7 +32,7 @@ test('the header shows the calendar, its summary and its tables', async () => {
   await expect.element(screen.getByRole('region', { name: 'Calendar header' })).toBeVisible()
   expect(document.querySelector('.saga-header-badge [data-icon="calendar-days"]')).not.toBeNull()
   await expect.element(screen.getByText('2 months · 50 days a year · 4-day week · 4 eras')).toBeVisible()
-  await expect.element(screen.getByRole('textbox', { name: 'Month 2 name' })).toHaveValue('Seedtide')
+  await expect.element(screen.getByRole('textbox', { name: 'Seedtide name' })).toHaveValue('Seedtide')
   await expect.element(screen.getByRole('spinbutton', { name: 'Seedtide days' })).toHaveValue(20)
   await expect.element(screen.getByRole('button', { name: 'Year 1 began on' })).toHaveTextContent('Moonday')
   expect([...document.querySelectorAll('.saga-calendar-fixed')].map((el) => el.textContent)).toEqual(['Earliest', 'Year 1'])
@@ -41,8 +41,8 @@ test('the header shows the calendar, its summary and its tables', async () => {
 
 test('months: name, days, add and remove write only months', async () => {
   const { screen, text } = await renderHeader(path, note())
-  await screen.getByRole('textbox', { name: 'Month 1 name' }).fill('Thaw')
-  blur(screen.getByRole('textbox', { name: 'Month 1 name' }))
+  await screen.getByRole('textbox', { name: 'Thawmoon name' }).fill('Thaw')
+  blur(screen.getByRole('textbox', { name: 'Thawmoon name' }))
   await vi.waitFor(() => expect(text()).toBe(note({ months: parts.months.replace('Thawmoon', 'Thaw') })))
   await screen.getByRole('spinbutton', { name: 'Seedtide days' }).fill('21')
   blur(screen.getByRole('spinbutton', { name: 'Seedtide days' }))
@@ -69,7 +69,7 @@ test('week: add, remove and reorder days write only weekdays; the first weekday 
   await screen.getByRole('button', { name: 'Remove Tideday' }).click()
   await vi.waitFor(() => expect(text()).toBe(note({ weekdays: 'weekdays:\n  - Moonday\n  - Netday\n  - Saltday\n  - Restday\n' })))
   const chips = document.querySelectorAll('.saga-calendar-chip')
-  await userEvent.dragAndDrop(cell(chips[0] ?? null), cell(chips[1] ?? null))
+  await userEvent.dragAndDrop(cell(chips[0]?.querySelector('.saga-calendar-grip') ?? null), cell(chips[1] ?? null))
   await vi.waitFor(() => expect(text()).toBe(note({ weekdays: 'weekdays:\n  - Netday\n  - Moonday\n  - Saltday\n  - Restday\n' })))
   await screen.getByRole('button', { name: 'Year 1 began on' }).click()
   expect(menus.at(-1)?.items.map((item) => item.title)).toEqual(['Netday', 'Moonday', 'Saltday', 'Restday'])
@@ -87,8 +87,8 @@ test('eras: side, short name and start write only eras; first of each side has n
   await vi.waitFor(() => expect(text()).toContain('short: TS'))
   await screen.getByRole('button', { name: 'Remove The Drowned Age' }).click()
   await vi.waitFor(() => expect(text()).not.toContain('The Drowned Age'))
-  // Before the Lanterns is now the first before era and loses its start.
-  expect(text()).not.toContain('start: 700')
+  // Before the Lanterns is now the first before era: it shows the fixed text and keeps its start.
+  expect(text()).toContain('start: 700')
   await screen.getByRole('button', { name: 'Before the Lanterns side' }).click()
   choose('After')
   await vi.waitFor(() => expect(text()).toContain('short: BL\n    side: after'))
@@ -126,7 +126,7 @@ test('the era strip follows the eras, each as wide as its span', async () => {
   await expect.element(screen.getByText('counting up →')).toBeVisible()
 })
 
-test('the glance shows a year with the days of linked notes marked, and steps over year 0', async () => {
+test('the glance shows a year with the days of linked notes marked, and steps back a year', async () => {
   const { screen, app } = await renderHeader(path, note(), {
     files: {
       'Lore/Flood.md': lore('year: 1312\nmonth: 1\nday: 3\nend-year: 1312\nend-month: 1\nend-day: 5\n'),
@@ -140,6 +140,7 @@ test('the glance shows a year with the days of linked notes marked, and steps ov
   const months = document.querySelectorAll('.saga-calendar-month')
   expect([...months].map((m) => m.querySelectorAll('.saga-calendar-cells [data-lore]').length)).toEqual([3, 1])
   expect([...months].map((m) => m.querySelectorAll('.saga-calendar-cells [data-day]').length)).toEqual([30, 20])
+  expect([...months].map((m) => m.querySelector('[role="img"]')?.getAttribute('aria-label'))).toEqual(['Thawmoon: days with lore: 3, 4, 5', 'Seedtide: days with lore: 20'])
   // 1312 AL starts 1311 years * 50 days after Moonday of year 1: a weekday offset of 1311 * 50 % 4 = 2.
   expect(months[0]?.querySelectorAll('[data-blank]')).toHaveLength(2)
   app.addFile('Lore/Later.md', lore('year: 1312\nmonth: 1\nday: 10\n'))
@@ -167,8 +168,8 @@ const inEra = {
 
 test('renaming an era asks, then renames era and end-era in linked notes only', async () => {
   const { screen, text, app, confirms, notices } = await renderHeader(path, note(), { files: inEra })
-  await screen.getByRole('textbox', { name: 'Era 3 name' }).fill('Age of Lamps')
-  blur(screen.getByRole('textbox', { name: 'Era 3 name' }))
+  await screen.getByRole('textbox', { name: 'Age of Lanterns name' }).fill('Age of Lamps')
+  blur(screen.getByRole('textbox', { name: 'Age of Lanterns name' }))
   await vi.waitFor(() => expect(app.text('Lore/Span.md')).toBe(lore('year: 3\nend-era: Age of Lamps\n')))
   expect(text()).toBe(note({ eras: parts.eras.replace('Age of Lanterns', 'Age of Lamps') }))
   expect(app.text('Lore/Founding.md')).toBe(lore('era: Age of Lamps\n'))
@@ -181,16 +182,16 @@ test('renaming an era asks, then renames era and end-era in linked notes only', 
 test('a note that cannot be written is listed in a notice', async () => {
   const stuck = '---\n{ type: event, calendar: "[[The Tidereckoning]]", era: Age of Lanterns }\n---\n'
   const { screen, text, notices } = await renderHeader(path, note(), { files: { 'Lore/Stuck.md': stuck, 'Lore/Founding.md': inEra['Lore/Founding.md'] } })
-  await screen.getByRole('textbox', { name: 'Era 3 name' }).fill('Age of Lamps')
-  blur(screen.getByRole('textbox', { name: 'Era 3 name' }))
+  await screen.getByRole('textbox', { name: 'Age of Lanterns name' }).fill('Age of Lamps')
+  blur(screen.getByRole('textbox', { name: 'Age of Lanterns name' }))
   await vi.waitFor(() => expect(notices).toEqual(['Could not rename Age of Lanterns in Stuck']))
   expect(text()).toContain('name: Age of Lamps')
 })
 
 test('renaming an era without notes in it writes eras only and does not ask', async () => {
   const { screen, text, confirms } = await renderHeader(path, note(), { files: { 'Lore/Tide.md': lore('era: The Second Tide\n') } })
-  await screen.getByRole('textbox', { name: 'Era 3 name' }).fill('Age of Lamps')
-  blur(screen.getByRole('textbox', { name: 'Era 3 name' }))
+  await screen.getByRole('textbox', { name: 'Age of Lanterns name' }).fill('Age of Lamps')
+  blur(screen.getByRole('textbox', { name: 'Age of Lanterns name' }))
   await vi.waitFor(() => expect(text()).toContain('name: Age of Lamps'))
   expect(confirms).toEqual([])
 })
@@ -198,10 +199,98 @@ test('renaming an era without notes in it writes eras only and does not ask', as
 test('cancelling the rename restores the name and writes nothing', async () => {
   const { screen, text, app, confirms, answer } = await renderHeader(path, note(), { files: inEra })
   answer.confirm = false
-  await screen.getByRole('textbox', { name: 'Era 3 name' }).fill('Age of Lamps')
-  blur(screen.getByRole('textbox', { name: 'Era 3 name' }))
-  await expect.element(screen.getByRole('textbox', { name: 'Era 3 name' })).toHaveValue('Age of Lanterns')
+  await screen.getByRole('textbox', { name: 'Age of Lanterns name' }).fill('Age of Lamps')
+  blur(screen.getByRole('textbox', { name: 'Age of Lanterns name' }))
+  await expect.element(screen.getByRole('textbox', { name: 'Age of Lanterns name' })).toHaveValue('Age of Lanterns')
   expect(confirms).toHaveLength(1)
   expect(text()).toBe(note())
   expect(app.processed).toEqual([])
+})
+
+const names = (text: string): string[] => [...text.matchAll(/- name: (.*)/g)].map((match) => match[1] ?? '')
+
+test('two writes in one tick both land', async () => {
+  const { screen, text } = await renderHeader(path, note())
+  cell(screen.getByRole('button', { name: 'Remove Thawmoon' }).element()).click()
+  cell(screen.getByRole('button', { name: 'Remove Seedtide' }).element()).click()
+  await vi.waitFor(() => expect(text()).toBe(note({ months: 'months: []\n' })))
+})
+
+test('Escape puts the value back and writes nothing, on an era name too', async () => {
+  const { screen, text, app, confirms } = await renderHeader(path, note(), { files: inEra })
+  await screen.getByRole('textbox', { name: 'Age of Lanterns name' }).fill('Age of Lamps')
+  await userEvent.keyboard('{Escape}')
+  await expect.element(screen.getByRole('textbox', { name: 'Age of Lanterns name' })).toHaveValue('Age of Lanterns')
+  expect(confirms).toEqual([])
+  expect(text()).toBe(note())
+  expect(app.processed).toEqual([])
+})
+
+test('a failed eras write stops the rename and leaves linked notes alone', async () => {
+  const flow = '---\n{ type: calendar, months: [{ name: A, days: 1 }], weekdays: [M], first-weekday: M, eras: [{ name: Age, short: A, side: after }] }\n---\n'
+  const { screen, app, confirms } = await renderHeader(path, flow, { files: { 'Lore/Founding.md': lore('era: Age\n') } })
+  await screen.getByRole('textbox', { name: 'Age name' }).fill('Lamps')
+  cell(screen.getByRole('textbox', { name: 'Age name' }).element()).blur()
+  await expect.element(screen.getByRole('alert')).toHaveTextContent('Could not update “eras”: Frontmatter is a flow mapping; not editable')
+  expect(confirms).toHaveLength(1)
+  expect(app.text('Lore/Founding.md')).toBe(lore('era: Age\n'))
+  await expect.element(screen.getByRole('textbox', { name: 'Age name' })).toHaveValue('Age')
+})
+
+test('a rename only touches a key that still holds the old name when it is written', async () => {
+  const { screen, app } = await renderHeader(path, note(), { files: inEra })
+  await screen.getByRole('textbox', { name: 'Age of Lanterns name' }).fill('Age of Lamps')
+  app.addFile('Lore/Founding.md', lore('era: Edited meanwhile\n'))
+  cell(screen.getByRole('textbox', { name: 'Age of Lanterns name' }).element()).blur()
+  await vi.waitFor(() => expect(app.text('Lore/Span.md')).toBe(lore('year: 3\nend-era: Age of Lamps\n')))
+  expect(app.text('Lore/Founding.md')).toBe(lore('era: Edited meanwhile\n'))
+})
+
+test('reordering keeps every start and the menu and Alt+Arrow move rows', async () => {
+  const { screen, text, menus, choose } = await renderHeader(path, note())
+  const rows = document.querySelectorAll('[data-columns="eras"] .saga-calendar-row')
+  await userEvent.dragAndDrop(cell(rows[3]?.querySelector('.saga-calendar-grip') ?? null), cell(rows[2] ?? null))
+  await vi.waitFor(() => expect(text().indexOf('The Second Tide')).toBeLessThan(text().indexOf('Age of Lanterns')))
+  expect(text()).toContain('start: 1400')
+  expect(text()).toContain('start: 600')
+  await screen.getByRole('button', { name: 'Move Seedtide' }).click()
+  expect(menus.at(-1)?.items.map((item) => item.title)).toEqual(['Move up'])
+  choose('Move up')
+  await vi.waitFor(() => expect(names(text()).slice(0, 2)).toEqual(['Seedtide', 'Thawmoon']))
+  const grip = screen.getByRole('button', { name: 'Move Seedtide' })
+  cell(grip.element()).focus()
+  await userEvent.keyboard('{Alt>}{ArrowDown}{/Alt}')
+  await vi.waitFor(() => expect(names(text()).slice(0, 2)).toEqual(['Thawmoon', 'Seedtide']))
+  expect(document.activeElement?.getAttribute('aria-label')).toBe('Move Seedtide')
+})
+
+test('the glance stays, with its year, while the calendar is invalid', async () => {
+  const { screen } = await renderHeader(path, note())
+  await screen.getByRole('button', { name: 'Previous year' }).click()
+  await expect.element(screen.getByRole('heading', { name: '1 BL at a glance' })).toBeVisible()
+  await screen.getByRole('spinbutton', { name: 'Thawmoon days' }).fill('0')
+  cell(screen.getByRole('spinbutton', { name: 'Thawmoon days' }).element()).blur()
+  await expect.element(screen.getByText('A month needs at least 1 day')).toBeVisible()
+  await expect.element(screen.getByRole('heading', { name: '1 BL at a glance' })).toBeVisible()
+})
+
+test('the summary leaves out what is empty', async () => {
+  const { screen } = await renderHeader(path, note({ months: 'months:\n  - name: Thawmoon\n    days: 1\n', weekdays: 'weekdays: []\n', eras: 'eras: []\n' }))
+  await expect.element(screen.getByText('1 month · 1 day a year')).toBeVisible()
+})
+
+test('there is no summary until a month exists', async () => {
+  await renderHeader(path, note({ months: 'months: []\n' }))
+  expect(document.querySelector('.saga-calendar-summary')).toBeNull()
+})
+
+test('Add day stays open for the next day and closes on Escape', async () => {
+  const { screen, text } = await renderHeader(path, note())
+  await screen.getByRole('button', { name: 'Add day' }).click()
+  await userEvent.keyboard('Restday{Enter}')
+  await vi.waitFor(() => expect(text()).toContain('  - Restday'))
+  await userEvent.keyboard('Sunday{Enter}')
+  await vi.waitFor(() => expect(text()).toContain('  - Sunday'))
+  await userEvent.keyboard('{Escape}')
+  await expect.element(screen.getByRole('button', { name: 'Add day' })).toBeVisible()
 })

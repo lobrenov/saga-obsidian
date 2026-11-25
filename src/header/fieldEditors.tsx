@@ -94,7 +94,7 @@ export function FileInput({ kind, onPick, autoFocus, ...props }: { kind: 'note' 
   )
 }
 
-function RemoveButton({ label, onClick }: { label: string; onClick: () => void }) {
+export function RemoveButton({ label, onClick }: { label: string; onClick: () => void }) {
   return (
     <button type="button" className="saga-header-chip-remove" aria-label={`Remove ${label}`} onClick={onClick}>
       <Icon name="x" />

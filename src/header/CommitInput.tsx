@@ -11,14 +11,19 @@ export function CommitInput({ value, onCommit, onBlur, onKeyDown, autoFocus, ...
   const input = useRef<HTMLInputElement>(null)
   const [draft, setDraft] = useState(value)
   const [seen, setSeen] = useState(value)
-  const latest = useRef(value)
-  latest.current = value
+  const latest = useRef({ draft, value })
+  latest.current.value = value
   useLayoutEffect(() => {
     if (autoFocus) input.current?.focus()
   }, [])
   if (seen !== value) {
     setSeen(value)
     setDraft(value)
+    latest.current.draft = value
+  }
+  const show = (text: string): void => {
+    latest.current.draft = text
+    setDraft(text)
   }
   return (
     <input
@@ -28,15 +33,19 @@ export function CommitInput({ value, onCommit, onBlur, onKeyDown, autoFocus, ...
       {...props}
       ref={input}
       value={draft}
-      onChange={(event) => setDraft(event.currentTarget.value)}
+      onChange={(event) => show(event.currentTarget.value)}
       onBlur={(event) => {
-        if (draft !== value) void Promise.resolve(onCommit(draft)).then((keep) => keep === false && setDraft(latest.current))
+        const { draft: text, value: saved } = latest.current
+        if (text !== saved) void Promise.resolve(onCommit(text)).then((keep) => keep === false && show(latest.current.value))
         onBlur?.(event)
       }}
       onKeyDown={(event) => {
-        if (event.key === 'Enter') event.currentTarget.blur()
-        else if (event.key === 'Escape') {
-          setDraft(value)
+        if (event.key === 'Enter') {
+          event.preventDefault()
+          event.currentTarget.blur()
+        } else if (event.key === 'Escape') {
+          event.preventDefault()
+          show(latest.current.value)
           event.currentTarget.blur()
         }
         onKeyDown?.(event)
