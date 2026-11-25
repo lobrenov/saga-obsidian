@@ -109,6 +109,12 @@ test('invalid entries show their issue', async () => {
   await expect.element(screen.getByText('A month needs at least 1 day')).not.toBeInTheDocument()
 })
 
+test('a new calendar note shows its empty editors without issues', async () => {
+  const { screen } = await renderHeader(path, '---\ntype: calendar\n---\n')
+  await expect.element(screen.getByRole('button', { name: 'Add month' })).toBeVisible()
+  expect(document.querySelectorAll('.saga-calendar-issue')).toHaveLength(0)
+})
+
 test('an era start that breaks the order shows its issue', async () => {
   const { screen } = await renderHeader(path, note({ eras: parts.eras.replace('1400', '1') }))
   await expect.element(screen.getByText('Starts must increase in time')).toBeVisible()
