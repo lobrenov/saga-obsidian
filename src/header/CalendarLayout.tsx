@@ -89,10 +89,12 @@ function Section({ title, note, children }: { title: string; note?: string; chil
 
 function AddRow({ label, onClick }: { label: string; onClick: () => void }) {
   return (
-    <button type="button" className="saga-calendar-add-row" onClick={onClick}>
-      <Icon name="plus" />
-      {label}
-    </button>
+    <div className="saga-calendar-add-row">
+      <button type="button" className="saga-header-add" onClick={onClick}>
+        <Icon name="plus" />
+        {label}
+      </button>
+    </div>
   )
 }
 

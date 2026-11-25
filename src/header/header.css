@@ -832,22 +832,8 @@
 .saga-header .saga-calendar-add-row {
   display: flex;
   align-items: center;
-  gap: var(--size-4-2);
-  width: 100%;
   height: 40px;
   padding: 0 var(--size-4-3);
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  color: var(--saga-header-accent);
-  font-size: var(--font-ui-small);
-  cursor: pointer;
-}
-
-.saga-calendar-add-row .svg-icon {
-  width: var(--icon-xs);
-  height: var(--icon-xs);
 }
 
 .saga-calendar-chip {
