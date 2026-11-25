@@ -96,6 +96,19 @@ test('eras: side, short name and start write only eras; first of each side has n
   await vi.waitFor(() => expect(text()).toContain('  - name: New era\n    short: NE\n    side: after\n    start: 1500\n'))
 })
 
+test('an added era takes a name and short name no era has', async () => {
+  const { screen, text } = await renderHeader(path, note())
+  await screen.getByRole('button', { name: 'Add era' }).click()
+  await vi.waitFor(() => expect(text()).toContain('  - name: New era\n    short: NE\n'))
+  await screen.getByRole('button', { name: 'Add era' }).click()
+  await vi.waitFor(() => expect(text()).toContain('  - name: New era 2\n    short: NE2\n'))
+  await screen.getByRole('textbox', { name: 'New era name' }).fill('Third Tide')
+  blur(screen.getByRole('textbox', { name: 'New era name' }))
+  await vi.waitFor(() => expect(text()).toContain('name: Third Tide'))
+  await screen.getByRole('button', { name: 'Add era' }).click()
+  await vi.waitFor(() => expect(text()).toContain('  - name: New era 3\n    short: NE3\n'))
+})
+
 test('invalid entries show their issue', async () => {
   const { screen, text } = await renderHeader(path, note({ months: 'months:\n  - name: Thawmoon\n    days: 0\n', first: 'first-weekday: Sunday\n' }))
   await expect.element(screen.getByText('A month needs at least 1 day')).toBeVisible()
