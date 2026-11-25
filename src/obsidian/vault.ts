@@ -63,6 +63,30 @@ export const updateField = (app: App, file: TFile, key: string, update: (current
     return setFrontmatterKey(text, key, update(parsed.data[key]))
   })
 
+/** The keys to set (`undefined` removes the key), in order. */
+export type FieldEntries = Readonly<Record<string, unknown>>
+
+/** Sets and removes several frontmatter keys in one write, changing only their text. `entries` may be a function of the frontmatter as written at write time; it returns the entries, or the reason to refuse the write. */
+export const setFields = (app: App, file: TFile, entries: FieldEntries | ((current: Frontmatter) => FieldEntries | string)): Promise<Result<void>> =>
+  editText(app, file, (text) => {
+    let chosen = entries
+    if (typeof entries === 'function') {
+      const parsed = parseFrontmatter(text)
+      const first = parsed.errors[0]
+      if (first) return err({ kind: 'parse', message: `Invalid frontmatter: ${first.message}` })
+      const result = entries(parsed.data)
+      if (typeof result === 'string') return err({ kind: 'validation', message: result, issues: [] })
+      chosen = result
+    }
+    let next = text
+    for (const [key, value] of Object.entries(chosen)) {
+      const result = setFrontmatterKey(next, key, value)
+      if (!result.ok) return result
+      next = result.value
+    }
+    return ok(next)
+  })
+
 /** Chooses the op for the note's current raw `map-pins` list, or null when the pin is no longer there. */
 export type PinOpBuilder = (list: readonly unknown[]) => PinOp | null
 

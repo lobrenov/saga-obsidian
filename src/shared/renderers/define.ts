@@ -12,6 +12,8 @@ export interface RendererDef<Id extends RendererId = RendererId, F extends Field
   color: string
   /** The image field drawn as the note's banner; without it the banner is the `banner` key. */
   banner?: string
+  /** The `type` values that map to the renderer while the config lists none; without it the id. */
+  types?: readonly string[]
 }
 
 export function defineRenderer<const Id extends RendererId, const F extends Fields>(def: RendererDef<Id, F>): RendererDef<Id, F> {

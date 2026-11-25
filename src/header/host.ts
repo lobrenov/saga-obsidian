@@ -53,8 +53,8 @@ export function createHeaderEnv(app: App): HeaderEnv {
     showMenu,
     confirm: (title, message, action, cancel) => confirm(app, title, message, action, cancel),
     notify: (message) => void new Notice(message),
-    suggest(input, kind, from, onPick) {
-      const files = kind === 'note' ? () => app.vault.getMarkdownFiles() : () => app.vault.getFiles().filter((file) => IMAGE_EXTENSIONS.has(file.extension.toLowerCase()))
+    suggest(input, kind, from, onPick, only) {
+      const files = kind === 'note' ? () => app.vault.getMarkdownFiles().filter((file) => only?.(file) ?? true) : () => app.vault.getFiles().filter((file) => IMAGE_EXTENSIONS.has(file.extension.toLowerCase()))
       const suggest = new FileSuggest(app, input, files, from, onPick)
       return () => suggest.close()
     }

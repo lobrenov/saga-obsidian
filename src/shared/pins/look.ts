@@ -151,6 +151,7 @@ export const PIN_DEFAULTS: Record<RendererId, PinLook> = {
   item: { shape: 'pin', color: 'ochre', icon: 'gem' },
   map: { shape: 'pin', color: 'olive', icon: 'map' },
   calendar: { shape: 'pin', color: 'slate', icon: 'calendar-days' },
+  lore: { shape: 'pin', color: 'plum', icon: 'scroll-text' },
   document: { shape: 'pin', color: 'umber', icon: 'file-text' }
 }
 

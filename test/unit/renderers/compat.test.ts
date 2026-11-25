@@ -3,7 +3,7 @@ import { rendererDefs } from '../../../src/shared/renderers/definitions'
 import { convertRaw, formatWikiLink, toNoteValue } from '../../../src/shared/renderers/values'
 import { createRendererResolver, typesOf } from '../../../src/shared/renderers/resolve'
 import { readFrontmatter } from '../../../src/shared/schemas/frontmatter'
-import type { Config } from '../../../src/shared/schemas/config'
+import { parseConfig, type Config } from '../../../src/shared/schemas/config'
 
 describe('compatibility', () => {
   it('a links field holding bare names is invalid and converts to [[links]]', () => {
@@ -27,6 +27,23 @@ describe('renderer resolution and values', () => {
     expect(resolve({ type: 'NPC' })).toEqual({ type: null, renderer: 'document' })
     expect(typesOf(config, 'character')).toEqual(['NPC'])
     expect(typesOf(config, 'location')).toEqual(['location'])
+  })
+
+  it('maps lore and event to Lore by default; configured types replace them', () => {
+    const resolve = createRendererResolver({ typeKey: 'type', renderers: {} })
+    expect(resolve({ type: 'lore' }).renderer).toBe('lore')
+    expect(resolve({ type: 'Event' }).renderer).toBe('lore')
+    expect(typesOf({ typeKey: 'type', renderers: {} }, 'lore')).toEqual(['lore', 'event'])
+    const configured: Config = { typeKey: 'type', renderers: { lore: { types: ['saga'], keys: {}, templates: [] } } }
+    expect(createRendererResolver(configured)({ type: 'event' }).renderer).toBe('document')
+    expect(createRendererResolver(configured)({ type: 'saga' }).renderer).toBe('lore')
+    expect(typesOf(configured, 'lore')).toEqual(['saga'])
+  })
+
+  it('does not rename the keys of date fields', () => {
+    const { config, issues } = parseConfig({ renderers: { lore: { keys: { when: 'date', where: 'place' } } } })
+    expect(config.renderers.lore?.keys).toEqual({ where: 'place' })
+    expect(issues.map((issue) => issue.path)).toEqual(['renderers.lore.keys.when'])
   })
 
   it('converts values that fail their schema', () => {

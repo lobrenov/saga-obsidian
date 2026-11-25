@@ -49,7 +49,7 @@ const linksTo = (app: App, file: TFile, note: TFile, frontmatter: Readonly<Recor
 }
 
 /** The notes whose `calendar` link resolves to `file`, with their start and end dates. */
-function loreOf(app: App, file: TFile): { path: string; start: CalendarDate; end: CalendarDate | undefined }[] {
+export function loreOf(app: App, file: TFile): { path: string; start: CalendarDate; end: CalendarDate | undefined }[] {
   return app.vault.getMarkdownFiles().flatMap((note) => {
     const frontmatter = frontmatterOf(app, note)
     if (!linksTo(app, file, note, frontmatter)) return []

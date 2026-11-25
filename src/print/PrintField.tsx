@@ -1,10 +1,12 @@
 import { frontmatterOf, resolveLink, resourceUrl } from '../obsidian/vault'
+import { formatDate, type CalendarDate } from '../shared/calendars/dates'
 import { rendererDefs } from '../shared/renderers/definitions'
 import { createRendererResolver } from '../shared/renderers/resolve'
 import type { WikiLink } from '../shared/wikilink'
 import { useHeader } from '../header/env'
 import type { FieldViewProps } from '../header/FieldView'
 import { Icon } from '../header/Icon'
+import { NO_CALENDAR, noteCalendar } from '../header/noteCalendar'
 
 /** A link as a read-only chip: the linked note's renderer icon and `alias ?? basename ?? target`. */
 function PrintChip({ link }: { link: WikiLink }) {
@@ -22,8 +24,8 @@ function PrintChip({ link }: { link: WikiLink }) {
 const isEmpty = (value: unknown): boolean => value === undefined || value === null || value === '' || (Array.isArray(value) && value.length === 0)
 
 /** The field's value as static content; null when there is nothing to show. */
-function PrintValue({ def, value }: Pick<FieldViewProps, 'def'> & { value: unknown }) {
-  const { env, file } = useHeader()
+function PrintValue({ def, value, frontmatter }: Pick<FieldViewProps, 'def' | 'frontmatter'> & { value: unknown }) {
+  const { env, file, config, renderer } = useHeader()
   switch (def.kind) {
     case 'text':
     case 'choice':
@@ -48,6 +50,8 @@ function PrintValue({ def, value }: Pick<FieldViewProps, 'def'> & { value: unkno
           ))}
         </div>
       )
+    case 'date':
+      return <>{formatDate(noteCalendar(env.app, file, config, renderer, frontmatter).calendar ?? NO_CALENDAR, value as CalendarDate)}</>
     case 'image': {
       const resolved = resolveLink(env.app, value as WikiLink, file.path)
       if (!resolved) return null
@@ -63,7 +67,7 @@ function PrintValue({ def, value }: Pick<FieldViewProps, 'def'> & { value: unkno
 }
 
 /** One field, read-only: label and value. Nothing for an empty value, one failing its schema, or an image that does not resolve. */
-export function PrintField({ def, noteKey, raw, layer, className }: FieldViewProps) {
+export function PrintField({ def, noteKey, raw, layer, frontmatter, className }: FieldViewProps) {
   const { env, file } = useHeader()
   if (isEmpty(raw) || layer.issues.length > 0 || isEmpty(layer.value)) return null
   if (def.kind === 'image' && !resolveLink(env.app, layer.value as WikiLink, file.path)) return null
@@ -71,7 +75,7 @@ export function PrintField({ def, noteKey, raw, layer, className }: FieldViewPro
     <div className={`saga-header-field ${className ?? ''}`} data-field={noteKey} data-kind={def.kind}>
       <span className="saga-header-label">{def.label}</span>
       <div className="saga-header-control">
-        <PrintValue def={def} value={layer.value} />
+        <PrintValue def={def} value={layer.value} frontmatter={frontmatter} />
       </div>
     </div>
   )

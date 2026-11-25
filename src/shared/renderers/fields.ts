@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import type { CalendarDate } from '../calendars/dates'
 import { wikiLinkSchema, type WikiLink } from '../wikilink'
 
 interface FieldBase {
@@ -19,6 +20,8 @@ export type FieldDef =
   | Plain<'links'>
   | Plain<'image'>
   | (FieldBase & { kind: 'choice'; options: readonly string[] })
+  /** A calendar date stored under `prefix` + `era`, `year`, `month`, `day`; `key` only names the field (the date keys are not renamed). */
+  | (FieldBase & { kind: 'date'; prefix: string })
 
 export type FieldKind = FieldDef['kind']
 export type Fields = Readonly<Record<string, FieldDef>>
@@ -29,6 +32,7 @@ interface KindValues {
   link: WikiLink
   links: WikiLink[]
   image: WikiLink
+  date: CalendarDate
 }
 
 /** The value a field holds: choice is the union of its options. */
@@ -50,6 +54,8 @@ export function fieldSchema(field: FieldDef): z.ZodType {
       return wikiLinkSchema
     case 'links':
       return z.array(wikiLinkSchema)
+    case 'date':
+      return z.unknown() // read with `readDate`
     case 'choice':
       return z.string().refine((s) => field.options.includes(s), { message: `Must be one of: ${field.options.join(', ')}` })
   }

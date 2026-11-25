@@ -46,6 +46,8 @@ export function convertRaw(field: FieldDef, raw: unknown): unknown {
       const text = scalarText(raw)?.trim()
       return text ? `[[${text.replace(/^\[+|\]+$/g, '')}]]` : undefined
     }
+    case 'date':
+      return undefined
     case 'choice': {
       const text = scalarText(raw)?.trim().toLowerCase()
       return field.options.find((option) => option.toLowerCase() === text)
