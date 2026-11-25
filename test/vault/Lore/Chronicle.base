@@ -1,0 +1,16 @@
+filters:
+  and:
+    - file.ext == "md"
+views:
+  - type: saga-calendar
+    name: Calendar
+    calendar: Calendars/The Tidereckoning.md
+    display: calendar
+  - type: saga-calendar
+    name: Feed
+    calendar: Calendars/The Tidereckoning.md
+    display: feed
+  - type: saga-calendar
+    name: Timeline
+    calendar: Calendars/The Tidereckoning.md
+    display: timeline

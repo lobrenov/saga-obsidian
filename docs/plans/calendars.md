@@ -50,7 +50,7 @@ end-day: 12
 - The date keys keep their names (no `keys` renames) in this version.
 - `era` holds the era's name. Renaming an era in the calendar note renames it in every note whose `calendar` resolves to that calendar (`era` and `end-era`); an `era` that matches no era (edited by hand) shows an issue, like an unknown pin value.
 - A Lore note without `calendar`: the date editor asks for one first (a suggester over calendar notes), and uses the only one when the vault has exactly one.
-- No Today, leap rules, extra days, moons, seasons or repeating events. The view does not edit dates (no dragging, no "New event on this day").
+- No Today, leap rules, extra days, moons, seasons or repeating events. The view edits a note's title and dates only through its Edit dialog (no dragging, no "New event on this day").
 
 ## Steps
 
@@ -103,6 +103,6 @@ Step 1 comes first. Steps 2, 3 and 4 can then run in parallel (separate files). 
 
 ## Not covered
 - Leap rules, extra days, moons, seasons, repeating events, a world Today.
-- Editing dates from the view.
+- Dragging dates in the view, or creating notes from it.
 - Dates on renderers other than Lore.
 - Renaming date keys in `.saga/renderers.yaml`.
