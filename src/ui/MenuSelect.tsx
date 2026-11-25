@@ -7,6 +7,8 @@ export interface MenuOption {
 
 interface MenuSelectProps {
   id?: string
+  /** The accessible name when no `<label>` points at the button. */
+  label?: string
   className?: string
   value: string | undefined
   options: readonly MenuOption[]
@@ -21,12 +23,13 @@ interface MenuSelectProps {
 }
 
 /** A dropdown button that opens a menu of `options` below it, the current one checked. */
-export function MenuSelect({ id, className, value, options, placeholder, disabled, invalid, describedBy, showMenu, onChange }: MenuSelectProps) {
+export function MenuSelect({ id, label, className, value, options, placeholder, disabled, invalid, describedBy, showMenu, onChange }: MenuSelectProps) {
   const current = options.find((option) => option.value === value)
   return (
     <button
       type="button"
       id={id}
+      aria-label={label}
       className={className ? `dropdown saga-menu-select ${className}` : 'dropdown saga-menu-select'}
       aria-haspopup="menu"
       aria-invalid={invalid || undefined}

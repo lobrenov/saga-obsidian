@@ -18,7 +18,7 @@ export interface LayoutInput {
   hidden: readonly string[]
 }
 
-export type HeaderRendererId = 'character' | 'location' | 'faction' | 'item' | 'map' | 'document'
+export type HeaderRendererId = 'character' | 'location' | 'faction' | 'item' | 'map' | 'calendar' | 'document'
 
 export interface RegisteredRenderer {
   Layout: ComponentType<LayoutInput>

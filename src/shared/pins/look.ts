@@ -126,6 +126,7 @@ export const PIN_ICON_CATALOG: readonly { name: string; icons: readonly PinIconD
     { id: 'dices', label: 'Encounter' },
     { id: 'circle-small', label: 'Dot' },
     { id: 'map', label: 'Map' },
+    { id: 'calendar-days', label: 'Calendar' },
     { id: 'file-text', label: 'Document' }
   ] },
 ]
@@ -149,6 +150,7 @@ export const PIN_DEFAULTS: Record<RendererId, PinLook> = {
   faction: { shape: 'pin', color: 'indigo', icon: 'flag' },
   item: { shape: 'pin', color: 'ochre', icon: 'gem' },
   map: { shape: 'pin', color: 'olive', icon: 'map' },
+  calendar: { shape: 'pin', color: 'slate', icon: 'calendar-days' },
   document: { shape: 'pin', color: 'umber', icon: 'file-text' }
 }
 

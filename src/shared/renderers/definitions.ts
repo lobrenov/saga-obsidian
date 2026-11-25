@@ -68,6 +68,15 @@ export const map = defineRenderer({
   }
 })
 
+/** The calendar note: its months, weekdays and eras are edited by the header's own layout, not by field editors. */
+export const calendar = defineRenderer({
+  id: 'calendar',
+  label: 'Calendar',
+  icon: 'calendar-days',
+  color: 'calendar',
+  fields: {}
+})
+
 /** The fallback renderer: no fields, any note is compatible. */
 export const document = defineRenderer({
   id: 'document',
@@ -77,4 +86,4 @@ export const document = defineRenderer({
   fields: {}
 })
 
-export const rendererDefs = { character, location, faction, item, map, document } as const
+export const rendererDefs = { character, location, faction, item, map, calendar, document } as const

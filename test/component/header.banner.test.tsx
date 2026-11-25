@@ -60,7 +60,7 @@ test('the Document card lists every configured type and choosing one writes type
   const { containerEl, bar, menus, choose, text } = await setup(DOCUMENT)
   await vi.waitFor(() => expect(button(bar(), 'Set type')).not.toBeNull())
   button(bar(), 'Set type')?.click()
-  expect(menus.at(-1)?.items.map((item) => item.title)).toEqual(['character', 'location', 'faction', 'item', 'map'])
+  expect(menus.at(-1)?.items.map((item) => item.title)).toEqual(['character', 'location', 'faction', 'item', 'map', 'calendar'])
   choose('location')
   await vi.waitFor(() => expect(text()).toBe(DOCUMENT.replace('type: note', 'type: location')))
   await vi.waitFor(() => expect(containerEl.querySelector('.saga-header[data-renderer="location"]')).not.toBeNull())

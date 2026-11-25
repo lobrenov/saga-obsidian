@@ -5,6 +5,7 @@ import { readFrontmatter } from '../shared/schemas/frontmatter'
 import type { Validated } from '../shared/result'
 import { PrintField } from '../print/PrintField'
 import { FieldView, type FieldViewProps } from './FieldView'
+import { CalendarLayout } from './CalendarLayout'
 import { CharacterLayout, DocumentLayout, FactionLayout, ItemLayout, LocationLayout, MapLayout } from './layouts'
 import type { HeaderRendererId, LayoutInput, LayoutProps, RegisteredRenderer } from './types'
 
@@ -26,7 +27,7 @@ function defineRendererView<R extends RendererDef>(def: R, Layout: ComponentType
   return { Layout: layoutWith(FieldView), PrintLayout: layoutWith(PrintField) }
 }
 
-const { character, location, faction, item, map, document } = rendererDefs
+const { character, location, faction, item, map, calendar, document } = rendererDefs
 
 /** Every renderer's header layout. */
 export const rendererRegistry: Record<HeaderRendererId, RegisteredRenderer> = {
@@ -35,5 +36,6 @@ export const rendererRegistry: Record<HeaderRendererId, RegisteredRenderer> = {
   faction: defineRendererView(faction, FactionLayout),
   item: defineRendererView(item, ItemLayout),
   map: defineRendererView(map, MapLayout),
+  calendar: { Layout: CalendarLayout, PrintLayout: defineRendererView(calendar, DocumentLayout).PrintLayout },
   document: defineRendererView(document, DocumentLayout)
 }

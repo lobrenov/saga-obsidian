@@ -14,7 +14,7 @@ export const NO_LAYERS: Layers = { hiddenRenderers: new Set(), hiddenIcons: new 
 
 export const isVisible = (pin: PlacedPin, layers: Layers): boolean => !layers.hiddenRenderers.has(pin.renderer) && !layers.hiddenIcons.has(pin.look.icon)
 
-const PLURAL: Record<RendererId, string> = { character: 'Characters', location: 'Locations', faction: 'Factions', item: 'Items', map: 'Maps', document: 'Documents' }
+const PLURAL: Record<RendererId, string> = { character: 'Characters', location: 'Locations', faction: 'Factions', item: 'Items', map: 'Maps', calendar: 'Calendars', document: 'Documents' }
 
 const toggled = <T,>(set: ReadonlySet<T>, value: T): Set<T> => {
   const next = new Set(set)

@@ -1,4 +1,5 @@
-import { AbstractInputSuggest, Keymap, prepareFuzzySearch, setIcon, type App, type HoverParent, type TFile } from 'obsidian'
+import { AbstractInputSuggest, Keymap, Notice, prepareFuzzySearch, setIcon, type App, type HoverParent, type TFile } from 'obsidian'
+import { confirm } from '../map/modals'
 import { showMenu } from '../ui/menu'
 import type { HeaderEnv } from './env'
 
@@ -50,6 +51,8 @@ export function createHeaderEnv(app: App): HeaderEnv {
       app.workspace.trigger('hover-link', { event, source: HOVER_SOURCE, hoverParent, targetEl, linktext, sourcePath }),
     setIcon,
     showMenu,
+    confirm: (title, message, action, cancel) => confirm(app, title, message, action, cancel),
+    notify: (message) => void new Notice(message),
     suggest(input, kind, from, onPick) {
       const files = kind === 'note' ? () => app.vault.getMarkdownFiles() : () => app.vault.getFiles().filter((file) => IMAGE_EXTENSIONS.has(file.extension.toLowerCase()))
       const suggest = new FileSuggest(app, input, files, from, onPick)

@@ -13,6 +13,10 @@ export interface HeaderEnv {
   hover(event: MouseEvent, el: HTMLElement, target: string, from: string): void
   setIcon(el: HTMLElement, name: string): void
   showMenu: ShowMenu
+  /** Asks to confirm an action; false when cancelled. */
+  confirm(title: string, message: string, action: string, cancel: string): Promise<boolean>
+  /** Shows a notice. */
+  notify(message: string): void
   /** Attaches a file suggester to `input` once; `from` gives the path of the note at pick time and `onPick` the link text of the chosen file. Returns the cleanup. */
   suggest(input: HTMLInputElement, kind: 'note' | 'image', from: () => string, onPick: (target: string) => void): () => void
 }

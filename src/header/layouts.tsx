@@ -90,6 +90,6 @@ export function MapLayout({ title }: LayoutProps<typeof map>) {
 }
 
 /** The title alone. */
-export function DocumentLayout({ title }: LayoutProps<typeof document>) {
+export function DocumentLayout({ title }: Pick<LayoutProps<typeof document>, 'title'>) {
   return <Identity title={title}>{null}</Identity>
 }

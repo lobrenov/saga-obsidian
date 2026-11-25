@@ -38,6 +38,7 @@ describe('the pin design data', () => {
       faction: { shape: 'pin', color: 'indigo', icon: 'flag' },
       item: { shape: 'pin', color: 'ochre', icon: 'gem' },
       map: { shape: 'pin', color: 'olive', icon: 'map' },
+      calendar: { shape: 'pin', color: 'slate', icon: 'calendar-days' },
       document: { shape: 'pin', color: 'umber', icon: 'file-text' }
     })
   })
@@ -59,7 +60,7 @@ describe('the pin design data', () => {
       ['Travel', ['anchor', 'sailboat', 'signpost', 'footprints', 'compass', 'route']],
       ['Danger & dungeons', ['swords', 'skull', 'triangle-alert', 'ghost', 'bone', 'key', 'lock']],
       ['Story & loot', ['scroll-text', 'star', 'message-circle', 'ear', 'circle-help', 'eye', 'eye-off', 'coins', 'gem', 'sparkles', 'wand-sparkles', 'flask-round']],
-      ['People & powers', ['user', 'users', 'crown', 'flag', 'shield', 'handshake', 'venetian-mask', 'dices', 'circle-small', 'map', 'file-text']]
+      ['People & powers', ['user', 'users', 'crown', 'flag', 'shield', 'handshake', 'venetian-mask', 'dices', 'circle-small', 'map', 'calendar-days', 'file-text']]
     ])
     expect(new Set(PIN_ICONS.map((icon) => icon.id)).size).toBe(PIN_ICONS.length)
     expect(PIN_ICONS.find((icon) => icon.id === 'circle-small')?.label).toBe('Dot')
