@@ -23,6 +23,7 @@ import {
 import { timelineRows, type TimelineRow } from "./timelineRows";
 import type { CalendarState, Scale } from "./types";
 import "./timeline.css";
+import { useHiddenLabel } from "./hiddenLabel";
 
 type Ready = Extract<CalendarState, { kind: "calendar" }>;
 
@@ -54,12 +55,16 @@ function Overview({
   title: string;
 }) {
   const window = markOf(axis, shown.from, shown.to);
+  const [labelId, label] = useHiddenLabel(
+    `Showing ${title} of ${calendar.eras.map((era) => era.name).join(", ")}`,
+  );
   return (
     <div
       className="saga-timeline-overview"
       role="img"
-      aria-label={`Showing ${title} of ${calendar.eras.map((era) => era.name).join(", ")}`}
+      aria-labelledby={labelId}
     >
+      {label}
       {axis.columns.map((column, i) => (
         <span
           key={i}
@@ -192,6 +197,9 @@ function RowItem({ calendar, row, mark, selected, onSelect }: RowItemProps) {
 /** The Timeline display: the window's title with the calendar's link, navigation and the Scale control, the era overview, the entries with a date problem, and one row per entry. */
 export function TimelineDisplay({ state }: { state: Ready }) {
   const { calendar, entries, host, file } = state;
+  const [scaleId, scaleLabel] = useHiddenLabel("Scale");
+  const [chartId, chartLabel] = useHiddenLabel("Timeline chart");
+  const [rowsId, rowsLabel] = useHiddenLabel("Timeline");
   // The scale the control chose, until the `scale` option shows it.
   const [pending, setPending] = useState<Scale | null>(null);
   const [at, setAt] = useState(() => opening(calendar, entries).year);
@@ -268,6 +276,9 @@ export function TimelineDisplay({ state }: { state: Ready }) {
         }
       }}
     >
+      {scaleLabel}
+      {chartLabel}
+      {rowsLabel}
       <header className="saga-calview-header">
         <div className="saga-calview-heading">
           <h2 className="saga-calview-title">{title}</h2>
@@ -298,7 +309,7 @@ export function TimelineDisplay({ state }: { state: Ready }) {
             </button>
           </div>
         )}
-        <div role="group" aria-label="Scale" className="saga-calview-range">
+        <div role="group" aria-labelledby={scaleId} className="saga-calview-range">
           {SCALES.map(({ id: option, label }) => (
             <button
               key={option}
@@ -348,7 +359,7 @@ export function TimelineDisplay({ state }: { state: Ready }) {
           <div
             className="saga-timeline-scroll"
             role="region"
-            aria-label="Timeline chart"
+            aria-labelledby={chartId}
             tabIndex={0}
           >
             <div className="saga-timeline-chart">
@@ -386,7 +397,7 @@ export function TimelineDisplay({ state }: { state: Ready }) {
                 </div>
               </div>
               {shown.length > 0 ? (
-                <ol className="saga-timeline-rows" aria-label="Timeline">
+                <ol className="saga-timeline-rows" aria-labelledby={rowsId}>
                   {shown.map(({ row, mark }) => (
                     <RowItem
                       key={row.entry.file.path}

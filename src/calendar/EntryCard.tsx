@@ -7,6 +7,7 @@ import { Glyph } from './Glyph'
 import type { CalendarHost } from './host'
 import { NoteLink } from './NoteLink'
 import { useExcerpt } from './useExcerpt'
+import { useHiddenLabel } from './hiddenLabel'
 
 const WIDTH = 300
 const GAP = 6
@@ -27,6 +28,7 @@ export function EntryCard({ host, calendar, entry, slot, onClose }: EntryCardPro
   const root = useRef<HTMLElement>(null)
   const excerpt = useExcerpt(host, entry.file, EXCERPT_CHARS)
   const date = dateText(calendar, entry)
+  const [problemsId, problemsLabel] = useHiddenLabel('Problems with this note')
 
   // Focus moves into the card and goes back to where it was when the card closes.
   useLayoutEffect(() => {
@@ -108,8 +110,9 @@ export function EntryCard({ host, calendar, entry, slot, onClose }: EntryCardPro
       </h3>
       {date ? <p className="saga-calview-card-date">{date}</p> : null}
       {excerpt ? <p className="saga-calview-card-excerpt">{excerpt}</p> : null}
+      {entry.issues.length > 0 ? problemsLabel : null}
       {entry.issues.length > 0 ? (
-        <ul className="saga-calview-card-issues" aria-label="Problems with this note">
+        <ul className="saga-calview-card-issues" aria-labelledby={problemsId}>
           {entry.issues.map((issue) => (
             <li key={issue}>{issue}</li>
           ))}

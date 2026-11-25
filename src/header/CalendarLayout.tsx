@@ -189,8 +189,14 @@ export function CalendarLayout({ title, frontmatter }: LayoutInput) {
   const firstWeekday = read(frontmatter, 'first-weekday')
   const parsed = parseCalendar(frontmatter)
   const calendar = parsed.value
-  // Issues of the keys the note has.
-  const issues = parsed.issues.filter((issue) => frontmatter[issue.path.split('.')[0] ?? ''] != null)
+  // Issues of the keys the note has, and short names an earlier era already uses.
+  const issues = [
+    ...parsed.issues.filter((issue) => frontmatter[issue.path.split('.')[0] ?? ''] != null),
+    ...eras.flatMap((era, i): Issue[] => {
+      const short = read(era, 'short').trim()
+      return short && eras.slice(0, i).some((earlier) => read(earlier, 'short').trim() === short) ? [{ path: `eras.${i}.short`, message: 'Short names must be unique' }] : []
+    })
+  ]
   const issuesAt = (path: string): Issue[] => issues.filter((issue) => issue.path === path || issue.path.startsWith(`${path}.`))
   const invalidAt = (path: string): boolean => issues.some((issue) => issue.path === path)
 

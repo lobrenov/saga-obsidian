@@ -33,7 +33,12 @@ const press = async (name: string, times = 1) => {
     await settle()
   }
 }
-const scaleButton = (name: string): HTMLElement => [...document.querySelectorAll<HTMLElement>('[aria-label="Scale"] button')].find((el) => el.textContent === name)!
+/** The name an element takes from its `aria-labelledby`. */
+const labelOf = (el: Element | null): string | undefined => (el ? el.ownerDocument.getElementById(el.getAttribute('aria-labelledby') ?? '')?.textContent ?? undefined : undefined)
+/** The element matching `selector` named `name` by its `aria-labelledby`. */
+const named = (selector: string, name: string): HTMLElement | undefined => [...document.querySelectorAll<HTMLElement>(selector)].find((el) => labelOf(el) === name)
+
+const scaleButton = (name: string): HTMLElement => [...named('[role="group"]', 'Scale')!.querySelectorAll<HTMLElement>('button')].find((el) => el.textContent === name)!
 const title = (): string => document.querySelector('.saga-calview-title')?.textContent ?? ''
 const rows = (): HTMLElement[] => [...document.querySelectorAll<HTMLElement>('.saga-timeline-row')]
 const row = (name: string): HTMLElement => rows().find((el) => el.querySelector('.saga-timeline-label-text')?.textContent === name)!
@@ -133,7 +138,7 @@ test('years are the columns at Decade and Century, and eras at All', async () =>
 test('the overview window follows navigation and marks the visible range', async () => {
   await renderTimeline({ scale: 'decade' }, dated)
   const strip = document.querySelector('.saga-timeline-overview')!
-  expect(strip.getAttribute('aria-label')).toBe('Showing 1311–1320 AL of The Drowned Age, Age of Lanterns')
+  expect(labelOf(strip)).toBe('Showing 1311–1320 AL of The Drowned Age, Age of Lanterns')
   expect(strip.querySelectorAll('.saga-timeline-tick').length).toBeGreaterThan(0)
   const first = windowLeft()
   await press('Next decade')
@@ -275,8 +280,10 @@ test('open marks say they continue, the head is hidden from assistive technology
   await press('Next year')
   expect(row('Came before').querySelector('.saga-timeline-when')?.textContent).toContain('continues before')
   expect(document.querySelector('.saga-timeline-head')?.getAttribute('aria-hidden')).toBe('true')
-  expect(document.querySelector('ol[aria-label="Timeline"]')).not.toBeNull()
-  expect(document.querySelector('.saga-timeline-scroll')?.getAttribute('aria-label')).toBe('Timeline chart')
+  expect(named('ol', 'Timeline')).not.toBeUndefined()
+  expect(labelOf(document.querySelector('.saga-timeline-scroll'))).toBe('Timeline chart')
+  // Obsidian draws an aria-label as a tooltip: only controls have one.
+  expect([...document.querySelectorAll('.saga-calview [aria-label]')].filter((el) => !el.matches('button'))).toEqual([])
   expect(document.querySelector('.saga-timeline-era[title]')).toBeNull()
 })
 
