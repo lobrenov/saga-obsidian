@@ -2,7 +2,7 @@
 
 ![Saga](assets/hero.png)
 
-Saga is a work-in-progress world-building plugin for Obsidian. It renders notes differently according to their type, adds banners, portraits and emblems to notes, shows icons for files and links, and draws maps with customisable pins in a custom Bases view. Every feature works on desktop and mobile, maps included.
+Saga is a work-in-progress world-building plugin for Obsidian. It renders notes differently according to their type, adds banners, portraits and emblems to notes, shows icons for files and links, draws maps with customisable pins, and lays out your world's history on its own calendars, each in a custom Bases view. Every feature works on desktop and mobile, maps included.
 
 Saga works best with the [Saga theme](https://community.obsidian.md/themes/saga).
 
@@ -19,6 +19,8 @@ A note's `type` property picks its renderer. The renderer replaces the inline ti
 | Faction | Emblem | Kind, Leader, Base, Allies, Rivals |
 | Item | Image | Kind, Rarity, Owner, Location |
 | Map | Banner | |
+| Calendar | Optional banner | Months, Week, Eras |
+| Lore | Optional banner | When, Ends, Calendar, Where, Who |
 | Document | Optional banner | |
 
 Notes with no `type`, or one that maps to no renderer, get the Document card. Any note can have a banner via the `banner` property, repositioned by dragging.
@@ -39,6 +41,12 @@ Settings → Saga sets the type property's key, which `type` values map to each 
 
 ### Map
 ![Map](assets/map-note.png)
+
+### Calendar
+![Calendar](assets/calendar-note.png)
+
+### Lore
+![Lore](assets/lore.png)
 
 ### Document
 ![Document](assets/document.png)
@@ -71,6 +79,37 @@ map-pins:
 
 <img src="assets/map-mobile.png" alt="Saga map on mobile" width="320">
 
+## Calendars
+
+![Saga calendar](assets/calendar-feed.png)
+
+A calendar is a note (`type: calendar`) that defines your world's months, week and eras. Edit them in its header: drag to reorder months and weekdays, and set where each era starts. Years count continuously, back before year 1 and up from it, with no year 0.
+
+Lore notes (`type: lore` or `event`) link a calendar and carry a date, edited with a picker that knows that calendar. A date can be a day, a month, a year or a whole era, with an optional end. The Lore header links the notes just before and after it.
+
+**Saga calendar** is a Bases view. Pick a calendar note in the view's options; every note in the base dated on it shows, as one of:
+
+- **Calendar:** a month or year grid, with multi-day events as bars and notes dated only to a month or year in their own row.
+- **Feed:** a timeline of cards with banners and excerpts, grouped by era, with the years between events marked. Oldest or newest first.
+- **Timeline:** one row per note across every era, or a century, decade or year at a time.
+
+Click a note for a card with its date and excerpt. Right-click it (long-press on mobile) to rename it, change its dates, or delete it.
+
+Dates are stored as flat properties, so Bases can sort and filter on them, and the calendar note is never edited by a date change:
+
+```yaml
+type: event
+calendar: "[[The Tidereckoning]]"
+year: 1312        # 1 BL is -1; there is no year 0
+month: 4          # 1-based
+day: 28
+end-year: 1312    # optional
+end-month: 6
+end-day: 12
+```
+
+An era-only date uses `era: Age of Lanterns` in place of `year`.
+
 ## Icons
 
 Optional, in Settings → Saga.
@@ -86,7 +125,7 @@ Icons use either the renderer's icon and colour, or the note's pin look on a cho
 
 - **PDF export:** Export to PDF prints the banner and header card (desktop).
 - **Field editing:** link fields use Obsidian's note suggester; image fields use an image suggester.
-- **Hover previews:** map pins and header link fields show Obsidian's page preview.
+- **Hover previews:** map pins, calendar entries and header link fields show Obsidian's page preview.
 - **Text-preserving writes:** edits change only the edited property's text in the note.
 
 ## Saga theme
