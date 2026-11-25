@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest'
-import { toExcerpt } from '../../src/map/excerpt'
+import { toExcerpt } from '../../src/shared/markdown/excerpt'
 
 it('takes the first block after headings, without list or task markers', () => {
   const text = '---\ntype: location\n---\n# The Shattered Plains\n\nPlateaus split by [[Chasm|chasms]].\nGoods move unseen.\n\n- [!] Flash floods\n- Chasmfiends\n'

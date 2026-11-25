@@ -38,35 +38,35 @@
 /* Renderer colours of bars, chips, marks and the card. */
 .saga-calview [data-renderer='character'] {
   --saga-calview-accent: var(--saga-character, var(--color-red));
-  --saga-calview-tint: var(--saga-character-tint, var(--background-secondary));
+  --saga-calview-tint: var(--saga-character-tint, color-mix(in srgb, var(--saga-calview-accent) 14%, var(--background-primary)));
 }
 .saga-calview [data-renderer='location'] {
   --saga-calview-accent: var(--saga-location, var(--color-green));
-  --saga-calview-tint: var(--saga-location-tint, var(--background-secondary));
+  --saga-calview-tint: var(--saga-location-tint, color-mix(in srgb, var(--saga-calview-accent) 14%, var(--background-primary)));
 }
 .saga-calview [data-renderer='faction'] {
   --saga-calview-accent: var(--saga-faction, var(--color-blue));
-  --saga-calview-tint: var(--saga-faction-tint, var(--background-secondary));
+  --saga-calview-tint: var(--saga-faction-tint, color-mix(in srgb, var(--saga-calview-accent) 14%, var(--background-primary)));
 }
 .saga-calview [data-renderer='item'] {
   --saga-calview-accent: var(--saga-item, var(--color-orange));
-  --saga-calview-tint: var(--saga-item-tint, var(--background-secondary));
+  --saga-calview-tint: var(--saga-item-tint, color-mix(in srgb, var(--saga-calview-accent) 14%, var(--background-primary)));
 }
 .saga-calview [data-renderer='map'] {
   --saga-calview-accent: var(--saga-map, var(--color-green));
-  --saga-calview-tint: var(--saga-map-tint, var(--background-secondary));
+  --saga-calview-tint: var(--saga-map-tint, color-mix(in srgb, var(--saga-calview-accent) 14%, var(--background-primary)));
 }
 .saga-calview [data-renderer='calendar'] {
   --saga-calview-accent: var(--saga-calendar, var(--color-blue));
-  --saga-calview-tint: var(--saga-calendar-tint, var(--background-secondary));
+  --saga-calview-tint: var(--saga-calendar-tint, color-mix(in srgb, var(--saga-calview-accent) 14%, var(--background-primary)));
 }
 .saga-calview [data-renderer='lore'] {
   --saga-calview-accent: var(--saga-lore, var(--color-purple));
-  --saga-calview-tint: var(--saga-lore-tint, var(--background-secondary));
+  --saga-calview-tint: var(--saga-lore-tint, color-mix(in srgb, var(--saga-calview-accent) 14%, var(--background-primary)));
 }
 .saga-calview [data-renderer='document'] {
   --saga-calview-accent: var(--saga-document, var(--text-muted));
-  --saga-calview-tint: var(--saga-document-tint, var(--background-secondary));
+  --saga-calview-tint: var(--saga-document-tint, color-mix(in srgb, var(--saga-calview-accent) 14%, var(--background-primary)));
 }
 
 .saga-calview-glyph {
@@ -250,6 +250,10 @@
   color: var(--text-muted);
 }
 
+.saga-calview-weekday-short {
+  display: none;
+}
+
 .saga-calview-day {
   position: relative;
   display: flex;
@@ -280,7 +284,7 @@
 
 .saga-calview-day[data-outside] .saga-calview-daynum {
   font-weight: normal;
-  color: var(--text-faint);
+  color: var(--text-muted);
 }
 
 /* Bars: one per entry per week; the cells it continues through join edge to edge. */
@@ -338,8 +342,8 @@
 /* Year: small months */
 .saga-calview-year {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
-  gap: var(--size-4-4) var(--size-4-6);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 11rem), 1fr));
+  gap: var(--size-4-4) var(--size-4-4);
 }
 
 .saga-calview-mini-title {
@@ -351,7 +355,11 @@
 .saga-calview-mini-grid {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
+}
+
+.saga-calview-mini-grid .saga-calview-week {
+  gap: 4px;
 }
 
 .saga-calview-mini-grid .saga-calview-weekday {
@@ -386,6 +394,23 @@
   font-weight: var(--font-semibold);
 }
 
+.saga-calview .saga-calview-mini-mark {
+  position: relative;
+}
+
+.saga-calview .saga-calview-mini-mark[data-faint] {
+  background: color-mix(in srgb, var(--saga-calview-tint) 45%, transparent);
+  font-weight: normal;
+}
+
+.saga-calview-mini-count {
+  position: absolute;
+  top: 1px;
+  right: 2px;
+  font-size: 9px;
+  line-height: 1;
+}
+
 .saga-calview .saga-calview-mini-mark[data-selected] {
   background: var(--text-normal);
   color: var(--background-primary);
@@ -416,11 +441,36 @@
   align-items: center;
   gap: var(--size-2-3);
   margin: 0;
-  color: var(--saga-calview-accent);
+  color: var(--text-muted);
   font-size: var(--font-ui-smaller);
   font-weight: var(--font-semibold);
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.saga-calview-card-kind .saga-calview-glyph {
+  color: var(--saga-calview-accent);
+}
+
+.saga-calview-card-arrow {
+  position: absolute;
+  top: calc(var(--saga-calview-card-arrow, 16px) - 6px);
+  width: 12px;
+  height: 12px;
+  background: var(--background-primary);
+  transform: rotate(45deg);
+}
+
+.saga-calview-card[data-side='left'] .saga-calview-card-arrow {
+  right: -7px;
+  border-top: 1px solid var(--background-modifier-border);
+  border-right: 1px solid var(--background-modifier-border);
+}
+
+.saga-calview-card[data-side='right'] .saga-calview-card-arrow {
+  left: -7px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  border-left: 1px solid var(--background-modifier-border);
 }
 
 .saga-calview-card-title {
@@ -431,7 +481,7 @@
 
 .saga-calview-card-date {
   margin: var(--size-2-3) 0 0;
-  color: var(--saga-calview-accent);
+  color: var(--text-muted);
 }
 
 .saga-calview-card-excerpt {
@@ -476,6 +526,27 @@
     right: var(--size-4-2);
     left: var(--size-4-2);
     width: auto;
+    max-height: 24rem;
+    overflow-y: auto;
+  }
+  .saga-calview-card-arrow {
+    display: none;
+  }
+  .saga-calview-weekday-full {
+    display: none;
+  }
+  .saga-calview-weekday-short {
+    display: inline;
+  }
+  .saga-calview .saga-calview-bar .saga-calview-glyph {
+    display: none;
+  }
+  .saga-calview .saga-calview-bar-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
   }
 }
 
@@ -498,5 +569,64 @@
   .saga-calview-mini-day,
   .saga-calview .saga-calview-mini-mark {
     min-height: 36px;
+  }
+}
+
+/* Day numbers and bar text for assistive technology only. */
+.saga-calview-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Pointer and keyboard states: Obsidian's button rules would otherwise win over the tints, and `box-shadow: none` drops its focus ring. */
+.saga-calview button,
+.saga-calview .saga-calview-bar[data-span] {
+  cursor: pointer;
+}
+
+.saga-calview button:focus-visible,
+.saga-calview a:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 1px;
+}
+
+.saga-calview button.saga-calview-bar:hover:not([data-selected]),
+.saga-calview .saga-calview-bar[data-hover]:not([data-selected]) {
+  background: color-mix(in srgb, var(--saga-calview-accent) 28%, var(--saga-calview-tint));
+}
+
+.saga-calview button.saga-calview-chip:hover:not([data-selected]),
+.saga-calview button.saga-calview-mini-mark:hover:not([data-selected]) {
+  background: color-mix(in srgb, var(--saga-calview-accent) 28%, var(--saga-calview-tint));
+}
+
+.saga-calview button.saga-calview-step:hover,
+.saga-calview .saga-calview-range button:hover:not([aria-pressed='true']) {
+  background: var(--background-modifier-hover);
+}
+
+.saga-calview button.saga-calview-more {
+  align-self: flex-start;
+  height: 20px;
+  padding: 0 var(--size-4-2);
+  border: 0;
+  border-radius: var(--radius-s);
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.saga-calview button.saga-calview-more:hover {
+  background: var(--background-modifier-hover);
+}
+
+@media (pointer: coarse) {
+  .saga-calview button.saga-calview-more {
+    height: 36px;
   }
 }

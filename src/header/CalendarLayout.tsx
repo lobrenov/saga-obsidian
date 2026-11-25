@@ -1,6 +1,6 @@
 import { useId, useLayoutEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react'
 import { TFile, type App } from 'obsidian'
-import { frontmatterOf, resolveLink, setField, updateField } from '../obsidian/vault'
+import { frontmatterOf, linksTo, setField, updateField } from '../obsidian/vault'
 import { addYears, checkDate, dateRange, dayNumber, eraSpan, formatDate, readDate, weekdayOf, type CalendarDate } from '../shared/calendars/dates'
 import { parseCalendar, type Calendar } from '../shared/calendars/schema'
 import type { Issue } from '../shared/result'
@@ -41,12 +41,6 @@ const locate = (items: unknown[], entry: unknown, drawn: number): number => {
   const text = JSON.stringify(entry)
   const at = items.findIndex((item) => JSON.stringify(item) === text)
   return at < 0 ? drawn : at
-}
-
-/** Whether `note`'s link under `key` (Lore's `calendar` key) resolves to `file`. */
-const linksTo = (app: App, file: TFile, note: TFile, frontmatter: Readonly<Record<string, unknown>>, key = 'calendar'): boolean => {
-  const link = frontmatter[key]
-  return typeof link === 'string' && resolveLink(app, link, note.path)?.path === file.path
 }
 
 /** The notes whose `calendar` link resolves to `file`, with their start and end dates. */

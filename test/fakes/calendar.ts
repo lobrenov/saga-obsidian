@@ -32,6 +32,7 @@ export class CalendarFake {
   readonly menus: { at: MenuAt; items: MenuItem[] }[] = []
   readonly hovered: string[] = []
   private cached: { path: string; host: CalendarHost } | null = null
+  private readonly listeners = new Set<() => void>()
 
   private constructor(
     readonly fake: CalendarApp,
@@ -76,14 +77,27 @@ export class CalendarFake {
         }
         return this.cached.host
       },
-      setOption: (key, value) => void this.written.push([key, value])
+      setOption: (key, value) => {
+        this.written.push([key, value])
+        this.set(key, value)
+      }
     })
   }
 
-  /** Calls `callback` when a note changes; returns the unsubscribe. */
+  /** Sets a view option and has the view render again, as Bases does for a config change. */
+  set(key: string, value: unknown): void {
+    this.options[key] = value
+    this.listeners.forEach((listener) => listener())
+  }
+
+  /** Calls `callback` when a note changes or an option is set; returns the unsubscribe. */
   subscribe(callback: () => void): () => void {
     const ref = this.fake.metadataCache.on('changed', callback)
-    return () => this.fake.metadataCache.offref(ref)
+    this.listeners.add(callback)
+    return () => {
+      this.fake.metadataCache.offref(ref)
+      this.listeners.delete(callback)
+    }
   }
 
   /** Chooses an item of the newest menu by title, as a click would. */

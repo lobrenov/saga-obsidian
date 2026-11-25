@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { setField } from '../obsidian/vault'
-import { addMonths, addYears, dayNumber, eraOf, eraSpan, formatDate, fromDayNumber, monthGrid, type CalendarDate, type GridDay } from '../shared/calendars/dates'
+import { addMonths, addYears, dayNumber, eraOf, eraSpan, formatDate, fromDayNumber, monthGrid, shortNames, type CalendarDate, type GridDay } from '../shared/calendars/dates'
 import type { Calendar, Era } from '../shared/calendars/schema'
 import type { EditorProps } from '../shared/renderers/define'
 import { useHeader } from './env'
@@ -35,16 +35,6 @@ function startOf(calendar: Calendar, value: CalendarDate | undefined): { year: n
     return { year: Number.isFinite(from) ? from : to, month: 1 }
   }
   return { year: 1, month: 1 }
-}
-
-/** Weekday labels of the same length, at least 2 letters and long enough to tell the days apart. */
-function shortNames(names: string[]): string[] {
-  const longest = Math.max(...names.map((name) => name.length))
-  for (let length = 2; length <= longest; length++) {
-    const short = names.map((name) => name.slice(0, length))
-    if (new Set(short).size === short.length) return short
-  }
-  return names
 }
 
 /** The day `delta` days from `day`, with the view moved to its month when the grid does not show it. */

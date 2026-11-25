@@ -2,7 +2,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { formatDate, weekdayOf } from '../shared/calendars/dates'
 import type { Calendar } from '../shared/calendars/schema'
 import { rendererDefs } from '../shared/renderers/definitions'
-import { toExcerpt } from '../map/excerpt'
+import { toExcerpt } from '../shared/markdown/excerpt'
 import type { CalendarEntry } from './entries'
 import { Glyph } from './Glyph'
 import type { CalendarHost } from './host'
@@ -42,7 +42,10 @@ export function EntryCard({ host, calendar, entry, slot, onClose }: EntryCardPro
     const before = root.current?.ownerDocument.activeElement
     root.current?.querySelector<HTMLElement>('[data-autofocus]')?.focus({ preventScroll: true })
     return () => {
-      if (before?.instanceOf(HTMLElement) && before.isConnected) before.focus({ preventScroll: true })
+      // Focus returns only when it is still in the card (or nowhere), not when the user moved on, as to a navigation button.
+      const now = root.current?.ownerDocument.activeElement
+      const lost = !now || now === now.ownerDocument.body || root.current?.contains(now)
+      if (lost && before?.instanceOf(HTMLElement) && before.isConnected) before.focus({ preventScroll: true })
     }
   }, [entry.file.path])
 
@@ -56,10 +59,13 @@ export function EntryCard({ host, calendar, entry, slot, onClose }: EntryCardPro
       if (!anchor) return
       const at = anchor.getBoundingClientRect()
       const box = content.getBoundingClientRect()
-      const left = at.left + at.width / 2 - box.left > box.width / 2 ? at.left - box.left - WIDTH - GAP : at.right - box.left + GAP
+      const side = at.left + at.width / 2 - box.left > box.width / 2 ? 'left' : 'right'
+      const left = side === 'left' ? at.left - box.left - WIDTH - GAP : at.right - box.left + GAP
+      card.dataset['side'] = side
       card.setCssProps({
         '--saga-calview-card-left': `${Math.min(Math.max(8, left), Math.max(8, box.width - WIDTH - 8))}px`,
         '--saga-calview-card-top': `${Math.max(0, at.top - box.top - 8)}px`,
+        '--saga-calview-card-arrow': `${Math.max(8, at.height / 2 + 2)}px`,
         '--saga-calview-card-below': `${at.bottom - box.top + GAP}px`
       })
     }
@@ -80,7 +86,21 @@ export function EntryCard({ host, calendar, entry, slot, onClose }: EntryCardPro
   }, [host, entry.file])
 
   return (
-    <section ref={root} role="dialog" aria-labelledby={id} className="saga-calview-card" data-renderer={entry.renderer}>
+    <section
+      ref={root}
+      role="dialog"
+      aria-labelledby={id}
+      className="saga-calview-card"
+      data-renderer={entry.renderer}
+      onKeyDown={(event) => {
+        if (event.key !== 'Tab' || !event.shiftKey || event.target !== root.current?.querySelector('button')) return
+        const anchor = [...(root.current?.parentElement?.querySelectorAll<HTMLElement>('[data-slot]') ?? [])].find((el) => el.dataset['slot'] === slot)
+        if (!anchor) return
+        event.preventDefault()
+        anchor.focus()
+      }}
+    >
+      <span aria-hidden="true" className="saga-calview-card-arrow" />
       <button type="button" className="saga-calview-card-close clickable-icon" aria-label="Close" onClick={onClose}>
         <Glyph name="x" />
       </button>
@@ -88,7 +108,7 @@ export function EntryCard({ host, calendar, entry, slot, onClose }: EntryCardPro
         <Glyph name={rendererDefs[entry.renderer].icon} />
         {rendererDefs[entry.renderer].label}
       </p>
-      <h2 id={id} className="saga-calview-card-title">
+      <h3 id={id} className="saga-calview-card-title">
         <a
           href={entry.file.path}
           className="internal-link"
@@ -101,7 +121,7 @@ export function EntryCard({ host, calendar, entry, slot, onClose }: EntryCardPro
         >
           {entry.title}
         </a>
-      </h2>
+      </h3>
       {date ? <p className="saga-calview-card-date">{date}</p> : null}
       {excerpt ? <p className="saga-calview-card-excerpt">{excerpt}</p> : null}
       {entry.issues.length > 0 ? (
